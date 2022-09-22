@@ -1,9 +1,11 @@
-const multiChoice = require("./multiChoice");
 const findClickableParent = require("./findClickableParent");
-const requestPermission = require("./requestPermission");
+const requestSetting = require("./requestSetting");
+const multiChoice = require("./multiChoice");
+const test = require("./test/offAppAdTest");
 // const instApk = require("./instApk");
 // const downApp = require("./downApp");
-const test = require("./test/offAppAdTest");
+const Settings = android.provider.Settings;
+
 function delay (time) {
 	sleep(time || 0x200);
 }
@@ -27,25 +29,40 @@ function isFrameLayout (linear) {
 	return /\.FrameLayout$/.test(linear.className());
 }
 
+function getDefaultValue (value, defaultValu) {
+	return value == null
+		? defaultValu
+		: value
+	;
+}
+
 function walkListView (options = {}) {
 	const adCheckBoxList = [];
 	const adLinearList = [];
-	let inNotify;
+	let inNotifyMgr;
 	const listView = findByClassName(/\.(RecyclerView|ListView)$/).filter(view => {
 		const packageName = view.packageName();
-		inNotify = packageName === "com.android.settings";
-		return inNotify || packageName === options.packageName;
+		return options.packageName === packageName || (inNotifyMgr = packageName === "com.android.settings");
 	}).findOne();
 	delay();
-	const regSwitchOn = inNotify
+	const regSwitchOn = inNotifyMgr
 		? null
-		: options.regSwitchOn || /^(仅在(WLAN|Wi-?Fi)下.*?|.*?广告(拦截|过滤)|去.*?广告)$/i;
-	const regSwitchOff = inNotify
+		: getDefaultValue(
+			options.regSwitchOn,
+			/^(仅在(WLAN|Wi-?Fi)下.*?|.*?广告(拦截|过滤)|去.*?广告)$/i,
+		);
+	const regSwitchOff = inNotifyMgr
 		? /^允许通知$/
-		: options.regSwitchOff || /猜你喜欢|天气视频|桌面搜索|用户体验|在线(内容)?服务|个性化|消息|广告|热[榜门]|推[荐广]|宫格[栏位]|技巧|热点|新闻|[资快]讯|推送(服务|通知)|通知栏|扫描内存|福利活动|显示天气服务/;
-	const regSubPage = inNotify
+		: getDefaultValue(
+			options.regSwitchOff,
+			/猜你喜欢|天气视频|桌面搜索|用户体验|在线(内容)?服务|个性化|消息|广告|热[榜门]|推[荐广]|宫格[栏位]|技巧|热点|新闻|[资快]讯|推送(服务|通知)|通知栏|扫描内存|福利活动|显示天气服务/,
+		);
+	const regSubPage = inNotifyMgr
 		? null
-		: options.regSubPage || /^(高级|其他|消息[与和]?推送|.*?广告(拦截|过滤)|去.*?广告|(.*?((消息)?通知|隐私|功能|个性化|信息流|用户体验|[主首]页|闹钟)(设置|管理|服务|计划|[防保]护)))$/;
+		: getDefaultValue(
+			options.regSubPage,
+			/^(高级|其他|消息[与和]?推送|.*?广告(拦截|过滤)|去.*?广告|(.*?((消息)?通知|隐私|功能|个性化|信息流|用户体验|[主首]页|闹钟)(设置|管理|服务|计划|[防保]护)))$/,
+		);
 	if (!options.handle) {
 		options.handle = {};
 	};
@@ -146,7 +163,7 @@ function walkListView (options = {}) {
 		result[adLinear.text] = subResult;
 	});
 
-	if (!inNotify && !options.disableScroll && listView.scrollable() && listView.scrollForward()) {
+	if (!inNotifyMgr && !options.disableScroll && listView.scrollable() && listView.scrollForward()) {
 		// 判断页面是否需要下滚
 		console.log("页面滑动");
 		delay();
@@ -223,6 +240,13 @@ function startAct (packageName, activity) {
 	waitForActivity(className);
 	delay(getDelayTimeByPackageName(packageName));
 	return result || true;
+}
+
+function startIntent (options) {
+	context.startActivity(new android.content.Intent(Settings[options.intent]));
+	waitForPackage(options.packageName);
+	toastLog(`正在启动“${options.name}”`);
+	delay();
 }
 
 function clickButton (btnLabelList, text) {
@@ -408,8 +432,8 @@ function startTask (options) {
 		threadSkipPopupPage = threads.start(skipPopupPage);
 	}
 	options = { ...options };
-	if (options.start) {
-		options.start();
+	if (options.intent) {
+		startIntent(options);
 	} else if (options.activity) {
 		startAct(options.packageName, options.activity);
 	} else {
@@ -423,6 +447,7 @@ function startTask (options) {
 		test(options, result);
 	}
 }
+
 function switchBroHomePage (listView, options) {
 	// 小米浏览器及国际版的特别控件————版式切换
 	Array.from(listView.children()).some(linear => {
@@ -477,6 +502,23 @@ function noop () {
 	//
 }
 
+function getSysConfig (space, key) {
+	// https://developer.android.google.cn/reference/android/provider/Settings
+	return Settings[space].getInt(context.getContentResolver(), key);
+}
+
+function getGlobalConfig (key) {
+	return getSysConfig("Global", key);
+}
+
+function getSecureConfig (key) {
+	return getSysConfig("Secure", key);
+}
+
+// function getSystemConfig (key) {
+// 	return getSysConfig("Secure", key);
+// }
+
 const cleanerList = [
 	{
 		name: "先清理后台应用(推荐)",
@@ -485,9 +527,40 @@ const cleanerList = [
 	{
 		// 小米帐号
 		packageName: "com.xiaomi.account",
+		// activity: ".settings.SystemAdActivity",
 		activity: ".ui.AccountSettingsActivity",
 		regSubPage: /^关于.*?[帐账]号|系统.*?广告$/,
 		regSwitchOff: /^系统.*?广告$/,
+		test: () => Settings.Global.getString(context.getContentResolver(), "passport_ad_status") !== "OFF",
+		entry: noop,
+	},
+	{
+		name: "系统安全",
+		packageName: "com.android.settings",
+		intent: "ACTION_SECURITY_SETTINGS",
+		regSubPage: /(广告|链接调用)/,
+		regSwitchOff: /诊断数据|广告推荐|链接调用|用户体验/,
+		test: () => [
+			// 网页链接调用服务
+			"http_invoke_app",
+			// 加入“用户体验改进计划”
+			"upload_log_pref",
+			// 自动发送诊断数据
+			"upload_debug_log_pref",
+
+		].some(getSecureConfig),
+		entry: noop,
+	},
+	{
+		// `广告服务` 位于 `安全` 的子页面
+		name: "广告服务",
+		packageName: "com.android.settings",
+		activity: ".ad.AdServiceSettings",
+		regSwitchOff: /.*/,
+		test: () => getGlobalConfig(
+			// 个性化广告推荐
+			"personalized_ad_enabled",
+		),
 		entry: noop,
 	},
 	{
@@ -640,7 +713,7 @@ const cleanerList = [
 	// 	// 打开知乎去广告插件-知了
 	// 	regSubPage: /^知了$/,
 	// 	regSwitchOn: /^(启用知了|去.*?广告)$/,
-	// 	regSwitchOff: null,
+	// 	regSwitchOff: false,
 	// 	done: function (result) {
 	// 		if (!Object.keys(result.handle).length) {
 	// 			startTask(this);
@@ -665,6 +738,23 @@ const cleanerList = [
 });
 
 function offAppAd () {
+	const resolver = context.getContentResolver();
+	try {
+		// https://developer.android.google.cn/reference/android/provider/Settings
+		// 系统安全 -> 广告服务 -> 个性化广告推荐：关闭
+		Settings.Global.putInt(resolver, "personalized_ad_enabled", 0);
+		[
+			// 网页链接调用服务
+			"http_invoke_app",
+			// 加入“用户体验改进计划”
+			"upload_log_pref",
+			// 自动发送诊断数据
+			"upload_debug_log_pref",
+		].forEach(key => Settings.Secure.putInt(resolver, key, 0));
+	} catch (ex) {
+		console.log("adb shell pm grant com.github.gucong3000.miui.cleaner android.permission.WRITE_SECURE_SETTINGS");
+	}
+
 	const menuItemList = cleanerList.filter((appInfo) => {
 		if (appInfo.packageName && !appInfo.appName && !appInfo.name) {
 			appInfo.appName = app.getAppName(appInfo.packageName);
@@ -672,10 +762,13 @@ function offAppAd () {
 				return false;
 			}
 		}
+		if (appInfo.test) {
+			return appInfo.test();
+		}
 		return true;
 	});
 
-	requestPermission({
+	requestSetting({
 		accessibility: true,
 		drawOverlay: true,
 	});
@@ -692,6 +785,9 @@ function offAppAd () {
 	}
 
 	tasks.forEach(task => {
+		if (task.test && !task.test()) {
+			return;
+		}
 		task.fn ? task.fn() : startTask(task);
 	});
 	console.hide();

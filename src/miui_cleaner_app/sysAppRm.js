@@ -1,6 +1,6 @@
-const multiChoice = require("./multiChoice");
-const blur = require("./blur");
 const findClickableParent = require("./findClickableParent");
+const requestSetting = require("./requestSetting");
+const multiChoice = require("./multiChoice");
 
 function clickButton (button, text) {
 	button = findClickableParent(button);
@@ -164,6 +164,22 @@ function getAppList () {
 		appInfo.appName = app.getAppName(appInfo.packageName);
 		return appInfo.appName;
 	});
+	const fileName = "MiuiPackageInstaller.apk";
+	const srcPath = "res/" + fileName;
+	const copyPath = "/sdcard/Download/" + fileName;
+	const installPath = "/data/local/tmp/" + fileName;
+	files.copy(srcPath, copyPath);
+	appList.push({
+		packageName: "com.miui.packageinstaller",
+		name: "纯净模式",
+		cmd: [
+			`mv ${copyPath} ${installPath}`,
+			"pm install -d -g " + installPath,
+			"rm -rf " + installPath,
+		].join("\n"),
+	});
+	console.log(files.isFile("res/MiuiPackageInstaller.apk"));
+	console.log(files.exists("res/MiuiPackageInstaller.apk"));
 	return appList;
 }
 
@@ -199,25 +215,28 @@ module.exports = () => {
 	}
 	const helper = threads.start(installerHelper);
 	tasks.forEach(appInfo => {
-		app.uninstall(appInfo.packageName);
+		appInfo.cmd || app.uninstall(appInfo.packageName);
 	});
-	blur();
+
+	do {
+		sleep(0x400);
+	} while (selector().filter(sth => /installer/i.test(sth.packageName())).findOnce());
+
 	helper.interrupt();
 
 	tasks = tasks.filter(
 		appInfo => app.getAppName(appInfo.packageName),
 	).map(appInfo => {
-		return "pm uninstall --user 0 " + appInfo.packageName;
+		return appInfo.cmd || "pm uninstall --user 0 " + appInfo.packageName;
 	});
 	if (!tasks.length) {
 		return;
 	}
-
-	const cmdOffAd = "settings put global passport_ad_status OFF";
+	const cmdGrant = `pm grant ${context.getPackageName()} android.permission.WRITE_SECURE_SETTINGS`;
 	let root;
 
 	try {
-		shell(cmdOffAd, true);
+		shell(cmdGrant, true);
 	} catch (ex) {
 		root = false;
 	}
@@ -230,7 +249,7 @@ module.exports = () => {
 		tasks.push("rm -rf " + shFilePath);
 		const script = [
 			"#!/bin/sh",
-			cmdOffAd,
+			cmdGrant,
 		].concat(tasks).join("\n") + "\n";
 
 		files.write(shFilePath, script);
@@ -238,12 +257,15 @@ module.exports = () => {
 		const cmd = "adb shell sh " + shFilePath;
 		console.log("正以等候电脑端自动执行：\n" + cmd);
 		toast("正以等候电脑端自动执行");
-		const startTime = Date.now();
+		const timeout = Date.now() + 0x800 + tasks.length * 0x200;
 		let fileExist;
+		requestSetting({
+			adb: true,
+		});
 		do {
 			sleep(0x200);
 			fileExist = files.exists(shFilePath);
-		} while (fileExist && Date.now() - startTime < 0x1000);
+		} while (fileExist && Date.now() < timeout);
 		if (fileExist) {
 			dialogs.rawInput("等候电脑端自动执行超时，请在电脑手动执行命令：", cmd);
 		} else {

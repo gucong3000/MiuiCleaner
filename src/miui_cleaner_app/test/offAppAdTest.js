@@ -9,8 +9,20 @@ const testData = {
 		关于小米帐号: {
 			系统广告: {
 				系统工具广告: false,
-				查看涉及应用列表: null,
 			},
+		},
+	},
+	广告服务: {
+		个性化广告推荐: false,
+	},
+	系统安全: {
+		"加入“用户体验改进计划”": false,
+		"自动发送诊断数据": false,
+		"广告服务": {
+			个性化广告推荐: false,
+		},
+		"网页链接调用服务": {
+			网页链接调用服务: false,
 		},
 	},
 	手机管家: {
@@ -195,9 +207,9 @@ module.exports = (options, result) => {
 	const testCaseName = options.name || options.appName || app.getAppName(options.packageName);
 	const data = testData[testCaseName];
 
+	// console.log(JSON.stringify(result.handle, 0, "\t"));
 	try {
 		if (!data) {
-			// console.log(JSON.stringify(result, 0, "\t"));
 			const error = new Error(`广告自动关闭模块功能异常: “${testCaseName}”中，未编写测试用例`);
 			throw error;
 		}

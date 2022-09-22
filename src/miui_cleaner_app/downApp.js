@@ -54,6 +54,11 @@ const appList = [
 		}[device.sdkInt],
 	},
 	{
+		name: "应用包管理组件 - 不含“纯净模式”",
+		packageName: "com.miui.packageinstaller",
+		url: "https://zisu.lanzoum.com/iI7LGwn5xjc",
+	},
+	{
 		name: "Holi 天气",
 		packageName: "com.joe.holi",
 		url: [

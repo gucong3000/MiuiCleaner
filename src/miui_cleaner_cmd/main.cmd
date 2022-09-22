@@ -1,6 +1,4 @@
 @echo off
-@REM CHCP 65001>nul 2>nul
-
 title MiuiCleaner - MIUI广告清理工具
 
 :start
@@ -31,7 +29,7 @@ call:pkg_exist "com.github.gucong3000.miui.cleaner" || (
 		echo 正在手机上安装 MiuiCleaner.apk, 请打开“设置 → 更多设置 → 开发者选项 → USB安装”
 		call:apk_install
 	) else (
-		echo 未在手机上找到“MiuiCleaner”，请将““MiuiCleaner.apk”拷贝至“%CD%”文件夹，或直接安装在手机后，按任意键重试
+		echo 未在手机上找到“MiuiCleaner”，请将“MiuiCleaner.apk”拷贝至"%CD%"文件夹，或直接安装在手机后，按任意键重试
 		pause>nul 2>nul
 		goto:start
 	)
@@ -44,6 +42,7 @@ adb shell settings put secure install_non_market_apps 1
 @REM adb shell settings get secure enabled_accessibility_services
 
 adb shell pm grant com.github.gucong3000.miui.cleaner android.permission.WRITE_SETTINGS>nul 2>nul
+adb shell pm grant com.github.gucong3000.miui.cleaner android.permission.WRITE_SECURE_SETTINGS>nul 2>nul
 adb shell pm grant com.github.gucong3000.miui.cleaner android.permission.SYSTEM_ALERT_WINDOW>nul 2>nul
 adb shell am start -n com.github.gucong3000.miui.cleaner/com.stardust.auojs.inrt.SplashActivity>nul 2>nul
 
