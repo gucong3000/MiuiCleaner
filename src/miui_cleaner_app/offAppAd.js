@@ -645,6 +645,7 @@ const cleanerList = [
 	},
 	{
 		// 音乐
+		// v3.51.1.1 下载 https://xiaoheiya.lanzoum.com/iVMeWnhkh5c
 		packageName: "com.miui.player",
 		activity: ".phone.ui.MusicSettings",
 		// start: function () {
@@ -752,7 +753,13 @@ function offAppAd () {
 			"upload_debug_log_pref",
 		].forEach(key => Settings.Secure.putInt(resolver, key, 0));
 	} catch (ex) {
-		console.log("adb shell pm grant com.github.gucong3000.miui.cleaner android.permission.WRITE_SECURE_SETTINGS");
+		console.error(
+			[
+				"调用“修改系统”权限失败，未能直接关闭“网页链接调用服务”、“用户体验改进计划”、自动发送诊断数据、“个性化广告推荐”。赋权方法：",
+				"adb shell pm grant com.github.gucong3000.miui.cleaner android.permission.WRITE_SECURE_SETTINGS",
+				"已提供备选方案：通过自动操作设置页面关闭相关功能的选项",
+			].join("\n"),
+		);
 	}
 
 	const menuItemList = cleanerList.filter((appInfo) => {
@@ -763,7 +770,7 @@ function offAppAd () {
 			}
 		}
 		if (appInfo.test) {
-			return appInfo.test();
+			return appInfo.test(appInfo);
 		}
 		return true;
 	});
@@ -785,7 +792,7 @@ function offAppAd () {
 	}
 
 	tasks.forEach(task => {
-		if (task.test && !task.test()) {
+		if (task.test && !task.test(task)) {
 			return;
 		}
 		task.fn ? task.fn() : startTask(task);

@@ -149,9 +149,35 @@ const packageNameList = [
 	"com.xiaomi.aiasst.service",
 ];
 
-let appList;
+// 卸载“纯净模式”
+function getInstaller (appList) {
+	const packageName = "com.miui.packageinstaller";
+	const packageInfo = context.getPackageManager().getPackageInfo(packageName, 0);
+	if (!packageInfo || packageInfo.versionCode < 400) {
+		// 版本号小于400，则不含“纯净模式”
+		return;
+	}
+	const fileName = "MiuiPackageInstaller.apk";
+	const srcPath = "res/" + fileName;
+	const copyPath = "/sdcard/Download/" + fileName;
+	const installPath = "/data/local/tmp/" + fileName;
+	const appName = app.getAppName(packageInfo.packageName);
+	files.copy(srcPath, copyPath);
+	appList.push({
+		packageName,
+		name: "纯净模式",
+		cmd: [
+			`mv ${copyPath} ${installPath}`,
+			"pm install -d -g " + installPath,
+			"rm -rf " + installPath,
+		].join("\n"),
+	});
+	console.log(`发现${appName}(${packageName})，版本号${packageInfo.versionCode}，已释放版本号为380的降级安装包到路径：${copyPath}`);
+}
+
 const whitelist = /^com\.(miui\.(voiceassist|personalassistant)|android\.(quicksearchbox|chrome))$/;
 function getAppList () {
+	let appList;
 	appList = packageNameList.map(packageName => ({
 		appName: app.getAppName(packageName),
 		checked: whitelist.test(packageName),
@@ -164,22 +190,7 @@ function getAppList () {
 		appInfo.appName = app.getAppName(appInfo.packageName);
 		return appInfo.appName;
 	});
-	const fileName = "MiuiPackageInstaller.apk";
-	const srcPath = "res/" + fileName;
-	const copyPath = "/sdcard/Download/" + fileName;
-	const installPath = "/data/local/tmp/" + fileName;
-	files.copy(srcPath, copyPath);
-	appList.push({
-		packageName: "com.miui.packageinstaller",
-		name: "纯净模式",
-		cmd: [
-			`mv ${copyPath} ${installPath}`,
-			"pm install -d -g " + installPath,
-			"rm -rf " + installPath,
-		].join("\n"),
-	});
-	console.log(files.isFile("res/MiuiPackageInstaller.apk"));
-	console.log(files.exists("res/MiuiPackageInstaller.apk"));
+	getInstaller(appList);
 	return appList;
 }
 
