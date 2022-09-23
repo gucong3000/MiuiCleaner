@@ -224,6 +224,7 @@ module.exports = () => {
 	if (!tasks.length) {
 		return;
 	}
+	toastLog("正尝试常规卸载");
 	const helper = threads.start(installerHelper);
 	tasks.forEach(appInfo => {
 		appInfo.cmd || app.uninstall(appInfo.packageName);
@@ -232,7 +233,6 @@ module.exports = () => {
 	do {
 		sleep(0x400);
 	} while (selector().filter(sth => /installer/i.test(sth.packageName())).findOnce());
-
 	helper.interrupt();
 
 	tasks = tasks.filter(
@@ -253,9 +253,10 @@ module.exports = () => {
 	}
 
 	if (root) {
-		toastLog("正以root权限删除");
+		toastLog(`共${tasks.length}个应用卸载失败，正以root权限卸载`);
 		tasks.forEach(cmd => shell(cmd, true));
 	} else {
+		toastLog(`共${tasks.length}个应用卸载失败，请连接电脑端辅助卸载`);
 		const shFilePath = "/sdcard/Download/MiuiCleaner.sh";
 		tasks.push("rm -rf " + shFilePath);
 		const script = [
@@ -267,7 +268,6 @@ module.exports = () => {
 		// alert(script);
 		const cmd = "adb shell sh " + shFilePath;
 		console.log("正以等候电脑端自动执行：\n" + cmd);
-		toast("正以等候电脑端自动执行");
 		const timeout = Date.now() + 0x800 + tasks.length * 0x200;
 		let fileExist;
 		requestSetting({
@@ -279,8 +279,11 @@ module.exports = () => {
 		} while (fileExist && Date.now() < timeout);
 		if (fileExist) {
 			dialogs.rawInput("等候电脑端自动执行超时，请在电脑手动执行命令：", cmd);
+			if (!files.exists(shFilePath)) {
+				console.log("电脑端手动执行成功");
+			}
 		} else {
-			console.log("电脑端自动执行成功");
+			toastLog("电脑端自动执行成功");
 		}
 	}
 };
