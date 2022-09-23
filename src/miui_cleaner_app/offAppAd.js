@@ -643,17 +643,17 @@ const cleanerList = [
 		activity: ".feature.mine.setting.SettingActivity",
 		entry: noop,
 	},
-	{
-		// 音乐
-		// v3.51.1.1 下载 https://xiaoheiya.lanzoum.com/iVMeWnhkh5c
-		packageName: "com.miui.player",
-		activity: ".phone.ui.MusicSettings",
-		// start: function () {
-		// 	app.uninstall("com.miui.player");
-		// },
-		// "com.tencent.qqmusiclite.activity.MainActivity",
-		entry: noop,
-	},
+	// {
+	// 	// 音乐
+	// 	// v3.51.1.1 下载 https://xiaoheiya.lanzoum.com/iVMeWnhkh5c
+	// 	packageName: "com.miui.player",
+	// 	activity: ".phone.ui.MusicSettings",
+	// 	// start: function () {
+	// 	// 	app.uninstall("com.miui.player");
+	// 	// },
+	// 	// "com.tencent.qqmusiclite.activity.MainActivity",
+	// 	entry: noop,
+	// },
 	{
 		// 小爱语音
 		packageName: "com.miui.voiceassist",

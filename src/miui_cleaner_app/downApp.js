@@ -59,6 +59,14 @@ const appList = [
 		url: "https://zisu.lanzoum.com/iI7LGwn5xjc",
 	},
 	{
+		name: "QQ音乐简洁版 - 代替套壳版本",
+		packageName: "com.tencent.qqmusiclite",
+		url: [
+			"https://www.coolapk.com/apk/com.tencent.qqmusiclite",
+			"https://app.mi.com/details?id=com.tencent.qqmusiclite",
+		],
+	},
+	{
 		name: "Holi 天气",
 		packageName: "com.joe.holi",
 		url: [
