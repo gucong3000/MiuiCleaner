@@ -264,15 +264,24 @@ function actionDevelopmentSettings () {
  */
 function enableAdbInstall () {
 	enableADB();
+	try {
+		shell("setprop persist.security.adbinput 1", true);
+	} catch (ex) {
+		// console.log(files.read("/data/data/com.miui.securitycenter/shared_prefs/remote_provider_preferences.xml"));
+	}
+
 	if (enableAccessibility()) {
 		actionDevelopmentSettings();
 		const listView = selector().packageName(settingsPackageName).scrollable(true).findOne();
+		// permcenter_install_intercept_enabled
 		return clickCheckBoxInView(listView, "允许通过USB安装应用", true) &&
-			clickCheckBoxInView(listView, "允许通过USB调试修改权限或模拟点击", true) && back();
+			(shell("getprop persist.security.adbinput").result.trim() === "1" || clickCheckBoxInView(listView, "允许通过USB调试修改权限或模拟点击", true)) &&
+			back();
 	} else if (dialogs.confirm("权限请求", "请在下个页面，打开“USB安装”和“USB调试（安全设置）”两个开关，以便电脑端可以执行您选定的操作。")) {
 		actionDevelopmentSettings();
 	}
 }
+enableAdbInstall();
 
 /**
  * 开启截图权限

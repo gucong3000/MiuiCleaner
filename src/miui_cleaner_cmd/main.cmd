@@ -1,4 +1,5 @@
 @echo off
+chcp 65001>nul 2>nul
 title MiuiCleaner - MIUI广告清理工具 - v2022.9.25.5
 
 :start
@@ -44,7 +45,6 @@ adb shell settings put secure install_non_market_apps 1
 adb shell pm grant com.github.gucong3000.miui.cleaner android.permission.WRITE_SETTINGS>nul 2>nul
 adb shell pm grant com.github.gucong3000.miui.cleaner android.permission.WRITE_SECURE_SETTINGS>nul 2>nul
 adb shell pm grant com.github.gucong3000.miui.cleaner android.permission.SYSTEM_ALERT_WINDOW>nul 2>nul
-adb shell am start -n com.github.gucong3000.miui.cleaner/com.stardust.auojs.inrt.SplashActivity>nul 2>nul
 
 echo 请在手机上打开“MiuiCleaner”，并在“无障碍”设置页面弹出时，打开“已下载的服务”，找到“MiuiCleaner”，开启它提供的的无障碍服务
 echo 正等候手机端发出指令...
@@ -57,6 +57,7 @@ goto:eof
 
 :apk_install
 	adb install -t -r -g MiuiCleaner.apk>nul 2>nul || (timeout /t 1>nul 2>nul && goto:apk_install)
+	adb shell am start -n com.github.gucong3000.miui.cleaner/com.stardust.auojs.inrt.SplashActivity>nul 2>nul
 goto:eof
 
 :adb_server

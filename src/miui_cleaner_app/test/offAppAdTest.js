@@ -4,7 +4,7 @@ function isObject (val) {
 function isBoolean (value) {
 	return value === true || value === false;
 }
-const testData = {
+const testCase = {
 	小米帐号: {
 		关于小米帐号: {
 			系统广告: {
@@ -205,7 +205,7 @@ function compiler (result, data, options, parent = []) {
 
 module.exports = (options, result) => {
 	const testCaseName = options.name || options.appName || app.getAppName(options.packageName);
-	const data = testData[testCaseName];
+	const data = testCase[testCaseName];
 
 	console.log(JSON.stringify(result.handle, 0, "\t"));
 	try {
@@ -218,3 +218,5 @@ module.exports = (options, result) => {
 		console.error(ex.message);
 	}
 };
+
+module.exports.testCase = testCase;
