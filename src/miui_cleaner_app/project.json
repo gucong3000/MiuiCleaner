@@ -28,9 +28,6 @@
 		"hideLogs": false,
 		"stableMode": false,
 		"volumeUpcontrol": true,
-		"permissions": [
-			"accessibility_services"
-		],
 		"serviceDesc": "自动操作(关闭 MIUI 广告)所需，若关闭则只能执行其他功能。",
 		"splashIcon": "res/splashIcon.png",
 		"splashText": "MIUI广告清理工具"

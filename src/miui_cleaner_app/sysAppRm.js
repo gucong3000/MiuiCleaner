@@ -286,7 +286,7 @@ module.exports = () => {
 			fileExist = files.exists(shFilePath);
 		} while (fileExist && Date.now() < timeout);
 		if (fileExist) {
-			dialogs.rawInput("等候电脑端自动执行超时，请在电脑手动执行命令：", cmd);
+			dialogs.rawInput("等候电脑端自动执行超时，请打开本软件电脑端，或者在电脑手动执行命令：", cmd);
 			if (!files.exists(shFilePath)) {
 				console.log("电脑端手动执行成功");
 			}

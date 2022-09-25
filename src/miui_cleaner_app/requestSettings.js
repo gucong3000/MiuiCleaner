@@ -3,6 +3,9 @@ const project = require("./project.json");
 const settingsPackageName = "com.android.settings";
 const resolver = context.getContentResolver();
 const Settings = android.provider.Settings;
+const accessServicesKey = Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES;
+const accessEnabledKey = Settings.Secure.ACCESSIBILITY_ENABLED;
+const accessServicesName = context.getPackageName() + "/com.stardust.autojs.core.accessibility.AccessibilityService";
 
 /**
  * 请求系统权限或设置
@@ -66,12 +69,11 @@ function switchACheckBox (expect, packageName) {
 }
 
 function getAccessibility () {
-	try {
-		selector().id("null").findOnce();
-	} catch (ex) {
-		return false;
-	}
-	return true;
+	return Settings.Secure.getInt(resolver, accessEnabledKey) && getAccessServices().has(accessServicesName) && global.org.autojs.autojs.tool.AccessibilityServiceTool.isAccessibilityServiceEnabled(context);
+}
+
+function getAccessServices () {
+	return new Set(Settings.Secure.getString(resolver, accessServicesKey).split(/\s*:+\s*/g));
 }
 
 /**
@@ -79,13 +81,12 @@ function getAccessibility () {
  * @param {String} serviceName 服务的名称
  * @returns {boolean} 成功与否
  */
-function addAccessibilityServices (serviceName) {
+function addAccessServices (serviceName) {
 	if (enableWriteSettings()) {
-		const key = Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES;
-		const enabledServices = new Set(Settings.Secure.getString(resolver, key).split(/\s*:+\s*/g));
+		const enabledServices = getAccessServices();
 		enabledServices.add(serviceName);
 		try {
-			Settings.Secure.putString(resolver, key, Array.from(enabledServices).join(":"));
+			Settings.Secure.putString(resolver, accessServicesKey, Array.from(enabledServices).join(":"));
 			Settings.Secure.putInt(resolver, Settings.Secure.ACCESSIBILITY_ENABLED, 1);
 		} catch (ex) {
 			return false;
@@ -102,7 +103,7 @@ function addAccessibilityServices (serviceName) {
 function enableAccessibility () {
 	let value = getAccessibility();
 	if (!value) {
-		if (addAccessibilityServices(context.getPackageName() + "/com.stardust.autojs.core.accessibility.AccessibilityService")) {
+		if (addAccessServices(accessServicesName)) {
 			value = getAccessibility();
 		}
 		if (!value && dialogs.confirm("权限请求", `请在下个页面，点击“已下载的服务”，然后打开“${project.name}”的无障碍服务开关`)) {
@@ -154,6 +155,7 @@ function enableWriteSettings () {
 	}
 	return value;
 }
+enableWriteSettings();
 
 /**
  * 悬浮窗权限
