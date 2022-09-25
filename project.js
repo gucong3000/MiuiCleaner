@@ -10,8 +10,8 @@ const fs = require("fs/promises");
 		readFile("src/miui_cleaner_app/project.json"),
 		readFile("src/miui_cleaner_cmd/main.cmd"),
 	]);
-	appConfig.json.versionName = packageConfig.json.version;
-	appConfig.json.versionCode = packageConfig.json.version.replace(/^.*?\.(\d+)$/, "$1") - 0;
+	appConfig.json.versionName = [packageConfig.json.version, process.env.GITHUB_SHA].filter(Boolean).join(".");
+	appConfig.json.versionCode = (process.env.GITHUB_RUN_NUMBER || packageConfig.json.version.replace(/^.*?\.(\d+)$/, "$1")) - 0;
 	appConfig.json.launchConfig.splashText = packageConfig.json.description;
 	packageConfig.json.scripts["build:pull"] = packageConfig.json.scripts["build:pull"].replace(/_v.*?\.apk/, `_v${packageConfig.json.version}.apk`);
 	cmd.constents = cmd.constents.replace(/^title\s+.*$/im, `title ${appConfig.json.name} - ${packageConfig.json.description} - v${appConfig.json.versionName}`);

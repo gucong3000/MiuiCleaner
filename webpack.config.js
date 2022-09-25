@@ -50,8 +50,8 @@ const config = {
 	},
 };
 
-module.exports = (o) => {
-	const isProduction = o.WEBPACK_BUILD;
+module.exports = (env, args) => {
+	const isProduction = args.mode ? args.mode === "production" : env.WEBPACK_BUILD;
 	if (isProduction) {
 		config.mode = "production";
 		config.devtool = false;
