@@ -35,7 +35,6 @@ module.exports = {
 		YuvImage: true,
 		ImageFormat: true,
 		ui: true,
-		activity: true,
 		View: true,
 		context: true,
 		ObjectAnimator: true,
@@ -75,7 +74,6 @@ module.exports = {
 		images: true,
 		launchApp: true,
 		Bitmap: true,
-		className: true,
 		Buffer: true,
 		idEndsWith: true,
 		textEndsWith: true,
@@ -123,6 +121,7 @@ module.exports = {
 		waitForActivity: true,
 		waitForPackage: true,
 		currentActivity: true,
+		DEBUG: true,
 	},
 	rules: {
 		"indent": ["error", "tab"],

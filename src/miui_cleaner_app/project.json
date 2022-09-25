@@ -28,9 +28,6 @@
 		"hideLogs": false,
 		"stableMode": false,
 		"volumeUpcontrol": true,
-		"permissions": [
-			"accessibility_services"
-		],
 		"serviceDesc": "自动操作(关闭 MIUI 广告)所需，若关闭则只能执行其他功能。",
 		"splashIcon": "res/splashIcon.png",
 		"splashText": "MIUI广告清理工具"
@@ -46,6 +43,6 @@
 		"keystore": null
 	},
 	"sourcePath": "/sdcard/auto.js/miui_cleaner_app/main.js",
-	"versionCode": 4,
-	"versionName": "2022.9.21.4"
+	"versionCode": 5,
+	"versionName": "2022.9.25.5"
 }

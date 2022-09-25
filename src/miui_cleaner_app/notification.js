@@ -1,4 +1,4 @@
-const requestPermission = require("./requestPermission");
+const requestSettings = require("./requestSettings");
 const blur = require("./blur");
 
 function notification () {
@@ -13,7 +13,7 @@ function notification () {
 		console.error(ex.message);
 		return;
 	}
-	requestPermission({
+	requestSettings({
 		accessibility: true,
 	});
 	blur();

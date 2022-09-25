@@ -1,6 +1,6 @@
-const multiChoice = require("./multiChoice");
-const blur = require("./blur");
 const findClickableParent = require("./findClickableParent");
+const requestSettings = require("./requestSettings");
+const multiChoice = require("./multiChoice");
 
 function clickButton (button, text) {
 	button = findClickableParent(button);
@@ -149,9 +149,38 @@ const packageNameList = [
 	"com.xiaomi.aiasst.service",
 ];
 
-let appList;
+// 卸载“纯净模式”
+function getInstaller (appList) {
+	const packageName = "com.miui.packageinstaller";
+	const packageInfo = context.getPackageManager().getPackageInfo(packageName, 0);
+	if (!packageInfo || packageInfo.versionCode < 400) {
+		// 版本号小于400，则不含“纯净模式”
+		return;
+	}
+	const fileName = "MiuiPackageInstaller.apk";
+	const srcPath = "res/" + fileName;
+	const copyPath = "/sdcard/Download/" + fileName;
+	const installPath = "/data/local/tmp/" + fileName;
+	const appName = app.getAppName(packageInfo.packageName);
+	files.copy(srcPath, copyPath);
+	appList.push({
+		packageName,
+		name: "纯净模式",
+		cmd: [
+			`mv ${copyPath} ${installPath}`,
+			"pm install -d -g " + installPath,
+			"rm -rf " + installPath,
+		].join("\n"),
+	});
+	console.log(`发现${appName}(${packageName})，版本号${packageInfo.versionCode}，已释放版本号为380的降级安装包到路径：${copyPath}`);
+	requestSettings({
+		adbInstall: true,
+	});
+}
+
 const whitelist = /^com\.(miui\.(voiceassist|personalassistant)|android\.(quicksearchbox|chrome))$/;
 function getAppList () {
+	let appList;
 	appList = packageNameList.map(packageName => ({
 		appName: app.getAppName(packageName),
 		checked: whitelist.test(packageName),
@@ -164,6 +193,7 @@ function getAppList () {
 		appInfo.appName = app.getAppName(appInfo.packageName);
 		return appInfo.appName;
 	});
+	getInstaller(appList);
 	return appList;
 }
 
@@ -193,61 +223,75 @@ function installerHelper () {
 }
 
 module.exports = () => {
-	let tasks = multiChoice("请选择要卸载的APP", getAppList());
+	let tasks = multiChoice("请选择要卸载的应用或功能", getAppList());
 	if (!tasks.length) {
 		return;
 	}
+	toastLog("正尝试常规卸载");
 	const helper = threads.start(installerHelper);
 	tasks.forEach(appInfo => {
-		app.uninstall(appInfo.packageName);
+		appInfo.cmd || app.uninstall(appInfo.packageName);
 	});
-	blur();
+
+	do {
+		sleep(0x400);
+	} while (selector().filter(sth => /installer/i.test(sth.packageName())).findOnce());
 	helper.interrupt();
 
 	tasks = tasks.filter(
 		appInfo => app.getAppName(appInfo.packageName),
 	).map(appInfo => {
-		return "pm uninstall --user 0 " + appInfo.packageName;
+		return appInfo.cmd || "pm uninstall --user 0 " + appInfo.packageName;
 	});
 	if (!tasks.length) {
 		return;
 	}
-
-	const cmdOffAd = "settings put global passport_ad_status OFF";
+	const cmdGrant = `pm grant ${context.getPackageName()} android.permission.WRITE_SECURE_SETTINGS`;
 	let root;
 
 	try {
-		shell(cmdOffAd, true);
+		shell(cmdGrant, true);
 	} catch (ex) {
 		root = false;
 	}
 
 	if (root) {
-		toastLog("正以root权限删除");
+		toastLog(`共${tasks.length}个应用卸载失败，正以root权限卸载`);
 		tasks.forEach(cmd => shell(cmd, true));
 	} else {
+		const settings = requestSettings({
+			drawOverlay: true,
+			adb: true,
+		});
+		if (!settings.adb) {
+			toastLog("未打开USB调试模式，请打开后再试。");
+			return;
+		}
+		toastLog(`共${tasks.length}个应用卸载失败，请连接电脑端辅助卸载`);
 		const shFilePath = "/sdcard/Download/MiuiCleaner.sh";
 		tasks.push("rm -rf " + shFilePath);
 		const script = [
 			"#!/bin/sh",
-			cmdOffAd,
 		].concat(tasks).join("\n") + "\n";
 
 		files.write(shFilePath, script);
 		// alert(script);
 		const cmd = "adb shell sh " + shFilePath;
 		console.log("正以等候电脑端自动执行：\n" + cmd);
-		toast("正以等候电脑端自动执行");
-		const startTime = Date.now();
+		const timeout = Date.now() + 0x800 + tasks.length * 0x200;
 		let fileExist;
+
 		do {
 			sleep(0x200);
 			fileExist = files.exists(shFilePath);
-		} while (fileExist && Date.now() - startTime < 0x1000);
+		} while (fileExist && Date.now() < timeout);
 		if (fileExist) {
-			dialogs.rawInput("等候电脑端自动执行超时，请在电脑手动执行命令：", cmd);
+			dialogs.rawInput("等候电脑端自动执行超时，请打开本软件电脑端，或者在电脑手动执行命令：", cmd);
+			if (!files.exists(shFilePath)) {
+				console.log("电脑端手动执行成功");
+			}
 		} else {
-			console.log("电脑端自动执行成功");
+			toastLog("电脑端自动执行成功");
 		}
 	}
 };

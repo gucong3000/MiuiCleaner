@@ -9,6 +9,7 @@ const appList = [
 		name: "李跳跳 - 广告自动跳过",
 		packageName: "cn.litiaotiao.app",
 		url: "https://www.123pan.com/s/A6cA-edAJh",
+		// 'cn.litiaotiao.app/com.litiaotiao.app.LttService'
 	},
 
 	{
@@ -52,6 +53,19 @@ const appList = [
 			// 8.55 MB 版本号 9-7126274 适用于安卓 9 SDK 28
 			28: "https://www.123pan.com/s/OZe0Vv-qOKl3",
 		}[device.sdkInt],
+	},
+	{
+		name: "应用包管理组件 - 不含“纯净模式”",
+		packageName: "com.miui.packageinstaller",
+		url: "https://zisu.lanzoum.com/iI7LGwn5xjc",
+	},
+	{
+		name: "QQ音乐简洁版 - 代替套壳版本",
+		packageName: "com.tencent.qqmusiclite",
+		url: [
+			"https://www.coolapk.com/apk/com.tencent.qqmusiclite",
+			"https://app.mi.com/details?id=com.tencent.qqmusiclite",
+		],
 	},
 	{
 		name: "Holi 天气",

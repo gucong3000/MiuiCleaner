@@ -1,7 +1,7 @@
+const findClickableParent = require("./findClickableParent");
+const requestSettings = require("./requestSettings");
 const singleChoice = require("./singleChoice");
 const instApk = require("./instApk");
-const requestPermission = require("./requestPermission");
-const findClickableParent = require("./findClickableParent");
 const blur = require("./blur");
 
 const marketPackageName = "com.xiaomi.market";
@@ -45,7 +45,7 @@ function getInstalledPackages () {
 			// dataDir: appInfo.dataDir,
 			apk: appInfo.sourceDir,
 			// publicSourceDir: appInfo.publicSourceDir,
-			// deviceProtectedDataDir: appInfo.deviceProtectedDataDir
+			// deviceProtectedDataDir: appInfo.deviceProtectedDataDir,
 		};
 	}).filter(Boolean);
 }
@@ -53,8 +53,7 @@ function getInstalledPackages () {
 function recycle () {
 	const appInfo = singleChoice("请选择要恢复的应用", getInstalledPackages().concat({ name: "其他" }));
 	if (appInfo) {
-		console.log(appInfo);
-		requestPermission({
+		requestSettings({
 			accessibility: true,
 		});
 		if (appInfo.apk) {
