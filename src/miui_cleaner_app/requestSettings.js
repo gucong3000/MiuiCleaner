@@ -281,7 +281,6 @@ function enableAdbInstall () {
 		actionDevelopmentSettings();
 	}
 }
-enableAdbInstall();
 
 /**
  * 开启截图权限
