@@ -1,4 +1,4 @@
-const requestSetting = require("./requestSetting");
+const requestSettings = require("./requestSettings");
 const blur = require("./blur");
 
 function startActivity (options) {
@@ -9,7 +9,7 @@ function startActivity (options) {
 		console.error(ex.message);
 		return;
 	}
-	requestSetting({
+	requestSettings({
 		accessibility: true,
 	});
 	blur();

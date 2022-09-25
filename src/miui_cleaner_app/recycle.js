@@ -1,5 +1,5 @@
 const findClickableParent = require("./findClickableParent");
-const requestSetting = require("./requestSetting");
+const requestSettings = require("./requestSettings");
 const singleChoice = require("./singleChoice");
 const instApk = require("./instApk");
 const blur = require("./blur");
@@ -53,8 +53,7 @@ function getInstalledPackages () {
 function recycle () {
 	const appInfo = singleChoice("请选择要恢复的应用", getInstalledPackages().concat({ name: "其他" }));
 	if (appInfo) {
-		console.log(appInfo);
-		requestSetting({
+		requestSettings({
 			accessibility: true,
 		});
 		if (appInfo.apk) {

@@ -1,10 +1,11 @@
 const findClickableParent = require("./findClickableParent");
-const requestSetting = require("./requestSetting");
+const requestSettings = require("./requestSettings");
 const multiChoice = require("./multiChoice");
-const test = require("./test/offAppAdTest");
+const test = DEBUG && require("./test/offAppAdTest");
 // const instApk = require("./instApk");
 // const downApp = require("./downApp");
 const Settings = android.provider.Settings;
+const resolver = context.getContentResolver();
 
 function delay (time) {
 	sleep(time || 0x200);
@@ -443,7 +444,7 @@ function startTask (options) {
 	entry(options);
 	const result = walkListView(options);
 	options.done && options.done(result);
-	if (test) {
+	if (DEBUG && test) {
 		test(options, result);
 	}
 }
@@ -504,7 +505,7 @@ function noop () {
 
 function getSysConfig (space, key) {
 	// https://developer.android.google.cn/reference/android/provider/Settings
-	return Settings[space].getInt(context.getContentResolver(), key);
+	return Settings[space].getInt(resolver, key);
 }
 
 function getGlobalConfig (key) {
@@ -531,7 +532,7 @@ const cleanerList = [
 		activity: ".ui.AccountSettingsActivity",
 		regSubPage: /^关于.*?[帐账]号|系统.*?广告$/,
 		regSwitchOff: /^系统.*?广告$/,
-		test: () => Settings.Global.getString(context.getContentResolver(), "passport_ad_status") !== "OFF",
+		test: () => Settings.Global.getString(resolver, "passport_ad_status") !== "OFF",
 		entry: noop,
 	},
 	{
@@ -739,27 +740,28 @@ const cleanerList = [
 });
 
 function offAppAd () {
-	const resolver = context.getContentResolver();
-	try {
-		// https://developer.android.google.cn/reference/android/provider/Settings
-		// 系统安全 -> 广告服务 -> 个性化广告推荐：关闭
-		Settings.Global.putInt(resolver, "personalized_ad_enabled", 0);
-		[
-			// 网页链接调用服务
-			"http_invoke_app",
-			// 加入“用户体验改进计划”
-			"upload_log_pref",
-			// 自动发送诊断数据
-			"upload_debug_log_pref",
-		].forEach(key => Settings.Secure.putInt(resolver, key, 0));
-	} catch (ex) {
-		console.error(
+	const settings = requestSettings({
+		writeSettings: true,
+		accessibility: true,
+		drawOverlay: true,
+	});
+
+	if (settings.writeSettings) {
+		try {
+			// https://developer.android.google.cn/reference/android/provider/Settings
+			// 系统安全 -> 广告服务 -> 个性化广告推荐：关闭
+			Settings.Global.putInt(resolver, "personalized_ad_enabled", 0);
 			[
-				"调用“修改系统”权限失败，未能直接关闭“网页链接调用服务”、“用户体验改进计划”、自动发送诊断数据、“个性化广告推荐”。赋权方法：",
-				"adb shell pm grant com.github.gucong3000.miui.cleaner android.permission.WRITE_SECURE_SETTINGS",
-				"已提供备选方案：通过自动操作设置页面关闭相关功能的选项",
-			].join("\n"),
-		);
+				// 网页链接调用服务
+				"http_invoke_app",
+				// 加入“用户体验改进计划”
+				"upload_log_pref",
+				// 自动发送诊断数据
+				"upload_debug_log_pref",
+			].forEach(key => Settings.Secure.putInt(resolver, key, 0));
+		} catch (ex) {
+			//
+		}
 	}
 
 	const menuItemList = cleanerList.filter((appInfo) => {
@@ -775,17 +777,12 @@ function offAppAd () {
 		return true;
 	});
 
-	requestSetting({
-		accessibility: true,
-		drawOverlay: true,
-	});
-
 	const tasks = multiChoice("请选择要关闭广告的APP", menuItemList, true);
 	if (!tasks.length) {
 		return;
 	}
 
-	if (floaty.checkPermission()) {
+	if (settings.drawOverlay) {
 		// 如果有悬浮窗权限，打开控制台
 		console.clear();
 		console.show();

@@ -121,6 +121,7 @@ module.exports = {
 		waitForActivity: true,
 		waitForPackage: true,
 		currentActivity: true,
+		DEBUG: true,
 	},
 	rules: {
 		"indent": ["error", "tab"],

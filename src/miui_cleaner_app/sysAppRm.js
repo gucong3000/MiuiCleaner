@@ -1,5 +1,5 @@
 const findClickableParent = require("./findClickableParent");
-const requestSetting = require("./requestSetting");
+const requestSettings = require("./requestSettings");
 const multiChoice = require("./multiChoice");
 
 function clickButton (button, text) {
@@ -173,6 +173,9 @@ function getInstaller (appList) {
 		].join("\n"),
 	});
 	console.log(`发现${appName}(${packageName})，版本号${packageInfo.versionCode}，已释放版本号为380的降级安装包到路径：${copyPath}`);
+	requestSettings({
+		adbInstall: true,
+	});
 }
 
 const whitelist = /^com\.(miui\.(voiceassist|personalassistant)|android\.(quicksearchbox|chrome))$/;
@@ -220,7 +223,7 @@ function installerHelper () {
 }
 
 module.exports = () => {
-	let tasks = multiChoice("请选择要卸载的APP", getAppList());
+	let tasks = multiChoice("请选择要卸载的应用或功能", getAppList());
 	if (!tasks.length) {
 		return;
 	}
@@ -256,12 +259,19 @@ module.exports = () => {
 		toastLog(`共${tasks.length}个应用卸载失败，正以root权限卸载`);
 		tasks.forEach(cmd => shell(cmd, true));
 	} else {
+		const settings = requestSettings({
+			drawOverlay: true,
+			adb: true,
+		});
+		if (!settings.adb) {
+			toastLog("未打开USB调试模式，请打开后再试。");
+			return;
+		}
 		toastLog(`共${tasks.length}个应用卸载失败，请连接电脑端辅助卸载`);
 		const shFilePath = "/sdcard/Download/MiuiCleaner.sh";
 		tasks.push("rm -rf " + shFilePath);
 		const script = [
 			"#!/bin/sh",
-			cmdGrant,
 		].concat(tasks).join("\n") + "\n";
 
 		files.write(shFilePath, script);
@@ -270,9 +280,7 @@ module.exports = () => {
 		console.log("正以等候电脑端自动执行：\n" + cmd);
 		const timeout = Date.now() + 0x800 + tasks.length * 0x200;
 		let fileExist;
-		requestSetting({
-			adb: true,
-		});
+
 		do {
 			sleep(0x200);
 			fileExist = files.exists(shFilePath);

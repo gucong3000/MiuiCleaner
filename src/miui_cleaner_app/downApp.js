@@ -9,6 +9,7 @@ const appList = [
 		name: "李跳跳 - 广告自动跳过",
 		packageName: "cn.litiaotiao.app",
 		url: "https://www.123pan.com/s/A6cA-edAJh",
+		// 'cn.litiaotiao.app/com.litiaotiao.app.LttService'
 	},
 
 	{
