@@ -8,7 +8,7 @@
 		"test:fix": "npm run test -- --fix",
 		"start": "npx webpack --config webpack.config.js --watch --mode=development",
 		"build:app": "npx webpack --config webpack.config.js --mode=production",
-		"build:cmd": "cat src/miui_cleaner_cmd/main.cmd | iconv --from-code=utf-8 --to-code=gbk > dist/miui_cleaner_cmd/main.cmd",
+		"build:cmd": "mkdir -p dist/miui_cleaner_cmd && (cat src/miui_cleaner_cmd/main.cmd | iconv --from-code=utf-8 --to-code=gbk > dist/miui_cleaner_cmd/main.cmd)",
 		"build:pull": "adb pull /sdcard/auto.js/miui_cleaner_app/dist/MiuiCleaner_v2022.9.21.4.apk ./dist/miui_cleaner_app/",
 		"build": "node project.js && npm run build:app && npm run build:cmd",
 		"deploy:clear": "rm -rf ./dist/miui_cleaner_app/*.map && rm -rf ./dist/miui_cleaner_app/*.apk",
