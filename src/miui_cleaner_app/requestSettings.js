@@ -1,8 +1,8 @@
-const Settings = android.provider.Settings;
-const resolver = context.getContentResolver();
-
 const findClickableParent = require("./findClickableParent");
+const project = require("./project.json");
 const settingsPackageName = "com.android.settings";
+const resolver = context.getContentResolver();
+const Settings = android.provider.Settings;
 
 /**
  * 请求系统权限或设置
@@ -105,7 +105,7 @@ function enableAccessibility () {
 		if (addAccessibilityServices(context.getPackageName() + "/com.stardust.autojs.core.accessibility.AccessibilityService")) {
 			value = getAccessibility();
 		}
-		if (!value && dialogs.confirm("权限请求", "请在下个页面，点击“已下载的服务”，然后打开“MiuiCleaner”的无障碍服务开关")) {
+		if (!value && dialogs.confirm("权限请求", `请在下个页面，点击“已下载的服务”，然后打开“${project.name}”的无障碍服务开关`)) {
 			value = auto.waitFor();
 		}
 	}

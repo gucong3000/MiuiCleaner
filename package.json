@@ -1,6 +1,6 @@
 {
 	"name": "miui_cleaner",
-	"version": "2022.9.21.4",
+	"version": "2022.9.25.5",
 	"private": true,
 	"description": "MIUI广告清理工具",
 	"scripts": {
@@ -9,7 +9,7 @@
 		"start": "npx webpack --config webpack.config.js --watch --mode=development",
 		"build:app": "npx webpack --config webpack.config.js --mode=production",
 		"build:cmd": "mkdir -p dist/miui_cleaner_cmd && (cat src/miui_cleaner_cmd/main.cmd | iconv --from-code=utf-8 --to-code=gbk > dist/miui_cleaner_cmd/MiuiCleaner.cmd)",
-		"build:pull": "adb pull /sdcard/auto.js/miui_cleaner_app/dist/MiuiCleaner_v2022.9.21.4.apk ./dist/miui_cleaner_app/",
+		"build:pull": "adb pull /sdcard/auto.js/miui_cleaner_app/dist/MiuiCleaner_v2022.9.25.5.apk ./dist/miui_cleaner_app/",
 		"build": "node project.js && npm run build:app && npm run build:cmd",
 		"deploy:json": "cp ./src/miui_cleaner_app/*.json ./dist/miui_cleaner_app/",
 		"deploy:app": "adb push ./dist/miui_cleaner_app/ /sdcard/auto.js/",

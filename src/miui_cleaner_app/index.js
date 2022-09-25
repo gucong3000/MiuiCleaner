@@ -1,4 +1,6 @@
 const singleChoice = require("./singleChoice");
+const project = require("./project.json");
+
 const mainActions = [
 	{
 		name: "预装应用卸载",
@@ -38,4 +40,4 @@ function showMenu (title, actions) {
 }
 
 // module.exports = mainMenu;
-showMenu("MiuiCleaner", mainActions);
+showMenu(project.name, mainActions);

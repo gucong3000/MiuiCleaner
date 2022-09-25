@@ -1,5 +1,5 @@
 @echo off
-title MiuiCleaner - MIUI广告清理工具
+title MiuiCleaner - MIUI广告清理工具 - v2022.9.25.5
 
 :start
 adb shell pm list packages>"%temp%\adb_list_packages.tmp" 2>&1
@@ -63,4 +63,3 @@ goto:eof
 	adb shell sh /sdcard/Download/MiuiCleaner.sh>nul 2>nul
 	timeout /t 1>nul 2>nul
 goto:adb_server
-
