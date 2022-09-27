@@ -1,6 +1,6 @@
 @echo off
 chcp 65001>nul 2>nul
-title MiuiCleaner - MIUI广告清理工具 - v2022.9.25.5
+title MiuiCleaner - MIUI广告清理工具 - v2022.9.27.6
 
 :start
 adb shell pm list packages>"%temp%\adb_list_packages.tmp" 2>&1

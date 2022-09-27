@@ -1,11 +1,10 @@
 const findClickableParent = require("./findClickableParent");
 const project = require("./project.json");
 const settingsPackageName = "com.android.settings";
-const resolver = context.getContentResolver();
-const Settings = android.provider.Settings;
-const accessServicesKey = Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES;
-const accessEnabledKey = Settings.Secure.ACCESSIBILITY_ENABLED;
+const accessServicesKey = "enabled_accessibility_services";
+const accessEnabledKey = "accessibility_enabled";
 const accessServicesName = context.getPackageName() + "/com.stardust.autojs.core.accessibility.AccessibilityService";
+const Settings = android.provider.Settings;
 
 /**
  * 请求系统权限或设置
@@ -63,37 +62,14 @@ function switchACheckBox (expect, packageName) {
 		if (checkBox) {
 			checkBox.click();
 			value = expect;
+			sleep(0x200);
 		}
 	}
 	return value;
 }
 
 function getAccessibility () {
-	return Settings.Secure.getInt(resolver, accessEnabledKey) && getAccessServices().has(accessServicesName) && global.org.autojs.autojs.tool.AccessibilityServiceTool.isAccessibilityServiceEnabled(context);
-}
-
-function getAccessServices () {
-	return new Set(Settings.Secure.getString(resolver, accessServicesKey).split(/\s*:+\s*/g));
-}
-
-/**
- * 向系统中添加新的无障碍服务
- * @param {String} serviceName 服务的名称
- * @returns {boolean} 成功与否
- */
-function addAccessServices (serviceName) {
-	if (enableWriteSettings()) {
-		const enabledServices = getAccessServices();
-		enabledServices.add(serviceName);
-		try {
-			Settings.Secure.putString(resolver, accessServicesKey, Array.from(enabledServices).join(":"));
-			Settings.Secure.putInt(resolver, Settings.Secure.ACCESSIBILITY_ENABLED, 1);
-		} catch (ex) {
-			return false;
-		}
-		return true;
-	}
-	return false;
+	return getSetting(accessServicesKey);
 }
 
 /**
@@ -102,13 +78,8 @@ function addAccessServices (serviceName) {
  */
 function enableAccessibility () {
 	let value = getAccessibility();
-	if (!value) {
-		if (addAccessServices(accessServicesName)) {
-			value = getAccessibility();
-		}
-		if (!value && dialogs.confirm("权限请求", `请在下个页面，点击“已下载的服务”，然后打开“${project.name}”的无障碍服务开关`)) {
-			value = auto.waitFor();
-		}
+	if (!value && dialogs.confirm("权限请求", `请在下个页面，点击“已下载的服务”，然后打开“${project.name}”的无障碍服务开关`)) {
+		value = auto.waitFor();
 	}
 	return value;
 }
@@ -118,7 +89,8 @@ function enableAccessibility () {
  * @returns {boolean}
  */
 function getWriteSettings () {
-	return Settings.System.canWrite(context);
+	return putSetting("adb_enabled", 1);
+	// Settings.System.canWrite(context);
 }
 
 function actionManageWriteSettings () {
@@ -142,6 +114,7 @@ function enableWriteSettings () {
 			} catch (ex) {
 				//
 			}
+			value = getWriteSettings();
 			if (value) {
 				back();
 			}
@@ -155,7 +128,6 @@ function enableWriteSettings () {
 	}
 	return value;
 }
-enableWriteSettings();
 
 /**
  * 悬浮窗权限
@@ -183,9 +155,14 @@ function enableDrawOverlay () {
  * @param {String} key 配置项名称
  * @returns {Int}
  */
-function getGlobalSetting (key) {
+function getSetting (key, space) {
 	// https://developer.android.google.cn/reference/android/provider/Settings.Global
-	return Settings.Global.getInt(resolver, key);
+	space = space || "Global";
+	let value = Settings[space].getString(context.getContentResolver(), key);
+	if (value && /^\d+$/.test(value)) {
+		value = Number.parseInt(value);
+	}
+	return value;
 }
 
 /**
@@ -194,8 +171,14 @@ function getGlobalSetting (key) {
  * @param {Int} key 配置值
  * @returns {boolean}
  */
-function putGlobalSetting (key, value) {
-	return enableWriteSettings() && Settings.Global.putInt(resolver, key, value);
+function putSetting (key, value, space) {
+	space = space || "Global";
+	const fnName = typeof value === "number" ? "putInt" : "putString";
+	try {
+		return Settings[space][fnName](context.getContentResolver(), key, value);
+	} catch (ex) {
+		return false;
+	}
 }
 
 /**
@@ -204,9 +187,10 @@ function putGlobalSetting (key, value) {
  */
 function enableDevelopment () {
 	const key = "development_settings_enabled";
-	let value = getGlobalSetting(key);
+	let value = getSetting(key);
 	if (!value) {
-		value = putGlobalSetting(key, 1);
+		enableWriteSettings();
+		value = putSetting(key, 1);
 	}
 	return value;
 }
@@ -217,10 +201,10 @@ function enableDevelopment () {
  */
 function enableADB () {
 	const key = "adb_enabled";
-	let value = getGlobalSetting(key);
+	let value = getSetting(key);
 	if (!value) {
 		enableDevelopment();
-		value = putGlobalSetting(key, 1);
+		value = putSetting(key, 1);
 	}
 	return value;
 }

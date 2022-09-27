@@ -32,25 +32,8 @@ class AutojsDeployPlugin {
 	apply (compiler) {
 		compiler.hooks.done.tap("AutojsDeployPlugin", (stats) => {
 			const options = this.options;
-			if (options.command) {
-				const command = options.command;
-				const exec = command[0];
-				const args = command.slice(1).map((arg) => (
-					(typeof arg === "function") ? arg.call(compiler, stats) : arg
-				));
-				console.log(exec, args.join(" "));
-				spawn(
-					exec,
-					args,
-					{
-						stdio: "pipe",
-						shell: true,
-						...options,
-					},
-				);
-			}
 			if (options.save) {
-				this.sendCmd("save", "/" + compiler.outputPath);
+				this.sendCmd("save", "/" + compiler.outputPath.replace(/\\/g, "/"));
 			}
 			if (options.rerun) {
 				for (const [fileName, info] of stats.compilation.assetsInfo) {
@@ -58,6 +41,25 @@ class AutojsDeployPlugin {
 						this.sendCmd("rerun", "/" + path.join(compiler.outputPath, fileName));
 					}
 				}
+			}
+			if (options.command) {
+				const command = options.command;
+				const exec = command[0];
+				const args = command.slice(1).map((arg) => (
+					(typeof arg === "function") ? arg.call(compiler, stats) : arg
+				));
+				setTimeout(() => {
+					console.log("$", exec, args.join(" "));
+					spawn(
+						exec,
+						args,
+						{
+							stdio: "inherit",
+							shell: true,
+							...options,
+						},
+					);
+				}, 0);
 			}
 		});
 	}

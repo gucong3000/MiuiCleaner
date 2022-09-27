@@ -13,8 +13,6 @@ MIUI广告清理工具
 		- [Android SDK 平台工具](https://developer.android.google.cn/studio/releases/platform-tools?hl=zh-cn)
 	- 在该工具的安装目录中搜索到`adb.exe`所在的子目录，将`MiuiCleaner.cmd`放入其中并运行
 
-<!-- ![别忘了打开USB调试的三个开关](https://i0.hdslb.com/bfs/article/e9276b611b6846e8016d08dc666c9b77c61e3be4.png) -->
-
 ## 功能介绍
 ### 预装应用卸载
 
@@ -272,7 +270,7 @@ MIUI广告清理工具
 
 ## CHANGELOG
 
-- current
+- v2022.9.25.5
 	- PC端修复bug #1
 	- 预装应用卸载
 		- 修正：卸载多个应用时报“超时”的bug

@@ -1,12 +1,10 @@
 // Generated using webpack-cli https://github.com/webpack/webpack-cli
 // http://auto.moly.host/index.html#/template/template
 const path = require("path");
-let bubleCfgRhino = require("buble-config-rhino");
-bubleCfgRhino = bubleCfgRhino.default || bubleCfgRhino;
-const AutojsDeployPlugin = require("./autojs-deploy");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
-const babelConfig = require("./babel.config");
 const webpack = require("webpack");
+const AutojsDeployPlugin = require("./autojs-deploy");
+const babelConfig = require("./babel.config");
+const AutoProWebpackPlugin = require("@auto.pro/webpack-plugin");
 
 const config = {
 	entry: {
@@ -14,14 +12,18 @@ const config = {
 	},
 	output: {
 		path: path.resolve(__dirname, "dist/miui_cleaner_app"),
+		publicPath: "/sdcard/脚本/",
 		filename: "[name].js",
+		clean: true,
 	},
 	target: "node",
 	plugins: [
 		// Add your plugins here
 		// Learn more about plugins from https://webpack.js.org/configuration/plugins/
-		new CleanWebpackPlugin(),
 		new AutojsDeployPlugin(),
+		new AutoProWebpackPlugin({
+			ui: ["main"],
+		}),
 	],
 	module: {
 		rules: [
@@ -30,10 +32,6 @@ const config = {
 			{
 				test: /\.(js|jsx)$/i,
 				use: [
-					{
-						loader: "buble-loader",
-						options: bubleCfgRhino(),
-					},
 					{
 						loader: "babel-loader",
 						options: babelConfig,

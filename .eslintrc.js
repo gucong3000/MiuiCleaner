@@ -6,18 +6,13 @@ module.exports = {
 		node: true,
 	},
 	extends: [
-		"plugin:react/recommended",
 		"standard",
 	],
 	parserOptions: {
 		ecmaFeatures: {
 			jsx: true,
 		},
-		ecmaVersion: 2018,
 	},
-	plugins: [
-		"react",
-	],
 	globals: {
 		Atomics: "readonly",
 		SharedArrayBuffer: "readonly",
@@ -43,7 +38,6 @@ module.exports = {
 		RGBLuminanceSource: true,
 		MultiFormatReader: true,
 		sleep: true,
-		util: true,
 		android: true,
 		Paint: true,
 		PorterDuffXfermode: true,
@@ -90,7 +84,6 @@ module.exports = {
 		PendingIntent: true,
 		dialogs: true,
 		auto: true,
-		Settings: true,
 		setClip: true,
 		Context: true,
 		getClip: true,
