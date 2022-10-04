@@ -192,6 +192,7 @@ const settingProperties = {
 	writeSettings: {
 		enumerable: true,
 		get: () => settings.System.canWrite(context),
+		// get: () => Boolean(context.checkCallingOrSelfPermission("android.permission.WRITE_SETTINGS")),
 		set: pmPermission("writeSettings", "WRITE_SETTINGS"),
 	},
 	writeSecureSettings: {
@@ -202,6 +203,8 @@ const settingProperties = {
 	drawOverlays: {
 		enumerable: true,
 		depend: "accessibilityServiceEnabled",
+		get: () => settings.canDrawOverlays(context),
+		// get: () => Boolean(context.checkCallingOrSelfPermission("android.permission.SYSTEM_ALERT_WINDOW")),
 		set: pmPermission("drawOverlays", "SYSTEM_ALERT_WINDOW"),
 	},
 	accessibilityServiceEnabled: {
