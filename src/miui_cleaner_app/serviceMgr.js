@@ -48,7 +48,7 @@ function parseTaskInfo (taskInfo) {
 		packageName: taskInfo.packageName,
 		action: taskInfo.action,
 		name: taskInfo.name || taskInfo.appName,
-		// checked: taskInfo.checked,
+		checked: taskInfo.checked,
 	};
 }
 

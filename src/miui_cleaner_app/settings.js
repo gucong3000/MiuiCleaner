@@ -57,75 +57,8 @@ settingsPrototype.forEach = function (callbackFn, thisArg) {
 };
 const settings = Object.create(settingsPrototype);
 
-// function startIntent (action, expectValue) {
-// 	// ACTION_MANAGE_OVERLAY_PERMISSION
-// 	// ACTION_MANAGE_WRITE_SETTINGS
-// 	// https://blog.csdn.net/mahongy/article/details/94549550
-// 	return waitForBack(() => {
-// 		const opts = {
-// 			action,
-// 		};
-// 		if (/\bmanage\b/.test(action)) {
-// 			opts.data = "package:" + context.getPackageName();
-// 			app.intent(opts);
-// 			if (settings.accessibilityServiceEnabled) {
-// 				try {
-// 					switchACheckBox(expectValue);
-// 					back();
-// 				} catch (ex) {
-// 					//
-// 				}
-// 			}
-// 		} else {
-// 			// app.intent(opts);
-// 			app.startActivity(new android.content.Intent(action));
-// 			if (settings.accessibilityServiceEnabled) {
-// 				const listView = selector().packageName(settingsPackageName).scrollable(true).findOne();
-// 				if (/DEVICE_INFO_SETTINGS$/.test(action)) {
-// 					let textView;
-// 					do {
-// 						textView = selector().packageName(settingsPackageName).filter(
-// 							textView => /^MIUI/.test(textView.text()),
-// 						).findOnce();
-// 					} while (!textView && listView.scrollForward());
-// 					const btnMiui = findClickableParent(textView);
-// 					for (let index = 0; index < 0xF; index++) {
-// 						btnMiui.click();
-// 					}
-// 				} else if (/APPLICATION_DEVELOPMENT_SETTINGS$/.test(action)) {
-// 					const result = new Set();
-// 					const helper = setInterval(autoClickAcceptBtn, 0x80);
-// 					do {
-// 						// console.log("test", selector().packageName(settingsPackageName).filter(
-// 						// 	textView => /^USB/.test(textView.text()),
-// 						// ).find());
-// 						const list = selector().packageName(settingsPackageName).filter(
-// 							textView => /^USB/.test(textView.text()),
-// 						).find();
-// 						Array.from(list).forEach(textView => {
-// 							console.log(textView.text());
-// 							const linear = findClickableParent(textView);
-// 							const checkBox = linear.findOne(selector().packageName(settingsPackageName).checkable(true));
-// 							if (!checkBox) {
-// 								return;
-// 							}
-// 							if (!checkBox.checked()) {
-// 								console.log("linear.click()");
-// 							}
-// 							console.log(textView.text());
-// 							result.add(textView.text());
-// 						});
-// 						console.log(result.size());
-// 					} while (result.size() < 3 && listView.scrollForward());
-// 					clearInterval(helper);
-// 				}
-// 				back();
-// 			}
-// 		}
-// 	});
-// }
-
 const actions = {
+	ACTION_MANAGE_UNKNOWN_APP_SOURCES: /^requestInstallPackages$/,
 	ACTION_MANAGE_OVERLAY_PERMISSION: /^drawOverlays$/,
 	ACTION_MANAGE_WRITE_SETTINGS: /^writeSettings$/,
 	ACTION_DEVICE_INFO_SETTINGS: /^development$/,
@@ -189,6 +122,12 @@ function pmPermission (key, permission) {
 }
 const accessServicesName = context.getPackageName() + "/com.stardust.autojs.core.accessibility.AccessibilityService";
 const settingProperties = {
+	requestInstallPackages: {
+		enumerable: true,
+		get: () => context.getPackageManager().canRequestPackageInstalls(),
+		// get: () => Boolean(context.checkCallingOrSelfPermission("android.permission.REQUEST_INSTALL_PACKAGES")),
+		set: pmPermission("requestInstallPackages", "REQUEST_INSTALL_PACKAGES"),
+	},
 	writeSettings: {
 		enumerable: true,
 		get: () => settings.System.canWrite(context),
@@ -367,34 +306,5 @@ Object.defineProperties(
 	settings,
 	settingProperties,
 );
-
-// const writeSettingsCache = [];
-// let oncall;
-// function requestWriteSettingsPermission (request, cmd) {
-// 	console.log(cmd);
-// 	if (oncall) {
-// 		writeSettingsCache.push(request);
-// 		return;
-// 	}
-// 	oncall = true;
-// 	if (!settings.writeSettings) {
-// 		waitForBack(() => {
-// 			app.startActivity({
-// 				action: settings.ACTION_MANAGE_WRITE_SETTINGS,
-// 				data: "package:" + context.getPackageName(),
-// 			});
-// 		}).then(() => {
-// 			do {
-// 				request();
-// 				request = writeSettingsCache.pop();
-// 			} while (request);
-// 			oncall = false;
-// 		}).catch(() => {
-// 			writeSettingsCache.push(request);
-// 		});
-// 	} else {
-// 		console.log(context.getPackageName());
-// 	}
-// }
 
 module.exports = settings;

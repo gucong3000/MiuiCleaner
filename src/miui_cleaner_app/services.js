@@ -39,8 +39,12 @@ function skipConfirmPopup () {
 	let btn;
 	let dialog;
 	do {
+		const checkBox = selector().id("check_box").packageName("com.miui.securitycenter").findOnce();
+		if (checkBox && checkBox.checkable() && checkBox.clickable() && !checkBox.checked()) {
+			checkBox.click();
+		}
 		btn = selector().filter(btn =>
-			/\b(ok|accept)$/.test(btn.id()) ||
+			/\b(ok|accept|intercept_warn_allow)$/.test(btn.id()) ||
 			/^(确[认定](关闭)?|删除)$/.test(btn.text()),
 		).findOne(0x200);
 		if (btn) {
@@ -611,20 +615,6 @@ const cleanerList = [
 		max: 3,
 	},
 	{
-		name: "允许显示在其他应用的上层",
-		packageName: settingsPackageName,
-		intent: "ACTION_MANAGE_OVERLAY_PERMISSION",
-		regSwitchOff: null,
-		regSwitchOn: /.*/,
-	},
-	{
-		name: "允许修改系统设置",
-		packageName: settingsPackageName,
-		intent: "ACTION_MANAGE_WRITE_SETTINGS",
-		regSwitchOff: null,
-		regSwitchOn: /.*/,
-	},
-	{
 		// `广告服务` 位于 `安全` 的子页面
 		name: "广告服务",
 		packageName: settingsPackageName,
@@ -871,9 +861,23 @@ const cleanerList = [
 // 	}).catch(console.error);
 // };
 
+const actionManageNames = {
+	ACTION_MANAGE_UNKNOWN_APP_SOURCES: "安装未知应用",
+	ACTION_MANAGE_OVERLAY_PERMISSION: "允许显示在其他应用的上层",
+	ACTION_MANAGE_WRITE_SETTINGS: "允许修改系统设置",
+};
+
 function runTask (taskInfo) {
 	if (taskInfo.action === "clearAnim") {
 		return clearAnim();
+	} else if (/^ACTION_MANAGE_/.test(taskInfo.action)) {
+		startTask({
+			packageName: settingsPackageName,
+			intent: taskInfo.action,
+			regSwitchOff: taskInfo.checked ? null : /.*/,
+			regSwitchOn: taskInfo.checked ? /.*/ : null,
+			name: actionManageNames[taskInfo.action],
+		});
 	}
 
 	let cleaner = cleanerList.filter(cleaner => (
