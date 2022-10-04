@@ -1,43 +1,65 @@
 const singleChoice = require("./singleChoice");
-const project = require("./project.json");
 
 const mainActions = [
 	{
-		name: "预装应用卸载",
+		name: "预装APP卸载",
+		summary: "卸载系统广告组件及随机预装的APP",
 		fn: require("./sysAppRm"),
 	},
 	{
-		name: "去广告应用",
-		fn: require("./downApp").choice,
+		name: "去广告APP",
+		summary: "各APP的去广告版和广告自动跳过工具",
+		fn: require("./downApp"),
 	},
 	{
-		name: "关闭各应用广告",
+		name: "关闭各APP广告",
+		summary: "自动查询并关闭各APP中的广告",
 		fn: require("./offAppAd"),
 	},
 	{
-		name: "应用管家",
-		subItems: require("./appManager"),
+		name: "APP管家",
+		summary: "广告相关权限管理",
+		fn: require("./appManager"),
 	},
 	{
 		name: "回收站",
+		summary: "恢复已卸载的APP",
 		fn: require("./recycle"),
 	},
 	{
+		name: "日志",
+		summary: "查看运行日志",
+		fn: () => app.startActivity("console"),
+	},
+	{
 		name: "退出",
-		fn: exit,
+		summary: "再见",
+		fn: () => ui.finish(),
 	},
 ];
-function showMenu (title, actions) {
-	const action = singleChoice(title, actions);
-	if (action) {
-		if (action.fn) {
-			action.fn();
-		} else if (Array.isArray(action.subItems)) {
-			showMenu(action.name, action.subItems);
-		}
-		showMenu(title, actions);
-	}
+
+function mainMenu () {
+	singleChoice({
+		title: "请选择你的操作",
+		itemList: mainActions,
+	});
 }
 
-// module.exports = mainMenu;
-showMenu(project.name, mainActions);
+function regBack () {
+	ui.emitter.once("back_pressed", (e) => {
+		e.consumed = true;
+		mainMenu();
+	});
+}
+
+module.exports = regBack;
+
+// if (DEBUG) {
+// 	const settings = require("./settings");
+// 	settings.forEach(function (value, key) {
+// 		// console.log(`settings.${key}: ${value}`);
+// 	});
+// 	require("./offAppAd")();
+// } else {
+mainMenu();
+// }

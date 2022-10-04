@@ -207,7 +207,7 @@ module.exports = (options, result) => {
 	const testCaseName = options.name || options.appName || app.getAppName(options.packageName);
 	const data = testCase[testCaseName];
 
-	console.log(JSON.stringify(result.handle, 0, "\t"));
+	console.log(`“${testCaseName}”清理结果：\n` + JSON.stringify(result.handle, 0, "\t"));
 	try {
 		if (!data) {
 			const error = new Error(`广告自动关闭模块功能异常: “${testCaseName}”中，未编写测试用例`);

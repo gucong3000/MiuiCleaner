@@ -4,11 +4,11 @@ const path = require("path");
 const webpack = require("webpack");
 const AutojsDeployPlugin = require("./autojs-deploy");
 const babelConfig = require("./babel.config");
-const AutoProWebpackPlugin = require("@auto.pro/webpack-plugin");
 
 const config = {
 	entry: {
 		main: "./src/miui_cleaner_app/index.js",
+		services: "./src/miui_cleaner_app/services.js",
 	},
 	output: {
 		path: path.resolve(__dirname, "dist/miui_cleaner_app"),
@@ -18,17 +18,15 @@ const config = {
 	},
 	target: "node",
 	plugins: [
-		// Add your plugins here
-		// Learn more about plugins from https://webpack.js.org/configuration/plugins/
-		new AutojsDeployPlugin(),
-		new AutoProWebpackPlugin({
-			ui: ["main"],
+		new AutojsDeployPlugin({
+			// {boolean|String|boolean[]|String[]} 添加`"ui";`前缀的chunk（output）名单，true代表project.json中定义的main，字符串代表文件名
+			ui: true,
+			// {String} 必须的 project.json 的文件路径
+			configFile: path.resolve(__dirname, "src/miui_cleaner_app/project.json"),
 		}),
 	],
 	module: {
 		rules: [
-			// Add your rules for custom modules here
-			// Learn more about loaders from https://webpack.js.org/loaders/
 			{
 				test: /\.(js|jsx)$/i,
 				use: [

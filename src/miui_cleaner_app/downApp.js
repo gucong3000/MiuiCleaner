@@ -1,19 +1,23 @@
 const singleChoice = require("./singleChoice");
-const blur = require("./blur");
+const waitForBack = require("./waitForBack");
 
 // https://github.abskoop.workers.dev/
 // http://fastgit.org/
+// https://download.fastgit.org/skylot/jadx/releases/download/v1.4.4/jadx-gui-1.4.4-no-jre-win.exe
+// https://download.fastgit.org/MrIkso/ArscEditor/releases/download/1.0.2/ArscEditor-1.0.2.zip
 
 const appList = [
 	{
-		name: "李跳跳 - 广告自动跳过",
+		name: "李跳跳",
+		summary: "干净小巧的广告自动跳过工具",
 		packageName: "cn.litiaotiao.app",
 		url: "https://www.123pan.com/s/A6cA-edAJh",
 		// 'cn.litiaotiao.app/com.litiaotiao.app.LttService'
 	},
 
 	{
-		name: "Edge 浏览器",
+		name: "Edge",
+		summary: "浏览器，微软出品，带广告屏蔽功能",
 		packageName: "com.microsoft.emmx",
 		url: [
 			"https://www.coolapk.com/apk/com.microsoft.emmx",
@@ -21,7 +25,8 @@ const appList = [
 		],
 	},
 	{
-		name: "小米浏览器 - 国际版",
+		name: "小米浏览器",
+		summary: "国际版",
 		packageName: "com.mi.globalbrowser",
 		url: [
 			"https://wwm.lanzouj.com/idzsf0bh062h",
@@ -31,6 +36,7 @@ const appList = [
 	},
 	{
 		name: "讯飞输入法",
+		summary: "定制版、Google Play版",
 		packageName: "com.iflytek.inputmethod",
 		url: "https://423down.lanzouv.com/b0f24av5i",
 		// [
@@ -39,7 +45,8 @@ const appList = [
 		// ]
 	},
 	{
-		name: "软件包安装程序 - Google版",
+		name: "软件包安装程序",
+		summary: "Google版",
 		packageName: "com.google.android.packageinstaller",
 		url: {
 			// 3.01 MB 版本号 未知 适用于安卓 13 SDK 33
@@ -55,12 +62,14 @@ const appList = [
 		}[device.sdkInt],
 	},
 	{
-		name: "应用包管理组件 - 不含“纯净模式”",
+		name: "应用包管理组件",
+		summary: "MIUI软件包安装程序v3.8.0，不含“纯净模式”",
 		packageName: "com.miui.packageinstaller",
 		url: "https://zisu.lanzoum.com/iI7LGwn5xjc",
 	},
 	{
-		name: "QQ音乐简洁版 - 代替套壳版本",
+		name: "QQ音乐简洁版",
+		summary: "v3.8.0 MIUI 音乐APP套壳的产品",
 		packageName: "com.tencent.qqmusiclite",
 		url: [
 			"https://www.coolapk.com/apk/com.tencent.qqmusiclite",
@@ -69,6 +78,7 @@ const appList = [
 	},
 	{
 		name: "Holi 天气",
+		summary: "干净、小巧、漂亮、功能多",
 		packageName: "com.joe.holi",
 		url: [
 			"https://www.coolapk.com/apk/com.joe.holi",
@@ -77,37 +87,50 @@ const appList = [
 	},
 	{
 		name: "ES文件浏览器",
+		summary: "去广告版，替代MIUI视频、音乐、文档查看器",
 		packageName: "com.estrongs.android.pop",
 		url: "https://423down.lanzouv.com/b0f1d7s2h",
 	},
 	{
-		name: "知乎 - 集成“知了”",
+		name: "WPS Office Lite",
+		summary: "国际版，无广告，替代“文档查看器”",
+		packageName: "cn.wps.moffice_i18n",
+		url: "https://www.32r.com/app/109976.html",
+	},
+	{
+		name: "知乎",
+		summary: "集成“知了”，“设置→知了”中有去广告开关",
 		packageName: "com.zhihu.android",
 		url: "https://423down.lanzouo.com/b0f2lkafe",
 		// url: "www.baidu.com",
 	},
 	{
-		name: "哔哩哔哩 - 集成“哔哩漫游”",
+		name: "哔哩哔哩",
+		summary: "“设置→哔哩漫游→关于版本”点五下有惊喜",
 		packageName: "tv.danmaku.bili",
 		url: "https://423down.lanzouv.com/b0f1gksne",
 	},
 	{
-		name: "优酷视频 - 修改版",
+		name: "优酷视频",
+		summary: "去广告版",
 		packageName: "com.youku.phone",
 		url: "https://423down.lanzouv.com/b0f1avpib",
 	},
 	{
-		name: "百度贴吧 - 修改版",
+		name: "百度贴吧",
+		summary: "去广告版",
 		packageName: "com.baidu.tieba",
 		url: "https://423down.lanzouv.com/b0f1b6q8d",
 	},
 	{
-		name: "酷安 - 应用商店 - 修改版",
+		name: "酷安",
+		summary: "应用商店，去广告版",
 		packageName: "com.coolapk.market",
 		url: "https://423down.lanzouv.com/b0f2uzq2b",
 	},
 	{
-		name: "AppShare - 应用商店",
+		name: "AppShare",
+		summary: "应用商店，刷机包，国际版提取的APP",
 		packageName: "info.muge.appshare",
 		url: "https://appshare.muge.info/",
 	},
@@ -119,38 +142,42 @@ function download (appInfo) {
 	}
 
 	if (appInfo.url) {
-		const url = Array.isArray(appInfo.url)
-			? appInfo.url[dialogs.select("请选一个网址", appInfo.url)] || appInfo.url[0]
-			: appInfo.url;
-		if (url.startsWith("https://app.mi.com/")) {
-			app.startActivity({
-				action: "android.intent.action.VIEW",
-				data: "market://details?id=" + appInfo.packageName,
-			});
-		} else {
-			app.openUrl(url);
-		}
+		return (
+			Array.isArray(appInfo.url)
+				? dialogs.select("请选一个网址", appInfo.url).then(index => appInfo.url[index] || appInfo.url[0])
+				: Promise.resolve(appInfo.url)
+		).then(url => waitForBack(() => {
+			if (url.startsWith("https://app.mi.com/")) {
+				app.startActivity({
+					action: "android.intent.action.VIEW",
+					data: "market://details?id=" + appInfo.packageName,
+				});
+			} else {
+				app.openUrl(url);
+			}
+		})).then(() => {
+			const appName = app.getAppName(appInfo.packageName);
+			if (appName) {
+				appInfo.appName = appName;
+				return appInfo;
+			}
+		}).catch(console.error);
 	} else {
 		alert("该应用暂不支持您的设备");
 		return null;
 	}
-	blur();
-	const appName = app.getAppName(appInfo.packageName);
-	if (appName) {
-		appInfo.appName = appName;
-		return appInfo;
-	}
 }
 
-function choice () {
-	// appList.forEach(appInfo => {
-	// 	appInfo.appName = app.getAppName(appInfo.packageName);
-	// });
-	const appInfo = singleChoice("请选择", appList);
-	if (appInfo) {
-		download(appInfo);
-		choice();
-	}
+function downApp () {
+	appList.forEach(appInfo => {
+		appInfo.appName = app.getAppName(appInfo.packageName);
+	});
+	singleChoice({
+		title: "请选择要下载的APP",
+		itemList: appList,
+		fn: download,
+	});
+	require("./index")();
 }
-module.exports = download;
-module.exports.choice = choice;
+// downApp.download = downApp;
+module.exports = downApp;

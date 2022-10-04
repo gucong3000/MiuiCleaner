@@ -37,7 +37,7 @@ const axios = require("axios").default;
 	packageConfig.json.version = versionName;
 	appConfig.json.launchConfig.splashText = packageConfig.json.description;
 	packageConfig.json.scripts["build:pull"] = packageConfig.json.scripts["build:pull"].replace(/_v.*?\.apk/, `_v${versionName}.apk`);
-	cmd.constents = cmd.constents.replace(/^title\s+.*$/im, `title ${appConfig.json.name} - ${packageConfig.json.description} - v${appConfig.json.versionName}`);
+	cmd.constents = cmd.constents.replace(/^title\s+.*$/im, `title ${appConfig.json.name}`);
 
 	const distCmd = fs.writeFile(
 		"dist/miui_cleaner_cmd/MiuiCleaner.cmd",

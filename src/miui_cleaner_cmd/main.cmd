@@ -1,16 +1,16 @@
 @echo off
 chcp 65001>nul 2>nul
-title MiuiCleaner - MIUI广告清理工具 - v2022.9.27.6
+title MiuiCleaner
 
 :start
 adb shell pm list packages>"%temp%\adb_list_packages.tmp" 2>&1
 if %errorlevel%==1 (
 	findstr /c:"no devices" "%temp%\adb_list_packages.tmp">nul 2>nul && (
-		echo · 请确保已用数据线连接手机和电脑
-		echo · 请确保小米手机助手可正常连接手机
-		echo · 请确保已请确保USB调试模式已打开
+		echo 请确保已用数据线连接手机和电脑
+		echo 请确保小米手机助手可正常连接手机
+		echo 请确保已请确保USB调试模式已打开
 	) || findstr /c:"unauthorized" "%temp%\adb_list_packages.tmp">nul 2>nul && (
-		echo · 请在手机弹出授权提示时点击“确定”
+		echo 请在手机弹出授权提示时点击“确定”
 	) || (
 		type "%temp%\adb_list_packages.tmp"
 	)

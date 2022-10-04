@@ -1,6 +1,13 @@
 const findClickableParent = require("./findClickableParent");
 const requestSettings = require("./requestSettings");
 const multiChoice = require("./multiChoice");
+const appDesc = require("./appDesc");
+const waitForBack = require("./waitForBack");
+
+const sysAppList = Object.keys(appDesc).map(packageName => ({
+	packageName,
+	summary: appDesc[packageName],
+}));
 
 function clickButton (button, text) {
 	button = findClickableParent(button);
@@ -8,146 +15,6 @@ function clickButton (button, text) {
 		button.click();
 	}
 }
-
-// https://fengooge.blogspot.com/2019/03/taking-ADB-to-uninstall-system-applications-in-MIUI-without-root.html
-const packageNameList = [
-	// APP 外置开屏广告
-	// 广告分析
-	"com.miui.analytics",
-	// 小米系统广告解决方案（智能服务）
-	"com.miui.systemAdSolution",
-	// 桌面广告 APP
-	// 智能助理（负一屏）
-	"com.miui.personalassistant",
-	// 信息助手（负一屏）
-	"com.mi.android.globalminusscreen",
-	// 智能出行
-	"com.miui.smarttravel",
-	// 内容中心（趣看看）
-	"com.miui.newhome",
-	// 百度搜索框
-	"com.baidu.searchbox",
-	// 桌面搜索框（搜索/全局搜索）
-	"com.android.quicksearchbox",
-	// 桌面搜索框（Google）
-	"com.google.android.googlequicksearchbox",
-	// 过时的 APP
-	// 悬浮球
-	"com.miui.touchassistant",
-	// 小米闻声
-	"com.miui.accessibility",
-	// 智慧生活
-	"com.miui.hybrid.accessory",
-	// 影音类 APP
-	// 音乐
-	"com.miui.player",
-	// Mi Video
-	"com.miui.videoplayer",
-	// 小米视频
-	"com.miui.video",
-	// 腾讯视频小米版
-	"com.tencent.qqlivexiaomi",
-	// 爱奇艺播放器
-	"com.qiyi.video.sdkplayer",
-	// 天气
-	// 小米天气
-	"com.miui.weather2",
-	// 支付、电商、理财类 APP
-	// 小米商城
-	"com.xiaomi.shop",
-	// 小米商城系统组件（电商助手）
-	"com.xiaomi.ab",
-	// 小米钱包
-	"com.mipay.wallet",
-	// 米币支付
-	"com.xiaomi.payment",
-	// 小米支付
-	"com.miui.nextpay",
-	// 小米卡包
-	"com.xiaomi.pass",
-	// 小米金融（天星金融）
-	"com.xiaomi.jr",
-	// 小米金融（天星金融）- 安全组件
-	"com.xiaomi.jr.security",
-	// 小米金服安全组件
-	"com.xiaomi.mifisecurity",
-	// 银联可信服务安全组件小米版
-	"com.unionpay.tsmservice.mi",
-	// 低使用频率 APP
-	// 小米换机
-	"com.miui.huanji",
-	// 小米社区
-	"com.xiaomi.vipaccount",
-	// 用户反馈
-	"com.miui.bugreport",
-	// 服务与反馈
-	"com.miui.miservice",
-	// 小米画报
-	"com.mfashiongallery.emag",
-	// 动态壁纸
-	"com.android.wallpaper",
-	// 动态壁纸获取
-	"com.android.wallpaper.livepicker",
-	// 收音机（蜻蜓FM）
-	"com.miui.fm",
-	// 阅读（番茄免费小说）
-	"com.dragon.read",
-	// 阅读（多看阅读器）
-	"com.duokan.reader",
-	// 小米运动健康
-	"com.mi.health",
-	// 浏览器
-	// 小米浏览器
-	"com.android.browser",
-	// 小米浏览器（国际版）
-	"com.mi.globalbrowser",
-	// Chrome
-	"com.android.chrome",
-	// 内置输入法
-	// 百度输入法-小米版
-	"com.baidu.input_mi",
-	// 搜狗输入法-小米版
-	"com.sohu.inputmethod.sogou.xiaomi",
-	// 讯飞输入法-小米版
-	"com.iflytek.inputmethod.miui",
-	// 小米安全键盘
-	"com.miui.securityinputmethod",
-	// 游戏中心（旧版）
-	"com.xiaomi.migameservice",
-	// 游戏中心
-	"com.xiaomi.gamecenter",
-	// 游戏服务
-	"com.xiaomi.gamecenter.sdk.service",
-	// 游戏中心 - pad 版
-	"com.xiaomi.gamecenter.pad",
-	// SIM 卡应用
-	// 小米移动
-	"com.xiaomi.mimobile",
-	// 全球上网
-	"com.miui.virtualsim",
-	// 小米云流量
-	"com.xiaomi.mimobile.cloudsim",
-	// 全球上网工具插件
-	"com.xiaomi.mimobile.noti",
-	// SIM卡应用
-	"com.android.stk",
-	// 快应用
-	// 快应用中心
-	"com.miui.quickappCenter.miAppStore",
-	// 快应用服务框架
-	"com.miui.hybrid",
-	// 语音助手
-	// 语音唤醒
-	"com.miui.voiceassist",
-	// 小爱语音(小爱同学)
-	"com.miui.voicetrigger",
-	// 小爱视觉（扫一扫）
-	"com.xiaomi.scanner",
-	// 小爱翻译
-	"com.xiaomi.aiasst.vision",
-	// 小爱通话（AI虚拟助手）
-	"com.xiaomi.aiasst.service",
-];
 
 // 卸载“纯净模式”
 function getInstaller (appList) {
@@ -178,20 +45,53 @@ function getInstaller (appList) {
 	});
 }
 
+// const Base64 = android.util.Base64;
+// const Bitmap = android.graphics.Bitmap;
+// const PixelFormat = android.graphics.PixelFormat;
+// const ByteArrayOutputStream = java.io.ByteArrayOutputStream;
+
+// // drawable 转换成bitmap
+// function drawableToBitmap (drawable) {
+// 	if (drawable.getBitmap) {
+// 		return drawable.getBitmap();
+// 	}
+// 	// 取drawable的长宽
+// 	const width = drawable.getIntrinsicWidth();
+// 	const height = drawable.getIntrinsicHeight();
+// 	const config = drawable.getOpacity() !== PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;// 取drawable的颜色格式
+// 	const bitmap = Bitmap.createBitmap(width, height, config);// 建立对应bitmap
+// 	const canvas = new android.graphics.Canvas(bitmap);// 建立对应bitmap的画布
+// 	drawable.setBounds(0, 0, width, height);
+// 	drawable.draw(canvas);// 把drawable内容画到画布中
+// 	return bitmap;
+// }
+
+// function Bitmap2StrByBase64 (bitmap) {
+// 	const bos = new ByteArrayOutputStream();
+// 	bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos);// 参数100表示不压缩
+// 	const bytes = bos.toByteArray();
+// 	return "data:image/png;base64," + Base64.encodeToString(bytes, Base64.DEFAULT).trim();
+// }
+
 const whitelist = /^com\.(miui\.(voiceassist|personalassistant)|android\.(quicksearchbox|chrome))$/;
 function getAppList () {
-	let appList;
-	appList = packageNameList.map(packageName => ({
-		appName: app.getAppName(packageName),
-		checked: whitelist.test(packageName),
-		packageName,
-	})).filter(appInfo => appInfo.appName);
-	appList.forEach(appInfo => {
-		appInfo.checked = !whitelist.test(appInfo.packageName);
-	});
-	appList = appList.filter(appInfo => {
-		appInfo.appName = app.getAppName(appInfo.packageName);
-		return appInfo.appName;
+	const pm = context.getPackageManager();
+	const appList = sysAppList.filter(item => {
+		let appInfo;
+		try {
+			appInfo = pm.getApplicationInfo(item.packageName, 0);
+		} catch (ex) {
+			return false;
+		}
+
+		item.appName = appInfo.loadLabel(pm);
+		// iconID: appInfo.icon,
+		// summary: Bitmap2StrByBase64(drawableToBitmap(appInfo.loadIcon(pm))),
+		if (item.checked == null) {
+			item.checked = !whitelist.test(item.packageName);
+		}
+		// item.isSysApp = appInfo.flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM;
+		return true;
 	});
 	getInstaller(appList);
 	return appList;
@@ -222,22 +122,25 @@ function installerHelper () {
 	setTimeout(installerHelper, 0x50);
 }
 
-module.exports = () => {
-	let tasks = multiChoice("请选择要卸载的应用或功能", getAppList());
+function removeByInstaler (tasks) {
 	if (!tasks.length) {
-		return;
+		return tasks;
 	}
-	toastLog("正尝试常规卸载");
+
+	toastLog(`尝试以常规权限卸载${tasks.length}个应用`);
 	const helper = threads.start(installerHelper);
-	tasks.forEach(appInfo => {
-		appInfo.cmd || app.uninstall(appInfo.packageName);
+
+	return waitForBack(() => {
+		tasks.forEach(appInfo => {
+			app.uninstall(appInfo.packageName);
+		});
+	}).then(() => {
+		helper.interrupt();
+		return tasks;
 	});
+}
 
-	do {
-		sleep(0x400);
-	} while (selector().filter(sth => /installer/i.test(sth.packageName())).findOnce());
-	helper.interrupt();
-
+function removeByScript (tasks) {
 	tasks = tasks.filter(
 		appInfo => app.getAppName(appInfo.packageName),
 	).map(appInfo => {
@@ -246,52 +149,68 @@ module.exports = () => {
 	if (!tasks.length) {
 		return;
 	}
-	const cmdGrant = `pm grant ${context.getPackageName()} android.permission.WRITE_SECURE_SETTINGS`;
-	let root;
 
+	const shFilePath = "/sdcard/Download/MiuiCleaner.sh";
+	tasks.unshift(`pm grant ${context.getPackageName()} android.permission.WRITE_SECURE_SETTINGS`);
+	tasks.unshift("#!/bin/sh");
+	tasks.push("rm -rf " + shFilePath);
+	const script = tasks.join("\n") + "\n";
+	files.write(shFilePath, script);
+	let cmd = "sh " + shFilePath;
 	try {
-		shell(cmdGrant, true);
+		shell(cmd, true);
+		toastLog(`尝试以root权限卸载${tasks.length}个应用`);
+		return;
 	} catch (ex) {
-		root = false;
+		//
 	}
-
-	if (root) {
-		toastLog(`共${tasks.length}个应用卸载失败，正以root权限卸载`);
-		tasks.forEach(cmd => shell(cmd, true));
-	} else {
-		const settings = requestSettings({
-			drawOverlay: true,
-			adb: true,
-		});
-		if (!settings.adb) {
-			toastLog("未打开USB调试模式，请打开后再试。");
-			return;
-		}
-		toastLog(`共${tasks.length}个应用卸载失败，请连接电脑端辅助卸载`);
-		const shFilePath = "/sdcard/Download/MiuiCleaner.sh";
-		tasks.push("rm -rf " + shFilePath);
-		const script = [
-			"#!/bin/sh",
-		].concat(tasks).join("\n") + "\n";
-
-		files.write(shFilePath, script);
-		// alert(script);
-		const cmd = "adb shell sh " + shFilePath;
-		console.log("正以等候电脑端自动执行：\n" + cmd);
-		const timeout = Date.now() + 0x800 + tasks.length * 0x200;
-		let fileExist;
-
-		do {
-			sleep(0x200);
+	const settings = requestSettings({
+		adb: true,
+	});
+	if (!settings.adb) {
+		toastLog("未打开USB调试模式，请打开后再试。");
+		return;
+	}
+	cmd = "adb shell " + cmd;
+	console.log("正以等候电脑端自动执行：\n" + cmd);
+	const timeout = Date.now() + 0x800 + tasks.length * 0x200;
+	let fileExist;
+	return new Promise((resolve) => {
+		const timer = setInterval(() => {
+			let wait;
 			fileExist = files.exists(shFilePath);
-		} while (fileExist && Date.now() < timeout);
-		if (fileExist) {
-			dialogs.rawInput("等候电脑端自动执行超时，请打开本软件电脑端，或者在电脑手动执行命令：", cmd);
-			if (!files.exists(shFilePath)) {
-				console.log("电脑端手动执行成功");
+			if (!fileExist) {
+				toastLog("电脑端自动执行成功");
+			} else if (Date.now() > timeout) {
+				wait = dialogs.rawInput("等候电脑端自动执行超时，请打开本软件电脑端，或者在电脑手动执行命令：", cmd).then(() => {
+					if (!files.exists(shFilePath)) {
+						toastLog("电脑端手动执行成功");
+					} else {
+						toastLog("电脑端手动执行失败");
+					}
+				});
+			} else {
+				return;
 			}
-		} else {
-			toastLog("电脑端自动执行成功");
-		}
-	}
+			clearInterval(timer);
+			resolve(wait);
+		}, 0x200);
+	});
+}
+
+function sysAppRm () {
+	const itemList = getAppList();
+	multiChoice({
+		title: "请选择要卸载的应用或功能",
+		itemList,
+	}).then(
+		removeByInstaler,
+	).then(
+		removeByScript,
+	).then(
+		sysAppRm,
+	).catch(console.error);
+	require("./index")();
 };
+
+module.exports = sysAppRm;

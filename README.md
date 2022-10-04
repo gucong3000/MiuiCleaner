@@ -11,7 +11,7 @@ MIUI广告清理工具
 		- [360手机助手](https://sj.360.cn/)
 		- [豌豆荚](https://www.wandoujia.com/)
 		- [Android SDK 平台工具](https://developer.android.google.cn/studio/releases/platform-tools?hl=zh-cn)
-	- 在该工具的安装目录中搜索到`adb.exe`所在的子目录，将`MiuiCleaner.cmd`放入其中并运行
+	- 在该工具的安装目录中搜索到`adb.exe`所在的子目录，将`MiuiCleaner.cmd`放入其中并运行（或者将这个目录加入环境变量`PATH`中）
 
 ## 功能介绍
 ### 预装应用卸载
