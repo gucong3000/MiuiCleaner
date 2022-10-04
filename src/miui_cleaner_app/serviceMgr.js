@@ -43,6 +43,15 @@ function getEngine (task) {
 // 	});
 // }
 
+function parseTaskInfo (taskInfo) {
+	return {
+		packageName: taskInfo.packageName,
+		action: taskInfo.action,
+		name: taskInfo.name || taskInfo.appName,
+		checked: taskInfo.checked,
+	};
+}
+
 function start (taskList) {
 	files.write(
 		files.join(
@@ -50,11 +59,9 @@ function start (taskList) {
 			"taskList.json",
 		),
 		JSON.stringify(
-			taskList.map(taskInfo => ({
-				packageName: taskInfo.packageName,
-				action: taskInfo.action,
-				name: taskInfo.name || taskInfo.appName,
-			})),
+			Array.isArray(taskList)
+				? taskList.map(parseTaskInfo)
+				: parseTaskInfo(taskList),
 		),
 	);
 	return getEngine().then(waitForEngineStart).then(waitForEngineStop);

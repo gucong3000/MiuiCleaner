@@ -1,8 +1,8 @@
 const findClickableParent = require("./findClickableParent");
-const requestSettings = require("./requestSettings");
 const multiChoice = require("./multiChoice");
-const appDesc = require("./appDesc");
 const waitForBack = require("./waitForBack");
+const settings = require("./settings");
+const appDesc = require("./appDesc");
 
 const sysAppList = Object.keys(appDesc).map(packageName => ({
 	packageName,
@@ -40,9 +40,6 @@ function getInstaller (appList) {
 		].join("\n"),
 	});
 	console.log(`发现${appName}(${packageName})，版本号${packageInfo.versionCode}，已释放版本号为380的降级安装包到路径：${copyPath}`);
-	requestSettings({
-		adbInstall: true,
-	});
 }
 
 // const Base64 = android.util.Base64;
@@ -164,37 +161,36 @@ function removeByScript (tasks) {
 	} catch (ex) {
 		//
 	}
-	const settings = requestSettings({
-		adb: true,
-	});
-	if (!settings.adb) {
-		toastLog("未打开USB调试模式，请打开后再试。");
-		return;
-	}
-	cmd = "adb shell " + cmd;
-	console.log("正以等候电脑端自动执行：\n" + cmd);
-	const timeout = Date.now() + 0x800 + tasks.length * 0x200;
-	let fileExist;
-	return new Promise((resolve) => {
-		const timer = setInterval(() => {
-			let wait;
-			fileExist = files.exists(shFilePath);
-			if (!fileExist) {
-				toastLog("电脑端自动执行成功");
-			} else if (Date.now() > timeout) {
-				wait = dialogs.rawInput("等候电脑端自动执行超时，请打开本软件电脑端，或者在电脑手动执行命令：", cmd).then(() => {
-					if (!files.exists(shFilePath)) {
-						toastLog("电脑端手动执行成功");
-					} else {
-						toastLog("电脑端手动执行失败");
-					}
-				});
-			} else {
-				return;
-			}
-			clearInterval(timer);
-			resolve(wait);
-		}, 0x200);
+	settings.set("adbInput", true, "打开“USB调试(安全设置)”，以便让电脑端有权限卸载这些APP").then(() => {
+		if (!settings.adbInput) {
+			toastLog("“USB调试(安全设置)”未打开，请打开后再试。");
+			return;
+		}
+		cmd = "adb shell " + cmd;
+		console.log("正以等候电脑端自动执行：\n" + cmd);
+		const timeout = Date.now() + 0x800 + tasks.length * 0x200;
+		let fileExist;
+		return new Promise((resolve) => {
+			const timer = setInterval(() => {
+				let wait;
+				fileExist = files.exists(shFilePath);
+				if (!fileExist) {
+					toastLog("电脑端自动执行成功");
+				} else if (Date.now() > timeout) {
+					wait = dialogs.rawInput("等候电脑端自动执行超时，请打开本软件电脑端，或者在电脑手动执行命令：", cmd).then(() => {
+						if (!files.exists(shFilePath)) {
+							toastLog("电脑端手动执行成功");
+						} else {
+							toastLog("电脑端手动执行失败");
+						}
+					});
+				} else {
+					return;
+				}
+				clearInterval(timer);
+				resolve(wait);
+			}, 0x200);
+		});
 	});
 }
 

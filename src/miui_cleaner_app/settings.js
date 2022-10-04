@@ -1,6 +1,5 @@
+const serviceMgr = require("./serviceMgr");
 const project = require("./project.json");
-const findClickableParent = require("./findClickableParent");
-const waitForBack = require("./waitForBack");
 
 const settingsPackageName = "com.android.settings";
 const settingsPrototype = Object.create(android.provider.Settings);
@@ -14,30 +13,36 @@ settingsPrototype.get = function (key) {
 	}
 };
 const requestCache = {};
+function lazyAction (key, action) {
+	let resolve = requestCache[key];
+	if (!resolve) {
+		resolve = Promise.resolve();
+	}
+	if (action) {
+		resolve = resolve.then(action);
+	}
+	requestCache[key] = resolve;
+	return resolve;
+}
+
 settingsPrototype.set = function (key, expectValue, reason) {
 	if (this.has(key)) {
 		this[key] = expectValue;
-		if (this[key] === expectValue) {
-			return;
+		if ((this[key] !== expectValue)) {
+			const depend = settingProperties[key].depend;
+			if (depend && expectValue) {
+				lazyAction(
+					key,
+					() => this.set(depend, expectValue, reason),
+				);
+			}
+			lazyAction(
+				key,
+				() => requestSettings(key, expectValue, reason),
+			);
 		}
-	} else {
-		return;
 	}
-
-	let request = requestCache[key];
-	if (!request) {
-		request = Promise.resolve();
-	}
-	const depend = settingProperties[key].depend;
-	if (depend && expectValue) {
-		request = request.then(() =>
-			this.set(depend, expectValue, reason),
-		);
-	}
-	request = request.then(() =>
-		requestSettings(key, expectValue, reason),
-	);
-	requestCache[key] = request;
+	return lazyAction(key);
 };
 settingsPrototype.forEach = function (callbackFn, thisArg) {
 	this.keys().forEach(
@@ -52,97 +57,95 @@ settingsPrototype.forEach = function (callbackFn, thisArg) {
 };
 const settings = Object.create(settingsPrototype);
 
-function autoClickAcceptBtn () {
-	const btnAccept = selector().id("accept").packageName("com.miui.securitycenter").findOnce();
-	btnAccept && btnAccept.clickable() && btnAccept.click();
-}
+// function startIntent (action, expectValue) {
+// 	// ACTION_MANAGE_OVERLAY_PERMISSION
+// 	// ACTION_MANAGE_WRITE_SETTINGS
+// 	// https://blog.csdn.net/mahongy/article/details/94549550
+// 	return waitForBack(() => {
+// 		const opts = {
+// 			action,
+// 		};
+// 		if (/\bmanage\b/.test(action)) {
+// 			opts.data = "package:" + context.getPackageName();
+// 			app.intent(opts);
+// 			if (settings.accessibilityServiceEnabled) {
+// 				try {
+// 					switchACheckBox(expectValue);
+// 					back();
+// 				} catch (ex) {
+// 					//
+// 				}
+// 			}
+// 		} else {
+// 			// app.intent(opts);
+// 			app.startActivity(new android.content.Intent(action));
+// 			if (settings.accessibilityServiceEnabled) {
+// 				const listView = selector().packageName(settingsPackageName).scrollable(true).findOne();
+// 				if (/DEVICE_INFO_SETTINGS$/.test(action)) {
+// 					let textView;
+// 					do {
+// 						textView = selector().packageName(settingsPackageName).filter(
+// 							textView => /^MIUI/.test(textView.text()),
+// 						).findOnce();
+// 					} while (!textView && listView.scrollForward());
+// 					const btnMiui = findClickableParent(textView);
+// 					for (let index = 0; index < 0xF; index++) {
+// 						btnMiui.click();
+// 					}
+// 				} else if (/APPLICATION_DEVELOPMENT_SETTINGS$/.test(action)) {
+// 					const result = new Set();
+// 					const helper = setInterval(autoClickAcceptBtn, 0x80);
+// 					do {
+// 						// console.log("test", selector().packageName(settingsPackageName).filter(
+// 						// 	textView => /^USB/.test(textView.text()),
+// 						// ).find());
+// 						const list = selector().packageName(settingsPackageName).filter(
+// 							textView => /^USB/.test(textView.text()),
+// 						).find();
+// 						Array.from(list).forEach(textView => {
+// 							console.log(textView.text());
+// 							const linear = findClickableParent(textView);
+// 							const checkBox = linear.findOne(selector().packageName(settingsPackageName).checkable(true));
+// 							if (!checkBox) {
+// 								return;
+// 							}
+// 							if (!checkBox.checked()) {
+// 								console.log("linear.click()");
+// 							}
+// 							console.log(textView.text());
+// 							result.add(textView.text());
+// 						});
+// 						console.log(result.size());
+// 					} while (result.size() < 3 && listView.scrollForward());
+// 					clearInterval(helper);
+// 				}
+// 				back();
+// 			}
+// 		}
+// 	});
+// }
 
-function startIntent (action, expectValue) {
-	// ACTION_MANAGE_OVERLAY_PERMISSION
-	// ACTION_MANAGE_WRITE_SETTINGS
-	// https://blog.csdn.net/mahongy/article/details/94549550
-	return waitForBack(() => {
-		const opts = {
-			action,
-		};
-		if (/\bmanage\b/.test(action)) {
-			opts.data = "package:" + context.getPackageName();
-			app.intent(opts);
-			if (settings.accessibilityServiceEnabled) {
-				try {
-					switchACheckBox(expectValue);
-					back();
-				} catch (ex) {
-					//
-				}
-			}
-		} else {
-			// app.intent(opts);
-			app.startActivity(new android.content.Intent(action));
-			if (settings.accessibilityServiceEnabled) {
-				const listView = selector().packageName(settingsPackageName).scrollable(true).findOne();
-				if (/DEVICE_INFO_SETTINGS$/.test(action)) {
-					let textView;
-					do {
-						textView = selector().packageName(settingsPackageName).filter(
-							textView => /^MIUI/.test(textView.text()),
-						).findOnce();
-					} while (!textView && listView.scrollForward());
-					const btnMiui = findClickableParent(textView);
-					for (let index = 0; index < 0xF; index++) {
-						btnMiui.click();
-					}
-				} else if (/APPLICATION_DEVELOPMENT_SETTINGS$/.test(action)) {
-					const result = new Set();
-					const helper = setInterval(autoClickAcceptBtn, 0x80);
-					do {
-						// console.log("test", selector().packageName(settingsPackageName).filter(
-						// 	textView => /^USB/.test(textView.text()),
-						// ).find());
-						const list = selector().packageName(settingsPackageName).filter(
-							textView => /^USB/.test(textView.text()),
-						).find();
-						Array.from(list).forEach(textView => {
-							console.log(textView.text());
-							const linear = findClickableParent(textView);
-							const checkBox = linear.findOne(selector().packageName(settingsPackageName).checkable(true));
-							if (!checkBox) {
-								return;
-							}
-							if (!checkBox.checked()) {
-								console.log("linear.click()");
-							}
-							console.log(textView.text());
-							result.add(textView.text());
-						});
-						console.log(result.size());
-					} while (result.size() < 3 && listView.scrollForward());
-					clearInterval(helper);
-				}
-				back();
-			}
-		}
-	});
-}
+const actions = {
+	ACTION_MANAGE_OVERLAY_PERMISSION: /^drawOverlays$/,
+	ACTION_MANAGE_WRITE_SETTINGS: /^writeSettings$/,
+	ACTION_DEVICE_INFO_SETTINGS: /^development$/,
+	ACTION_APPLICATION_DEVELOPMENT_SETTINGS: /^adb/,
+};
 
 function requestSettings (key, expectValue, reason) {
-	console.log(`正在模拟将${key}调整为${expectValue}`);
 	if (key === "accessibilityServiceEnabled") {
 		return dialogs.confirm("权限请求", reason || `请在下个页面，点击“已下载的服务”，然后打开“${project.name}”的无障碍服务开关`).then((confirm) => {
 			confirm && auto.waitFor();
 		});
 	}
-	if (key === "drawOverlays") {
-		return startIntent(settings.ACTION_MANAGE_OVERLAY_PERMISSION, expectValue);
-	}
-	if (key === "writeSettings") {
-		return startIntent(settings.ACTION_MANAGE_WRITE_SETTINGS, expectValue);
-	}
-	// if (key === "development") {
-	// 	return startIntent(settings.ACTION_DEVICE_INFO_SETTINGS);
-	// }
-	if (key.startsWith("adb")) {
-		return startIntent(settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
+	for (const actionName in actions) {
+		if (actions[actionName].test(key)) {
+			return serviceMgr({
+				packageName: settingsPackageName,
+				checked: expectValue,
+				action: actionName,
+			});
+		}
 	}
 }
 function tryCmd (cmd, root = true) {
@@ -155,22 +158,25 @@ function tryCmd (cmd, root = true) {
 	}
 }
 
-function switchACheckBox (expect = true, packageName = "com.android.settings") {
-	let checkBox = selector().packageName(packageName).checkable(true).findOne();
-	let value = checkBox.checked();
-	if (value === expect) {
-		return expect;
-	} else {
-		checkBox = findClickableParent(checkBox);
-		if (checkBox) {
-			checkBox.click();
-			value = expect;
-		}
-	}
-	return value;
-}
+// function switchACheckBox (expect = true, packageName = settingsPackageName) {
+// 	let checkBox = selector().packageName(packageName).checkable(true).findOne();
+// 	let value = checkBox.checked();
+// 	if (value === expect) {
+// 		return expect;
+// 	} else {
+// 		checkBox = findClickableParent(checkBox);
+// 		if (checkBox) {
+// 			checkBox.click();
+// 			value = expect;
+// 		}
+// 	}
+// 	return value;
+// }
 
 function pmPermission (key, permission) {
+	// pm grant org.autojs.autoxjs.v6 android.permission.WRITE_SETTINGS
+	// pm grant org.autojs.autoxjs.v6 android.permission.WRITE_SECURE_SETTINGS
+	// pm grant org.autojs.autoxjs.v6 android.permission.SYSTEM_ALERT_WINDOW
 	// pm grant com.github.gucong3000.miui.cleaner android.permission.WRITE_SETTINGS
 	// pm grant com.github.gucong3000.miui.cleaner android.permission.WRITE_SECURE_SETTINGS
 	// pm grant com.github.gucong3000.miui.cleaner android.permission.SYSTEM_ALERT_WINDOW
@@ -216,7 +222,7 @@ const settingProperties = {
 	adbInput: {
 		enumerable: true,
 		depend: "adb",
-		get: () => Boolean(tryCmd("getprop persist.security.adbinput", false) - 0),
+		get: () => settings.adb && (getAdbInput() || getAdbInput()),
 		set: (expectValue) => {
 			const value = settings.adbInput;
 			if (expectValue !== value) {
@@ -226,6 +232,10 @@ const settingProperties = {
 		},
 	},
 };
+
+function getAdbInput () {
+	return Boolean(tryCmd("getprop persist.security.adbinput", false) - 0);
+}
 
 function enableDependSetting (depend, value) {
 	if (depend && value) {

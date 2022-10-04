@@ -179,6 +179,14 @@ const testCase = {
 		通知栏快捷入口: false,
 		Facebook快捷通知: false,
 	},
+	关于手机: {
+		"MIUI 版本": 14,
+	},
+	开发者选项: {
+		"USB 调试": true,
+		"USB安装": true,
+		"USB调试（安全设置）": true,
+	},
 };
 function compiler (result, data, options, parent = []) {
 	for (const key in data) {
@@ -207,7 +215,7 @@ module.exports = (options, result) => {
 	const testCaseName = options.name || options.appName || app.getAppName(options.packageName);
 	const data = testCase[testCaseName];
 
-	console.log(`“${testCaseName}”清理结果：\n` + JSON.stringify(result.handle, 0, "\t"));
+	console.log(`“${testCaseName}”结果：\n` + JSON.stringify(result.handle, 0, "\t"));
 	try {
 		if (!data) {
 			const error = new Error(`广告自动关闭模块功能异常: “${testCaseName}”中，未编写测试用例`);

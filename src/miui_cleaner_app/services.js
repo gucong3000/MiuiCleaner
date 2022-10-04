@@ -1,6 +1,8 @@
 const findClickableParent = require("./findClickableParent");
-const test = DEBUG && require("./test/offAppAdTest");
-const packageName = context.getPackageName();
+const servicesTest = DEBUG && require("./test/services");
+const thisPackageName = context.getPackageName();
+const settingsPackageName = "com.android.settings";
+const securityCenterPackageName = "com.miui.securitycenter";
 
 function delay (time) {
 	sleep(time || 0x200);
@@ -32,13 +34,39 @@ function getDefaultValue (value, defaultValu) {
 	;
 }
 
+// 打开USB调试、关闭下载管理程序资源推荐等，会弹出的二次确认，自动点击
+function skipConfirmPopup () {
+	let btn;
+	let dialog;
+	do {
+		btn = selector().filter(btn =>
+			/\b(ok|accept)$/.test(btn.id()) ||
+			/^(确[认定](关闭)?|删除)$/.test(btn.text()),
+		).findOne(0x200);
+		if (btn) {
+			const time = /\((\d+)\)$/.exec(btn.text());
+			if (time) {
+				delay(time[1] * 1000);
+			} else {
+				clickButton(btn);
+			}
+		}
+		dialog = selector().filter(dialog =>
+			/\bdialog(_\w+)*$/.test(dialog.id()),
+		).findOnce();
+		if (dialog) {
+			delay();
+		}
+	} while (btn || dialog);
+}
+
 function walkListView (options = {}) {
 	const adCheckBoxList = [];
 	const adLinearList = [];
 	let inNotifyMgr;
 	const listView = findByClassName(/\.(RecyclerView|ListView)$/).filter(view => {
 		const packageName = view.packageName();
-		return options.packageName === packageName || (inNotifyMgr = packageName === "com.android.settings");
+		return options.packageName === packageName || (inNotifyMgr = packageName === settingsPackageName);
 	}).findOne();
 	delay();
 	const regSwitchOn = inNotifyMgr
@@ -133,9 +161,9 @@ function walkListView (options = {}) {
 		if (adCheckBox.expect !== adCheckBox.checkBox.checked()) {
 			// click一下
 			adCheckBox.linear.click();
+			skipConfirmPopup();
 			console.log(`已${adCheckBox.expect ? "打开" : "关闭"}“${adCheckBox.text}”`);
 			result[adCheckBox.text] = adCheckBox.expect;
-			clickButton(selector().filter(btn => btn.id() === "ok" || /^(确[认定](关闭)?|删除)$/.test(btn.text())).findOne(0x100));
 		} else {
 			console.log(`“${adCheckBox.text}”已处于${adCheckBox.expect ? "打开" : "关闭"}状态`);
 		}
@@ -159,8 +187,16 @@ function walkListView (options = {}) {
 		result[adLinear.text] = subResult;
 	});
 
-	if (!inNotifyMgr && !options.disableScroll && listView.scrollable() && listView.scrollForward()) {
+	if (
 		// 判断页面是否需要下滚
+		listView.scrollable() &&
+		!(
+			options.disableScroll ||
+			inNotifyMgr ||
+			(options.max && Object.keys(options.handle).filter(key => options.handle[key]).length >= options.max)
+		) &&
+		listView.scrollForward()
+	) {
 		console.log("页面滑动");
 		delay();
 		Object.assign(result, walkListView(options));
@@ -255,7 +291,15 @@ function startIntent ({
 	name,
 }) {
 	intent = android.provider.Settings[intent];
-	app.startActivity(new android.content.Intent(intent));
+	app.startActivity(
+		/\bMANAGE_/.test(intent)
+			? {
+				action: intent,
+				data: "package:" + thisPackageName,
+			}
+			: new android.content.Intent(intent),
+	);
+
 	waitForPackage(packageName);
 	toastLog(`正在启动“${name}”，“${intent}”`);
 	delay();
@@ -312,7 +356,7 @@ function skipPopupPage () {
 		);
 		clickButton(
 			// 天气、日历、时钟、小米社区等MIUI APP的用户协议页
-			selector().packageName("com.miui.securitycenter").id("cta_positive").findOnce(),
+			selector().packageName(securityCenterPackageName).id("cta_positive").findOnce(),
 		);
 	}
 	btnText && clickButton(selector().text(btnText).findOne());
@@ -454,7 +498,7 @@ function startTask (options) {
 	// if (entry && entry === openCfgPageBySubPage) {
 	// 	back();
 	// }
-	while (currentPackage() !== packageName) {
+	while (currentPackage() !== thisPackageName) {
 		back();
 		delay();
 	}
@@ -462,8 +506,8 @@ function startTask (options) {
 	if (options.done) {
 		options.done(result);
 	}
-	if (DEBUG && test) {
-		test(options, result);
+	if (DEBUG && servicesTest) {
+		servicesTest(options, result);
 	}
 }
 
@@ -503,6 +547,25 @@ const browserConfig = {
 	// done: console.log,
 };
 
+// 在“关于手机”手机界面，点击“MIUI版本” 10次
+function click10 (listView, options) {
+	listView = selector().packageName(settingsPackageName).scrollable(true).findOne();
+	let textView;
+	do {
+		textView = selector().packageName(settingsPackageName).filter(
+			textView => /\bcard_title$/.test(textView.id()) && /^MIUI/.test(textView.text()),
+		).findOnce();
+	} while (!textView && listView.scrollForward());
+	if (textView) {
+		const text = textView.text();
+		const btnMiui = findClickableParent(textView);
+		for (let index = 1; index < 0xF; index++) {
+			btnMiui.click();
+			console.log(`已点击“${text}”${index}次`);
+			options.handle[text] = index;
+		}
+	}
+}
 // function openInstallerHelper () {
 // 	const packageName = "com.miui.packageinstaller";
 // 	const appName = app.getAppName(packageName);
@@ -523,6 +586,53 @@ const browserConfig = {
 
 const cleanerList = [
 	{
+		name: "系统安全",
+		packageName: settingsPackageName,
+		intent: "ACTION_SECURITY_SETTINGS",
+		regSubPage: /(广告|链接调用)/,
+		regSwitchOff: /诊断数据|广告推荐|链接调用|用户体验/,
+	},
+	{
+		name: "关于手机",
+		packageName: settingsPackageName,
+		intent: "ACTION_DEVICE_INFO_SETTINGS",
+		regSubPage: null,
+		regSwitchOff: null,
+		regSwitchOn: null,
+		walk: click10,
+	},
+	{
+		name: "开发者选项",
+		packageName: settingsPackageName,
+		intent: "ACTION_APPLICATION_DEVELOPMENT_SETTINGS",
+		regSubPage: null,
+		regSwitchOff: null,
+		regSwitchOn: /^USB\b/,
+		max: 3,
+	},
+	{
+		name: "允许显示在其他应用的上层",
+		packageName: settingsPackageName,
+		intent: "ACTION_MANAGE_OVERLAY_PERMISSION",
+		regSwitchOff: null,
+		regSwitchOn: /.*/,
+	},
+	{
+		name: "允许修改系统设置",
+		packageName: settingsPackageName,
+		intent: "ACTION_MANAGE_WRITE_SETTINGS",
+		regSwitchOff: null,
+		regSwitchOn: /.*/,
+	},
+	{
+		// `广告服务` 位于 `安全` 的子页面
+		name: "广告服务",
+		packageName: settingsPackageName,
+		activity: ".ad.AdServiceSettings",
+		regSwitchOff: /.*/,
+		regSwitchOn: null,
+	},
+	{
 		// 小米帐号
 		packageName: "com.xiaomi.account",
 		// activity: ".settings.SystemAdActivity",
@@ -531,28 +641,14 @@ const cleanerList = [
 		regSwitchOff: /^系统.*?广告$/,
 	},
 	{
-		name: "系统安全",
-		packageName: "com.android.settings",
-		intent: "ACTION_SECURITY_SETTINGS",
-		regSubPage: /(广告|链接调用)/,
-		regSwitchOff: /诊断数据|广告推荐|链接调用|用户体验/,
-	},
-	{
-		// `广告服务` 位于 `安全` 的子页面
-		name: "广告服务",
-		packageName: "com.android.settings",
-		activity: ".ad.AdServiceSettings",
-		regSwitchOff: /.*/,
-	},
-	{
 		// 手机管家 -> 设置页
-		packageName: "com.miui.securitycenter",
+		packageName: securityCenterPackageName,
 		activity: "com.miui.securityscan.ui.settings.SettingsActivity",
 	},
 	{
 		// 手机管家 -> 应用管理
 		name: "应用管理",
-		packageName: "com.miui.securitycenter",
+		packageName: securityCenterPackageName,
 		activity: "com.miui.appmanager.AppManagerMainActivity",
 		entry: openCfgPageByPopupMenu,
 	},
@@ -701,6 +797,7 @@ const cleanerList = [
 	// 		}
 	// 	}
 	// },
+
 ].map(menuItem => {
 	if (typeof menuItem === "string") {
 		menuItem = {
@@ -789,6 +886,10 @@ function runTask (taskInfo) {
 		));
 	}
 	cleaner = cleaner[0];
+	if (DEBUG && !cleaner) {
+		console.error("未找到适配的任务");
+		console.error(taskInfo);
+	}
 	const name = taskInfo.name || taskInfo.appName || cleaner.name;
 	if (name) {
 		cleaner.name = name;
@@ -796,7 +897,7 @@ function runTask (taskInfo) {
 	// if (cleaner.test && !cleaner.test(task)) {
 	// 	return;
 	// }
-	console.log(`开始清理：${name}`);
+	// console.log(`开始任务：${name}`);
 
 	cleaner.fn ? cleaner.fn() : startTask(cleaner);
 }

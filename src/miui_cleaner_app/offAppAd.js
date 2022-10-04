@@ -1,6 +1,7 @@
 const multiChoice = require("./multiChoice");
 const serviceMgr = require("./serviceMgr");
 const settings = require("./settings");
+const settingsPackageName = "com.android.settings";
 
 const cleanerList = [
 	{
@@ -18,7 +19,7 @@ const cleanerList = [
 	{
 		name: "系统安全",
 		summary: "系统安全→网页拉活应用、日志上传等",
-		packageName: "com.android.settings",
+		packageName: settingsPackageName,
 		action: "ACTION_SECURITY_SETTINGS",
 		settings: [
 			// 网页链接调用服务
@@ -33,7 +34,7 @@ const cleanerList = [
 		// `广告服务` 位于 `安全` 的子页面
 		name: "广告服务",
 		summary: "系统安全→广告服务→个性化广告推荐",
-		packageName: "com.android.settings",
+		packageName: settingsPackageName,
 		action: ".ad.AdServiceSettings",
 		settings: ["personalizedAD"],
 	},

@@ -148,8 +148,10 @@ class AutojsDeployPlugin {
 			const compilation = stats.compilation;
 			return Promise.all([
 				this.rerun(compilation),
-				this.save(compilation),
-				this.command(compilation),
+				Promise.race([
+					this.save(compilation),
+					this.command(compilation),
+				]),
 			]);
 		});
 
