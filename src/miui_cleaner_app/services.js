@@ -907,11 +907,15 @@ function runTaskList (taskList) {
 	const timerSkipPopupPage = setInterval(skipPopupPage, 0x50);
 
 	if (Array.isArray(taskList)) {
+		if (floaty.checkPermission()) {
+			console.show();
+		}
 		taskList.forEach(runTask);
 	} else {
 		runTask(taskList);
 	}
 	clearInterval(timerSkipPopupPage);
+	console.hide();
 }
 
 function init () {
