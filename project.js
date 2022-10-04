@@ -92,7 +92,11 @@ async function readFile (path) {
 // 保持文档的描述和关闭广告的单元测试数据一致
 function updateDoc (readme) {
 	const docResult = [];
-	printTestCase(require("./src/miui_cleaner_app/test/offAppAdTest").testCase);
+	const testCase = require("./src/miui_cleaner_app/test/services").testCase;
+	delete testCase["关于手机"];
+	delete testCase["开发者选项"];
+
+	printTestCase(testCase);
 
 	readme.constents = readme.constents.replace(/(#+\s*关闭各应用广告[\s\S]*?<\/summary>[\s\S]*?)-[\s\S]*(<\/details>)/, (s, prefix, suffix) => {
 		return prefix + docResult.join("\n") + "\n\n" + suffix;
