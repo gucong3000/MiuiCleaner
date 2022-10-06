@@ -1,42 +1,20 @@
 {
-	"assets": [
-		{
-			"form": "/sdcard/脚本/miui_cleaner_app",
-			"to": "/project"
-		}
-	],
-	"buildDir": "build",
-	"encryptLevel": 0,
 	"icon": "res/drawable/ic_launcher.png",
-	"ignore": [
-		"build",
-		"node_modules"
-	],
-	"ignoredDirs": [
-		"build",
-		"node_modules"
-	],
 	"launchConfig": {
 		"displaySplash": false,
 		"hideLogs": false,
 		"permissions": [],
 		"serviceDesc": "自动操作(关闭 MIUI 广告)所需，若关闭则只能执行其他功能。",
+		"splashIcon": null,
+		"splashText": "MIUI广告清理工具",
 		"stableMode": false,
-		"volumeUpcontrol": true,
-		"splashText": "MIUI广告清理工具"
+		"volumeUpcontrol": true
 	},
 	"main": "main.js",
 	"name": "MiuiCleaner",
-	"optimization": {
-		"removeOpenCv": false,
-		"unusedResources": false
-	},
-	"outputPath": "/sdcard/脚本/miui_cleaner_app/build",
 	"packageName": "com.github.gucong3000.miui.cleaner",
-	"projectDirectory": "/sdcard/脚本/miui_cleaner_app",
 	"scripts": {},
-	"sourcePath": "/sdcard/脚本/miui_cleaner_app/main.js",
 	"useFeatures": [],
 	"versionCode": 7,
-	"versionName": "2022.10.4.7"
+	"versionName": "2022.10.6.7"
 }

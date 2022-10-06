@@ -36,7 +36,6 @@ const axios = require("axios").default;
 	appConfig.json.versionName = versionName;
 	packageConfig.json.version = versionName;
 	appConfig.json.launchConfig.splashText = packageConfig.json.description;
-	packageConfig.json.scripts["build:pull"] = packageConfig.json.scripts["build:pull"].replace(/_v.*?\.apk/, `_v${versionName}.apk`);
 	cmd.constents = cmd.constents.replace(/^title\s+.*$/im, `title ${appConfig.json.name}`);
 
 	const distCmd = fs.writeFile(
