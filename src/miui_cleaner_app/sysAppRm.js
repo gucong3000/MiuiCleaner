@@ -177,7 +177,7 @@ function removeByScript (tasks) {
 				if (!fileExist) {
 					toastLog("电脑端自动执行成功");
 				} else if (Date.now() > timeout) {
-					wait = dialogs.rawInput("等候电脑端自动执行超时，请打开本软件电脑端，或者在电脑手动执行命令：", cmd).then(() => {
+					wait = dialogs.prompt("等候电脑端自动执行超时，请打开本软件电脑端，或者在电脑手动执行命令：", cmd).then(() => {
 						if (!files.exists(shFilePath)) {
 							toastLog("电脑端手动执行成功");
 						} else {

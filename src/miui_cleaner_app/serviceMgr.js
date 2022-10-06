@@ -16,7 +16,7 @@ function waitForEngineStart () {
 function waitForEngineStop () {
 	return sleep(0x50).then(() => {
 		if (scriptEngine && scriptEngine.engine && !scriptEngine.engine.destroyed) {
-			return waitForEngineStart();
+			return waitForEngineStop();
 		}
 	});
 }
