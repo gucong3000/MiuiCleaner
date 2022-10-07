@@ -81,7 +81,7 @@ function requestSettings (key, expectValue, reason) {
 			},
 		).then((confirm) => {
 			return confirm && waitForBack(() => {
-				auto.waitFor();
+				auto();
 			});
 		});
 	}
@@ -103,7 +103,7 @@ function requestSettings (key, expectValue, reason) {
 }
 function tryCmd (cmd, root = true) {
 	try {
-		shell(cmd, root);
+		return shell(cmd, root);
 	} catch (ex) {
 		if (root) {
 			return tryCmd(cmd, false);
@@ -134,10 +134,7 @@ function pmPermission (key, permission) {
 	// pm grant com.github.gucong3000.miui.cleaner android.permission.WRITE_SECURE_SETTINGS
 	// pm grant com.github.gucong3000.miui.cleaner android.permission.SYSTEM_ALERT_WINDOW
 	return (expectValue) => {
-		const value = settings[key];
-		if (expectValue !== value) {
-			tryCmd(`pm ${expectValue ? "grant" : "revoke"} ${context.getPackageName()} android.permission.${permission}`);
-		}
+		tryCmd(`pm ${expectValue ? "grant" : "revoke"} ${context.getPackageName()} android.permission.${permission}`);
 	};
 }
 
@@ -185,17 +182,14 @@ const settingProperties = {
 		depend: "adb",
 		get: () => settings.adb && (getAdbInput() || getAdbInput()),
 		set: (expectValue) => {
-			const value = settings.adbInput;
-			if (expectValue !== value) {
-				enableDependSetting("adb", expectValue);
-				tryCmd("setprop persist.security.adbinput " + (expectValue ? 1 : 0));
-			}
+			enableDependSetting("adb", expectValue);
+			tryCmd("setprop persist.security.adbinput " + (expectValue ? 1 : 0));
 		},
 	},
 };
 
 function getAdbInput () {
-	return Boolean(tryCmd("getprop persist.security.adbinput", false) - 0);
+	return Boolean(tryCmd("getprop persist.security.adbinput", false).result - 0);
 }
 
 function enableDependSetting (depend, value) {
