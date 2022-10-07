@@ -22,3 +22,34 @@ jobs:
       run: |
         npm install
         npm run build
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        draft: true
+        prerelease: true
+
+    - name: Upload Batch
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+        asset_path: ./dist/miui_cleaner_cmd/MiuiCleaner.cmd
+        asset_name: MiuiCleaner.cmd
+        asset_content_type: text/plain
+
+    - name: Upload JavaScript
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+        asset_path: ./dist/miui_cleaner_app/main.js
+        asset_name: MiuiCleaner.js
+        asset_content_type: text/javascript
