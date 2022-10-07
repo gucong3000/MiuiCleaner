@@ -14,17 +14,17 @@ const axios = require("axios").default;
 		readFile("src/miui_cleaner_cmd/main.cmd"),
 		readFile("README.md"),
 	]);
+	const pkgInfo = packageConfig.json;
+	const appInfo = appConfig.json;
+
 	const date = new Date();
 	let versionCode;
 
 	if (process.env.GITHUB_RUN_NUMBER) {
 		versionCode = process.env.GITHUB_RUN_NUMBER - 0;
 	} else {
-		// appConfig.json.versionCode = ;
 		versionCode = (await axios.get("https://raw.fastgit.org/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json")).data.versionCode + 1;
 	}
-
-	appConfig.json.versionCode = versionCode;
 
 	const versionName = [
 		date.getUTCFullYear(),
@@ -32,11 +32,14 @@ const axios = require("axios").default;
 		date.getUTCDate(),
 		versionCode,
 	].join(".");
-
-	appConfig.json.versionName = versionName;
-	packageConfig.json.version = versionName;
-	appConfig.json.launchConfig.splashText = packageConfig.json.description;
-	cmd.constents = cmd.constents.replace(/^title\s+.*$/im, `title ${appConfig.json.name}`);
+	pkgInfo.version = versionName;
+	appInfo.versionCode = versionCode;
+	appInfo.versionName = versionName;
+	appInfo.launchConfig.splashText = pkgInfo.description;
+	cmd.constents = cmd.constents.replace(
+		/^title\s+.*$/im,
+		`title ${appInfo.name} - ${pkgInfo.description}`,
+	);
 
 	const distCmd = fs.writeFile(
 		"dist/miui_cleaner_cmd/MiuiCleaner.cmd",
@@ -49,7 +52,10 @@ const axios = require("axios").default;
 			{
 				input: cmd.constents.replace(
 					/^chcp\s+\d+/im, "chcp 936",
-				),
+				).replace(
+					/^title\s+.*$/im,
+					`title ${appInfo.name} - ${pkgInfo.description} -v${pkgInfo.version}`,
+				).replace(/\r?\n/g, "\r\n"),
 			},
 		).stdout,
 	);
@@ -80,8 +86,10 @@ async function readFile (path) {
 			} else {
 				newContents = file.constents;
 			}
+			const finalNewline = /\.(cmd|bat)$/i.test(path) ? "\r\n" : "\n";
+			newContents = newContents.replace(/\r?\n/g, finalNewline);
 			if (constents.trim() !== newContents.trim()) {
-				return fs.writeFile(path, newContents.trim() + "\n", ...args);
+				return fs.writeFile(path, newContents.trim() + finalNewline, ...args);
 			}
 		},
 	};
