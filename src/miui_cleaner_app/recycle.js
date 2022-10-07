@@ -1,35 +1,26 @@
-const findClickableParent = require("./findClickableParent");
 const singleChoice = require("./singleChoice");
+const serviceMgr = require("./serviceMgr");
+const settings = require("./settings");
 const instApk = require("./instApk");
 const appDesc = require("./appDesc");
 
-const marketPackageName = "com.xiaomi.market";
-function clickMarketBtn (text) {
-	let btn;
-	try {
-		btn = selector().packageName(marketPackageName).text(text).findOne(0x1000);
-	} catch (ex) {
-		//
-	}
-	if (btn) {
-		findClickableParent(btn).click();
-		return btn;
-	}
-}
-
 function launchMarket () {
-	const opts = {
-		packageName: marketPackageName,
-		className: marketPackageName + ".ui.MarketTabActivity",
-	};
-
-	try {
-		app.startActivity(opts);
-	} catch (ex) {
-		app.launch(marketPackageName);
-	}
-
-	clickMarketBtn("我的") && clickMarketBtn("系统应用管理");
+	return settings.set(
+		"accessibilityServiceEnabled",
+		true,
+		"自动打开“应用商店”的“系统应用管理”",
+	).then(accessibilityServiceEnabled => {
+		const marketPackageName = "com.xiaomi.market";
+		if (accessibilityServiceEnabled) {
+			return serviceMgr({
+				packageName: marketPackageName,
+				action: ".ui.CommonWebActivity",
+				name: "系统应用管理",
+			});
+		} else {
+			return app.launchPackage(marketPackageName);
+		}
+	});
 }
 
 function getInstalledPackages () {
@@ -61,7 +52,7 @@ function getInstalledPackages () {
 		},
 	);
 }
-
+let requestInstallPackages;
 function recycle () {
 	singleChoice({
 		title: "请选择要恢复的应用",
@@ -69,8 +60,13 @@ function recycle () {
 			then: (resolve) => resolve(getInstalledPackages()),
 		},
 		fn: function (appInfo) {
-			instApk(appInfo.apk);
-			console.log("正在恢复：", appInfo);
+			if (!requestInstallPackages) {
+				requestInstallPackages = settings.set("requestInstallPackages", true, "打开应用安装权限");
+			}
+			return requestInstallPackages.then(() => {
+				instApk(appInfo.apk);
+				console.log("正在恢复：", appInfo);
+			});
 		},
 	});
 	require("./index")();

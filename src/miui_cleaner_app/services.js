@@ -1,8 +1,10 @@
 const findClickableParent = require("./findClickableParent");
 const servicesTest = DEBUG && require("./test/services");
+
 const thisPackageName = context.getPackageName();
-const settingsPackageName = "com.android.settings";
 const securityCenterPackageName = "com.miui.securitycenter";
+const settingsPackageName = "com.android.settings";
+const marketPackageName = "com.xiaomi.market";
 
 function delay (time) {
 	sleep(time || 0x200);
@@ -513,6 +515,7 @@ function startTask (options) {
 	if (DEBUG && servicesTest) {
 		servicesTest(options, result);
 	}
+	return result;
 }
 
 function switchBroHomePage (listView, options) {
@@ -649,9 +652,23 @@ const cleanerList = [
 	},
 	{
 		// 应用商店
-		packageName: "com.xiaomi.market",
+		packageName: marketPackageName,
 		// activity: ".ui.MarketTabActivity",
 		entry: openCfgPageBySubPage,
+	},
+	{
+		// 应用商店
+		packageName: marketPackageName,
+		action: ".ui.CommonWebActivity",
+		fn: (configs) => {
+			startPkg(configs);
+			[
+				"我的",
+				"系统应用管理",
+			].every(text => clickButton(
+				selector().packageName(configs.packageName).text(text).findOne(0xFFF),
+			));
+		},
 	},
 	// {
 	// 	packageName: "com.miui.packageinstaller",
@@ -867,16 +884,21 @@ const actionManageNames = {
 	ACTION_MANAGE_WRITE_SETTINGS: "允许修改系统设置",
 };
 
+function getSettings (key) {
+	console.log(key);
+}
+
 function runTask (taskInfo) {
 	if (taskInfo.action === "clearAnim") {
 		return clearAnim();
 	} else if (/^ACTION_MANAGE_/.test(taskInfo.action)) {
-		startTask({
+		// 打开各种单项权限管理界面
+		return startTask({
 			packageName: settingsPackageName,
 			intent: taskInfo.action,
 			regSwitchOff: taskInfo.checked ? null : /.*/,
 			regSwitchOn: taskInfo.checked ? /.*/ : null,
-			name: actionManageNames[taskInfo.action],
+			name: actionManageNames[taskInfo.action] || taskInfo.action,
 		});
 	}
 
@@ -886,7 +908,7 @@ function runTask (taskInfo) {
 
 	if (cleaner.length > 1) {
 		cleaner = cleanerList.filter(cleaner => (
-			(cleaner.activity || cleaner.intent) === taskInfo.action
+			(cleaner.action || cleaner.activity || cleaner.intent) === taskInfo.action
 		));
 	}
 	cleaner = cleaner[0];
@@ -898,12 +920,11 @@ function runTask (taskInfo) {
 	if (name) {
 		cleaner.name = name;
 	}
-	// if (cleaner.test && !cleaner.test(task)) {
-	// 	return;
-	// }
-	// console.log(`开始任务：${name}`);
-
-	cleaner.fn ? cleaner.fn() : startTask(cleaner);
+	if (cleaner.settings && !cleaner.settings.every(getSettings)) {
+		console.log(`跳过任务：${name}`);
+		return;
+	}
+	return cleaner.fn ? cleaner.fn(cleaner) : startTask(cleaner);
 }
 
 function runTaskList (taskList) {
@@ -914,12 +935,13 @@ function runTaskList (taskList) {
 		if (floaty.checkPermission()) {
 			console.show();
 		}
-		taskList.forEach(runTask);
+		taskList = taskList.map(runTask);
 	} else {
-		runTask(taskList);
+		taskList = runTask(taskList);
 	}
 	clearInterval(timerSkipPopupPage);
 	console.hide();
+	return taskList;
 }
 
 function init () {

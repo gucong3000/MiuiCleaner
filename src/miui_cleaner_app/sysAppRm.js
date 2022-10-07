@@ -3,6 +3,7 @@ const multiChoice = require("./multiChoice");
 const waitForBack = require("./waitForBack");
 const settings = require("./settings");
 const appDesc = require("./appDesc");
+const dialogs = require("./dialogs");
 
 const sysAppList = Object.keys(appDesc).map(packageName => ({
 	packageName,
@@ -99,22 +100,21 @@ const installerAppName = app.getAppName(installerPackageName);
 
 function installerHelper () {
 	// 应用包安装程序选择界面，下次默认，不再提示
-	clickButton(
-		selector().filter(checkBox => (
-			checkBox.checkable() && !checkBox.checked() && /下次默认.*不再提示/.test(checkBox.text()) && /\bandroid\b/.test(checkBox.packageName())
-		)).findOnce(),
+	const isCheckBox = checkBox => (
+		checkBox.checkable() && !checkBox.checked() && /下次默认.*不再提示/.test(checkBox.text()) && /\bandroid\b/.test(checkBox.packageName())
 	);
 	// 应用包安装程序选择界面，通过“应用包管理组件”运行
-	clickButton(
-		selector().filter(btn => (
-			installerAppName === btn.text() && /\bandroid\b/.test(btn.packageName())
-		)).findOnce(),
+	const isInstallerSelect = btn => (
+		installerAppName === btn.text() && /\bandroid\b/.test(btn.packageName())
 	);
 	// 应用包管理组件，确定、继续按钮
+	const isContinueBtn = btn => (
+		/\b(continue|ok)_button$/.test(btn.id()) && installerPackageName === btn.packageName()
+	);
 	clickButton(
-		selector().filter(btn => (
-			/\b(continue|ok)_button$/.test(btn.id()) && installerPackageName === btn.packageName()
-		)).findOnce(),
+		selector().filter(
+			obj => isCheckBox(obj) || isInstallerSelect(obj) || isContinueBtn(obj),
+		).findOnce(),
 	);
 	setTimeout(installerHelper, 0x50);
 }
@@ -125,16 +125,25 @@ function removeByInstaler (tasks) {
 	}
 
 	toastLog(`尝试以常规权限卸载${tasks.length}个应用`);
-	const helper = threads.start(installerHelper);
-
-	return waitForBack(() => {
-		tasks.forEach(appInfo => {
-			app.uninstall(appInfo.packageName);
-		});
-	}).then(() => {
-		helper.interrupt();
-		return tasks;
-	});
+	let helper;
+	return settings.set(
+		"accessibilityServiceEnabled",
+		true,
+		"自动化卸载这些APP",
+	).then(accessibilityServiceEnabled => {
+		if (accessibilityServiceEnabled) {
+			helper = threads.start(installerHelper);
+		}
+	}).then(() =>
+		waitForBack(() => {
+			tasks.forEach(appInfo => {
+				app.uninstall(appInfo.packageName);
+			});
+		}).then(() => {
+			helper && helper.interrupt();
+			return tasks;
+		}),
+	);
 }
 
 function removeByScript (tasks) {
@@ -161,11 +170,11 @@ function removeByScript (tasks) {
 	} catch (ex) {
 		//
 	}
-	settings.set("adbInput", true, "打开“USB调试(安全设置)”，以便让电脑端有权限卸载这些APP").then(() => {
-		if (!settings.adbInput) {
-			toastLog("“USB调试(安全设置)”未打开，请打开后再试。");
-			return;
-		}
+	settings.set("adbInput", true, "自动打开“USB调试(安全设置)”，让电脑端有权限卸载这些APP").then((adbInput) => {
+		// if (!adbInput) {
+		// 	toastLog("“USB调试(安全设置)”未打开，请打开后再试。");
+		// 	return;
+		// }
 		cmd = "adb shell " + cmd;
 		console.log("正以等候电脑端自动执行：\n" + cmd);
 		const timeout = Date.now() + 0x800 + tasks.length * 0x200;
@@ -177,7 +186,14 @@ function removeByScript (tasks) {
 				if (!fileExist) {
 					toastLog("电脑端自动执行成功");
 				} else if (Date.now() > timeout) {
-					wait = dialogs.prompt("等候电脑端自动执行超时，请打开本软件电脑端，或者在电脑手动执行命令：", cmd).then(() => {
+					wait = dialogs.prompt(
+						"等候电脑端自动执行超时，请打开本软件电脑端，或者在电脑手动执行命令：",
+						cmd,
+						{
+							negative: false,
+							cancelable: true,
+						},
+					).then(() => {
 						if (!files.exists(shFilePath)) {
 							toastLog("电脑端手动执行成功");
 						} else {

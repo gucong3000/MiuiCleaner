@@ -151,9 +151,23 @@ function offAppAd () {
 		title: "请选择要关闭广告的APP",
 		itemList: getCleanerList(),
 		checked: true,
-	}).then(
-		serviceMgr,
-	).then(
+	}).then(cleanerList => (
+		settings.set(
+			"accessibilityServiceEnabled",
+			true,
+			"操作其他APP的广告开关",
+		).then(accessibilityServiceEnabled => {
+			if (!accessibilityServiceEnabled) {
+				return accessibilityServiceEnabled;
+			}
+			return settings.set(
+				"drawOverlays",
+				true,
+			).then(
+				() => serviceMgr(cleanerList),
+			);
+		})
+	)).then(
 		offAppAd,
 	).catch(console.error);
 	require("./index")();

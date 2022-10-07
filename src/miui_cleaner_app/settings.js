@@ -1,5 +1,7 @@
+const waitForBack = require("./waitForBack");
 const serviceMgr = require("./serviceMgr");
 const project = require("./project.json");
+const dialogs = require("./dialogs");
 
 const settingsPackageName = "com.android.settings";
 const settingsPrototype = Object.create(android.provider.Settings);
@@ -41,6 +43,10 @@ settingsPrototype.set = function (key, expectValue, reason) {
 				() => requestSettings(key, expectValue, reason),
 			);
 		}
+		lazyAction(
+			key,
+			() => this[key],
+		);
 	}
 	return lazyAction(key);
 };
@@ -67,17 +73,31 @@ const actions = {
 
 function requestSettings (key, expectValue, reason) {
 	if (key === "accessibilityServiceEnabled") {
-		return dialogs.confirm("权限请求", reason || `请在下个页面，点击“已下载的服务”，然后打开“${project.name}”的无障碍服务开关`).then((confirm) => {
-			confirm && auto.waitFor();
+		reason = reason ? `，以便“${project.name}”能${reason}` : "";
+		return dialogs.confirm(
+			`请在下个页面，点击“已下载的服务”，然后${expectValue ? "打开" : "关闭"}“${project.name}”的无障碍服务开关${reason}。`,
+			{
+				title: "权限请求",
+			},
+		).then((confirm) => {
+			return confirm && waitForBack(() => {
+				auto.waitFor();
+			});
 		});
 	}
 	for (const actionName in actions) {
 		if (actions[actionName].test(key)) {
-			return serviceMgr({
-				packageName: settingsPackageName,
-				checked: expectValue,
-				action: actionName,
-			});
+			return settings.set(
+				"accessibilityServiceEnabled",
+				true,
+				reason,
+			).then(accessibilityServiceEnabled => (
+				accessibilityServiceEnabled && serviceMgr({
+					packageName: settingsPackageName,
+					checked: expectValue,
+					action: actionName,
+				})
+			));
 		}
 	}
 }
@@ -120,8 +140,12 @@ function pmPermission (key, permission) {
 		}
 	};
 }
+
 const accessServicesName = context.getPackageName() + "/com.stardust.autojs.core.accessibility.AccessibilityService";
 const settingProperties = {
+	// rhinoVersion: {
+	// 	get: () => org.mozilla.javascript.Context.getCurrentContext().getImplementationVersion(),
+	// },
 	requestInstallPackages: {
 		enumerable: true,
 		get: () => context.getPackageManager().canRequestPackageInstalls(),
@@ -141,18 +165,15 @@ const settingProperties = {
 	},
 	drawOverlays: {
 		enumerable: true,
-		depend: "accessibilityServiceEnabled",
 		get: () => settings.canDrawOverlays(context),
 		// get: () => Boolean(context.checkCallingOrSelfPermission("android.permission.SYSTEM_ALERT_WINDOW")),
 		set: pmPermission("drawOverlays", "SYSTEM_ALERT_WINDOW"),
 	},
 	accessibilityServiceEnabled: {
 		enumerable: true,
-		depend: "accessibilityServices",
 		get: () => settings.accessibility &&
 			settings.accessibilityServices.has(accessServicesName) &&
 			org.autojs.autojs.tool.AccessibilityServiceTool.isAccessibilityServiceEnabled(context),
-
 		set: (value) => {
 			if (value) {
 				settings.accessibilityServices.add(accessServicesName);

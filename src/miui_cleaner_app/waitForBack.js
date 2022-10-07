@@ -6,7 +6,9 @@ function waitForBack (leave) {
 			ui.emitter.once("resume", resolve);
 			clearTimeout(timer);
 		});
-		leave && leave();
+		if (leave) {
+			setTimeout(leave, 0);
+		};
 	});
 };
 
