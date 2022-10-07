@@ -171,9 +171,7 @@ const settingProperties = {
 	},
 	accessibilityServiceEnabled: {
 		enumerable: true,
-		get: () => settings.accessibility &&
-			settings.accessibilityServices.has(accessServicesName) &&
-			org.autojs.autojs.tool.AccessibilityServiceTool.isAccessibilityServiceEnabled(context),
+		get: () => Boolean(auto.service),
 		set: (value) => {
 			if (value) {
 				settings.accessibilityServices.add(accessServicesName);

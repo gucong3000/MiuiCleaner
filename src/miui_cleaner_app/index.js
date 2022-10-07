@@ -29,7 +29,17 @@ const mainActions = [
 	{
 		name: "日志",
 		summary: "查看运行日志",
-		fn: () => app.startActivity("console"),
+		fn: () => {
+			app.startActivity("console");
+			if (DEBUG) {
+				setTimeout(() => {
+					const settings = require("./settings");
+					settings.forEach(function (value, key) {
+						console.log(`settings.${key}: ${value}`);
+					});
+				}, 0);
+			}
+		},
 	},
 	{
 		name: "退出",
@@ -54,12 +64,4 @@ function regBack () {
 
 module.exports = regBack;
 
-// if (DEBUG) {
-// 	const settings = require("./settings");
-// 	settings.forEach(function (value, key) {
-// 		// console.log(`settings.${key}: ${value}`);
-// 	});
-// 	require("./offAppAd")();
-// } else {
 mainMenu();
-// }
