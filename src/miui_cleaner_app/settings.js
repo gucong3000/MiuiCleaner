@@ -31,12 +31,21 @@ settingsPrototype.set = function (key, expectValue, reason) {
 	if (this.has(key)) {
 		this[key] = expectValue;
 		if ((this[key] !== expectValue)) {
-			const depend = settingProperties[key].depend;
-			if (depend && expectValue) {
-				lazyAction(
-					key,
-					() => this.set(depend, expectValue, reason),
-				);
+			if (expectValue) {
+				const space = settingProperties[key].space;
+				if (((space && space !== "Secure") || /^accessibility/.test(key)) && !this.writeSettings && this.accessibilityServiceEnabled) {
+					lazyAction(
+						key,
+						() => this.set("writeSettings", expectValue, reason),
+					);
+				}
+				const depend = settingProperties[key].depend;
+				if (depend && !this[depend]) {
+					lazyAction(
+						key,
+						() => this.set(depend, expectValue, reason),
+					);
+				}
 			}
 			lazyAction(
 				key,
@@ -53,9 +62,6 @@ settingsPrototype.set = function (key, expectValue, reason) {
 settingsPrototype.forEach = function (callbackFn, thisArg) {
 	this.keys().forEach(
 		(key) => {
-			if (key === "forEach") {
-				return;
-			}
 			callbackFn.call(thisArg || this, settings[key], key, settings);
 		},
 		thisArg,
@@ -81,7 +87,15 @@ function requestSettings (key, expectValue, reason) {
 			},
 		).then((confirm) => {
 			return confirm && waitForBack(() => {
-				auto();
+				if (expectValue) {
+					try {
+						auto();
+					} catch (ex) {
+						//
+					}
+				} else {
+					app.startActivity(new android.content.Intent(settings.ACTION_ACCESSIBILITY_SETTINGS));
+				}
 			});
 		});
 	}
@@ -133,8 +147,10 @@ function pmPermission (key, permission) {
 	// pm grant com.github.gucong3000.miui.cleaner android.permission.WRITE_SETTINGS
 	// pm grant com.github.gucong3000.miui.cleaner android.permission.WRITE_SECURE_SETTINGS
 	// pm grant com.github.gucong3000.miui.cleaner android.permission.SYSTEM_ALERT_WINDOW
+	// grantRuntimePermission
+	// revokeRuntimePermission
 	return (expectValue) => {
-		tryCmd(`pm ${expectValue ? "grant" : "revoke"} ${context.getPackageName()} android.permission.${permission}`);
+		tryCmd(`pm ${expectValue ? "grant" : "revoke"} ${context.getPackageName()} android.permission.${permission}`, expectValue);
 	};
 }
 
@@ -167,6 +183,7 @@ const settingProperties = {
 		set: pmPermission("drawOverlays", "SYSTEM_ALERT_WINDOW"),
 	},
 	accessibilityServiceEnabled: {
+		depend: "accessibility",
 		enumerable: true,
 		get: () => Boolean(auto.service),
 		set: (value) => {
@@ -212,27 +229,25 @@ function defineSettingProperty ({
 		.replace(/_(ad$|\w)/g, s => s.slice(1).toUpperCase());
 	const descriptor = {
 		enumerable: true,
-		get: getter,
-		set: setter,
-		space,
 		depend,
+		space,
+		get: () => {
+			const value = settings[space]["get" + type](context.getContentResolver(), key);
+			return get ? get(value) : value;
+		},
+		set: (expectValue) => {
+			expectValue = set ? set(expectValue) : expectValue;
+			enableDependSetting(depend, expectValue);
+			try {
+				settings[space]["put" + type](context.getContentResolver(), key, expectValue);
+			} catch (ex) {
+				// console.error(`将${propertyName}设置为${expectValue}时失败\n${ex.message}`);
+			}
+		},
 	};
 	settingProperties[propertyName] = descriptor;
 	if (!depend) {
 		depend = space === "Secure" ? "writeSecureSettings" : "writeSettings";
-	}
-	function getter () {
-		const value = settings[space]["get" + type](context.getContentResolver(), key);
-		return get ? get(value) : value;
-	}
-	function setter (expectValue) {
-		expectValue = set ? set(expectValue) : expectValue;
-		enableDependSetting(depend, expectValue);
-		try {
-			settings[space]["put" + type](context.getContentResolver(), key, expectValue);
-		} catch (ex) {
-			// console.error(`将${propertyName}设置为${expectValue}时失败\n${ex.message}`);
-		}
 	}
 }
 
@@ -275,25 +290,24 @@ defineSettingProperty({
 		get,
 	} = accessibilityServices;
 	let services;
+	const toString = () => Array.from(services).join(":");
 	const proxy = {
-		...String.prototype,
-		toString: () => Array.from(services).join(":"),
+		toString,
+		inspect: toString,
+		toJSON: toString,
 	};
-	proxy.inspect = proxy.toJSON = proxy.toString;
 
 	Object.getOwnPropertyNames(Set.prototype).forEach(propertyName => {
 		proxy[propertyName] = (...args) => {
 			const result = services[propertyName](...args);
-			set(proxy.toString());
+			set(toString());
 			settings.accessibility = true;
 			return result;
 		};
 	});
 
 	accessibilityServices.get = () => {
-		if (!services) {
-			services = new Set(get().split(/\s*:\s*/g));
-		}
+		services = new Set(get().trim().split(/\s*:\s*/g));
 		return Object.create(proxy);
 	};
 	delete accessibilityServices.set;

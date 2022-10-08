@@ -30,15 +30,14 @@ const mainActions = [
 		name: "日志",
 		summary: "查看运行日志",
 		fn: () => {
-			app.startActivity("console");
 			if (DEBUG) {
-				setTimeout(() => {
-					const settings = require("./settings");
-					settings.forEach(function (value, key) {
-						console.log(`settings.${key}: ${value}`);
-					});
-				}, 0);
+				const settings = require("./settings");
+				console.log(
+					"settings: \n" +
+					settings.keys().map(key => `\t${key}: ${JSON.stringify(settings[key])}`).join("\n"),
+				);
 			}
+			return app.startActivity("console");
 		},
 	},
 	{

@@ -1,5 +1,6 @@
 const singleChoice = require("./singleChoice");
 const waitForBack = require("./waitForBack");
+const settings = require("./settings");
 
 // https://github.abskoop.workers.dev/
 // http://fastgit.org/
@@ -160,6 +161,10 @@ function download (appInfo) {
 			if (appName) {
 				appInfo.appName = appName;
 				return appInfo;
+			}
+			const liTiaoTiao = "cn.litiaotiao.app";
+			if (app.getAppName(liTiaoTiao)) {
+				settings.accessibilityServices.add(liTiaoTiao + "/com.litiaotiao.app.LttService");
 			}
 		}).catch(console.error);
 	} else {
