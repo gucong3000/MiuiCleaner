@@ -22,7 +22,7 @@ function clickButton (button, text) {
 function getInstaller (appList) {
 	const packageName = "com.miui.packageinstaller";
 	const packageInfo = context.getPackageManager().getPackageInfo(packageName, 0);
-	if (!packageInfo || packageInfo.versionCode < 400) {
+	if (!packageInfo || packageInfo.getLongVersionCode() < 400) {
 		// 版本号小于400，则不含“纯净模式”
 		return;
 	}

@@ -192,7 +192,12 @@ function download (appInfo) {
 }
 
 function downApp () {
-	appList.forEach(getApplicationInfo);
+	appList.forEach((appInfo) => {
+		getApplicationInfo(appInfo);
+		if (appInfo.appName) {
+			appInfo.appName = appInfo.appName.replace(/(\s+v.*?)?$/, " v" + appInfo.getVersionName());
+		}
+	});
 	singleChoice({
 		title: "请选择要下载的APP",
 		itemList: appList,
