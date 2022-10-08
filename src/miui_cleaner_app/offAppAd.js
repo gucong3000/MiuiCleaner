@@ -1,3 +1,4 @@
+const getApplicationInfo = require("./getApplicationInfo");
 const multiChoice = require("./multiChoice");
 const serviceMgr = require("./serviceMgr");
 const settings = require("./settings");
@@ -131,18 +132,7 @@ function getCleanerList () {
 		if (cleaner.settings && !cleaner.settings.some(key => settings[key])) {
 			return false;
 		}
-		if (cleaner.packageName) {
-			const appName = app.getAppName(cleaner.packageName);
-			// 一些APP，如果已经卸载了，就不再显示
-			if (!appName) {
-				return false;
-			}
-			// 如果没有名字，以app名作为模块名
-			if (!cleaner.name && !cleaner.appName) {
-				cleaner.appName = appName;
-			}
-		}
-		return true;
+		return !cleaner.packageName || getApplicationInfo(cleaner);
 	});
 }
 

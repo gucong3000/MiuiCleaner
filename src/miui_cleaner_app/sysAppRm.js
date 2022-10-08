@@ -1,4 +1,5 @@
 const findClickableParent = require("./findClickableParent");
+const getApplicationInfo = require("./getApplicationInfo");
 const multiChoice = require("./multiChoice");
 const waitForBack = require("./waitForBack");
 const settings = require("./settings");
@@ -73,18 +74,10 @@ function getInstaller (appList) {
 
 const whitelist = /^com\.(miui\.(voiceassist|personalassistant)|android\.(quicksearchbox|chrome))$/;
 function getAppList () {
-	const pm = context.getPackageManager();
 	const appList = sysAppList.filter(item => {
-		let appInfo;
-		try {
-			appInfo = pm.getApplicationInfo(item.packageName, 0);
-		} catch (ex) {
+		if (!getApplicationInfo(item)) {
 			return false;
 		}
-
-		item.appName = appInfo.loadLabel(pm);
-		// iconID: appInfo.icon,
-		// summary: Bitmap2StrByBase64(drawableToBitmap(appInfo.loadIcon(pm))),
 		if (item.checked == null) {
 			item.checked = !whitelist.test(item.packageName);
 		}

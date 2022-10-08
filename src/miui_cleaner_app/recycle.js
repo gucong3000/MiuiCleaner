@@ -35,6 +35,7 @@ function getInstalledPackages () {
 			appName: pm.getApplicationLabel(appInfo).toString(),
 			packageName: appInfo.packageName,
 			summary: appDesc[appInfo.packageName] || "",
+			loadIcon: appInfo.icon && (() => appInfo.loadIcon(pm)),
 			// versionCode: appInfo.versionCode,
 			// versionName: appInfo.versionName,
 			// dataDir: appInfo.dataDir,

@@ -1,3 +1,4 @@
+const getApplicationInfo = require("./getApplicationInfo");
 const singleChoice = require("./singleChoice");
 const waitForBack = require("./waitForBack");
 const settings = require("./settings");
@@ -12,7 +13,11 @@ const appList = [
 		name: "李跳跳",
 		summary: "干净小巧的广告自动跳过工具",
 		packageName: "cn.litiaotiao.app",
-		url: "https://www.123pan.com/s/A6cA-edAJh",
+		icon: "https://litiaotiao.cn/apple-touch-icon.png",
+		url: [
+			"https://litiaotiao.cn/",
+			"https://www.123pan.com/s/A6cA-edAJh",
+		],
 		// 'cn.litiaotiao.app/com.litiaotiao.app.LttService'
 	},
 
@@ -20,6 +25,7 @@ const appList = [
 		name: "Edge",
 		summary: "浏览器，微软出品，带广告屏蔽功能",
 		packageName: "com.microsoft.emmx",
+		icon: "http://file.market.xiaomi.com/thumbnail/PNG/l114/AppStore/083ca7b4c3bc34d6ca687789daa6747ea368d8747",
 		url: [
 			"https://www.coolapk.com/apk/com.microsoft.emmx",
 			"https://app.mi.com/details?id=com.microsoft.emmx",
@@ -29,6 +35,7 @@ const appList = [
 		name: "小米浏览器",
 		summary: "国际版",
 		packageName: "com.mi.globalbrowser",
+		icon: "http://img.itmop.com/upload/2018-2/2018227171959917.png",
 		url: [
 			"https://wwm.lanzouj.com/idzsf0bh062h",
 			"https://www.firepx.com/app/android-mi-browser-google-play/",
@@ -40,6 +47,7 @@ const appList = [
 		summary: "定制版、Google Play版",
 		packageName: "com.iflytek.inputmethod",
 		url: "https://423down.lanzouv.com/b0f24av5i",
+		icon: "http://file.market.xiaomi.com/thumbnail/PNG/l114/AppStore/04f6d4e16c4c41e570c4daf8349ad32f1e342cb66",
 		// [
 		// 	"https://www.coolapk.com/apk/com.iflytek.inputmethod",
 		// 	"https://app.mi.com/details?id=com.iflytek.inputmethod",
@@ -72,15 +80,17 @@ const appList = [
 		name: "QQ音乐简洁版",
 		summary: "v3.8.0 MIUI 音乐APP套壳的产品",
 		packageName: "com.tencent.qqmusiclite",
+		icon: "http://file.market.xiaomi.com/thumbnail/PNG/l114/AppStore/0f487cb7981174cf5a5338085d4d4acd5b1279946",
 		url: [
 			"https://www.coolapk.com/apk/com.tencent.qqmusiclite",
 			"https://app.mi.com/details?id=com.tencent.qqmusiclite",
 		],
 	},
 	{
-		name: "Holi 天气",
+		name: "Holi天气",
 		summary: "干净、小巧、漂亮、功能多",
 		packageName: "com.joe.holi",
+		icon: "http://pp.myapp.com/ma_icon/0/icon_42394164_1637810437/128",
 		url: [
 			"https://www.coolapk.com/apk/com.joe.holi",
 			"https://app.mi.com/details?id=com.joe.holi",
@@ -90,18 +100,21 @@ const appList = [
 		name: "ES文件浏览器",
 		summary: "去广告版，替代MIUI视频、音乐、文档查看器",
 		packageName: "com.estrongs.android.pop",
+		icon: "http://file.market.xiaomi.com/thumbnail/PNG/l114/AppStore/05b6f55415e9941468fd3185ebe8d80816335f599",
 		url: "https://423down.lanzouv.com/b0f1d7s2h",
 	},
 	{
 		name: "WPS Office Lite",
 		summary: "国际版，无广告，替代“文档查看器”",
 		packageName: "cn.wps.moffice_i18n",
+		icon: "https://findorra.com/apps/app/images/appicons/85525195-e34c-4314-a771-454e60c2e7de.PNG",
 		url: "https://www.32r.com/app/109976.html",
 	},
 	{
 		name: "知乎",
 		summary: "集成“知了”，“设置→知了”中有去广告开关",
 		packageName: "com.zhihu.android",
+		icon: "https://static.zhihu.com/heifetz/assets/apple-touch-icon-60.8f6c52aa.png",
 		url: "https://423down.lanzouo.com/b0f2lkafe",
 		// url: "www.baidu.com",
 	},
@@ -109,31 +122,36 @@ const appList = [
 		name: "哔哩哔哩",
 		summary: "“设置→哔哩漫游→关于版本”点五下有惊喜",
 		packageName: "tv.danmaku.bili",
+		icon: "http://file.market.xiaomi.com/thumbnail/PNG/l114/AppStore/096ba00f21e7f4633b0cbc9e596b5ab5233f608b5",
 		url: "https://423down.lanzouv.com/b0f1gksne",
 	},
 	{
 		name: "优酷视频",
 		summary: "去广告版",
 		packageName: "com.youku.phone",
+		icon: "https://img.alicdn.com/tfs/TB1WeJ9Xrj1gK0jSZFuXXcrHpXa-195-195.png",
 		url: "https://423down.lanzouv.com/b0f1avpib",
 	},
 	{
 		name: "百度贴吧",
 		summary: "去广告版",
 		packageName: "com.baidu.tieba",
+		icon: "http://file.market.xiaomi.com/thumbnail/PNG/l114/AppStore/02f3ec586a44940620835c58ff9b3c760914d1725",
 		url: "https://423down.lanzouv.com/b0f1b6q8d",
 	},
 	{
 		name: "酷安",
 		summary: "应用商店，去广告版",
 		packageName: "com.coolapk.market",
+		icon: "https://static.coolapk.com/static/web/v8/images/header-logo.png",
 		url: "https://423down.lanzouv.com/b0f2uzq2b",
 	},
 	{
 		name: "AppShare",
 		summary: "应用商店，刷机包，国际版提取的APP",
 		packageName: "info.muge.appshare",
-		url: "https://appshare.muge.info/",
+		icon: "http://pic.xfdown.com/uploads/2022-5/2022551511344265.png",
+		url: "https://423down.lanzouv.com/iHmmD06tw9xa",
 	},
 ];
 
@@ -174,9 +192,7 @@ function download (appInfo) {
 }
 
 function downApp () {
-	appList.forEach(appInfo => {
-		appInfo.appName = app.getAppName(appInfo.packageName);
-	});
+	appList.forEach(getApplicationInfo);
 	singleChoice({
 		title: "请选择要下载的APP",
 		itemList: appList,
