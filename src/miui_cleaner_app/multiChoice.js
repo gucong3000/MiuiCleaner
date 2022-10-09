@@ -5,10 +5,12 @@ function multiChoice (
 	{
 		itemList = [],
 		title = "多选",
-		icon = "@drawable/ic_launcher",
+		icon = "./res/drawable/ic_android.png",
 		checked = true,
 	},
 ) {
+	icon = /^\w+:\/\//.test(icon) ? icon : ("file://" + files.path(icon));
+
 	ui.layout(`
 		<frame>
 			<vertical>
@@ -18,7 +20,7 @@ function multiChoice (
 				<list id="itemList">
 					<card w="*" h="auto" margin="0 0 0 10" foreground="?selectableItemBackground">
 						<horizontal gravity="center_vertical">
-							<img id="icon" h="48" w="48" src="{{this.icon == null ? '${icon}' : this.icon}}" margin="10 10 0 10" />
+							<img id="icon" h="48" w="48" src="{{this.icon || '${icon}'}}" margin="10 10 0 10" />
 							<vertical h="auto" layout_weight="1" margin="10 15">
 								<text text="{{this.appName || this.name || this.packageName}}" textColor="#222222" textSize="16sp" maxLines="1" />
 								<text text="{{this.summary}}" textColor="#999999" textSize="14sp" maxLines="1" />
@@ -55,6 +57,11 @@ function multiChoice (
 	}
 
 	global.activity.setSupportActionBar(ui.toolbar);
+	itemList.forEach((item) => {
+		if (item.icon && !/^\w+:\/\//.test(item.icon)) {
+			item.icon = "file://" + files.path(item.icon);
+		}
+	});
 	ui.itemList.setDataSource(itemList);
 	bindDoneBtnVisibility(checked);
 

@@ -218,4 +218,9 @@ function sysAppRm () {
 	require("./index")();
 };
 
-module.exports = sysAppRm;
+module.exports = {
+	name: "预装APP卸载",
+	summary: "卸载系统广告组件及随机预装的APP",
+	icon: "./res/drawable/ic_phone_recovery.png",
+	fn: sysAppRm,
+};

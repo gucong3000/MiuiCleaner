@@ -73,4 +73,9 @@ function recycle () {
 	require("./index")();
 }
 
-module.exports = recycle;
+module.exports = {
+	name: "回收站",
+	summary: "恢复已卸载的APP",
+	icon: "./res/drawable/ic_recovery.png",
+	fn: recycle,
+};

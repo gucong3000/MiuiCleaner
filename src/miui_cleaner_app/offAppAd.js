@@ -163,4 +163,9 @@ function offAppAd () {
 	require("./index")();
 };
 
-module.exports = offAppAd;
+module.exports = {
+	name: "关闭各APP广告",
+	summary: "自动查询并关闭各APP中的广告",
+	icon: "./res/drawable/ic_no_ad.png",
+	fn: offAppAd,
+};

@@ -5,6 +5,12 @@ function emitItemShowEvent (listView, defaultIcon) {
 	const itemVisible = new Map();
 	listView.on("item_bind", function (itemView, itemHolder) {
 		itemList.set(itemView, itemHolder);
+		setTimeout(() => {
+			listView.emit("item_show", itemHolder.item, itemView, listView);
+			if (itemHolder.item.loadIcon || (itemHolder.item.icon && /^https?:/i.test(itemHolder.item.icon))) {
+				itemView.icon.clearColorFilter();
+			}
+		}, 0);
 	});
 	listView.on("scroll_change", () => {
 		const parentRect = new Rect();

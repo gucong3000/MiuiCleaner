@@ -1,6 +1,6 @@
 {
 	"name": "miui_cleaner",
-	"version": "2022.10.7.7",
+	"version": "2022.10.10.7",
 	"private": true,
 	"description": "MIUI广告清理工具",
 	"scripts": {
