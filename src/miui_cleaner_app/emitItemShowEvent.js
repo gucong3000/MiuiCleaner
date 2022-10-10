@@ -1,5 +1,5 @@
 const Rect = android.graphics.Rect;
-
+const inNightMode = Boolean(activity.getApplicationContext().getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_YES);
 function emitItemShowEvent (listView, defaultIcon) {
 	const itemList = new Map();
 	const itemVisible = new Map();
@@ -36,7 +36,11 @@ function emitItemShowEvent (listView, defaultIcon) {
 		const imageView = itemView.icon;
 		if (item.loadIcon) {
 			imageView.setImageDrawable(item.loadIcon());
+		} else if (!(item.icon && /^https?:/i.test(item.icon))) {
+			imageView.setColorFilter(android.graphics.Color.parseColor(inNightMode ? "#FFCCCCCC" : "#FF333333"));
+			return;
 		}
+		imageView.clearColorFilter();
 	});
 }
 module.exports = emitItemShowEvent;
