@@ -1,6 +1,8 @@
 const startActivity = require("./startActivity");
 const singleChoice = require("./singleChoice");
 
+// https://blog.unidevel.cn/xiao-mi-dian-zi-shu-shang-yi-xie-yin-cang-de-she-zhi/
+
 const actions = [
 	{
 		name: "自启动管理",
@@ -43,15 +45,31 @@ const actions = [
 		packageName: "com.android.settings",
 		className: ".applications.ManageApplications",
 	},
+	// {
+	// 	name: "甜品盒",
+	// 	summary: "彩蛋",
+	// 	icon: "./res/drawable/ic_android.png",
+	// 	packageName: "com.android.systemui",
+	// 	className: ".DessertCase",
+	// },
+	// {
+	// 	name: "Marshmallow Land",
+	// 	summary: "彩蛋",
+	// 	icon: "./res/drawable/ic_android.png",
+	// 	packageName: "com.android.systemui",
+	// 	className: ".egg.MLandActivity",
+	// },
 ].filter(action => (
 	app.getAppName(action.packageName)
 ));
 
 const name = "APP管家";
+const icon = "./res/drawable/ic_phone_settings.png";
 
 function appManager () {
 	singleChoice({
 		title: name,
+		icon,
 		itemList: actions,
 		fn: function (item) {
 			startActivity(item);
@@ -62,7 +80,7 @@ function appManager () {
 
 module.exports = {
 	name,
+	icon,
 	summary: "广告相关权限管理",
-	icon: "./res/drawable/ic_phone_settings.png",
 	fn: appManager,
 };
