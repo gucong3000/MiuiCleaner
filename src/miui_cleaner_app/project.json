@@ -5,7 +5,7 @@
 		"hideLogs": false,
 		"permissions": [],
 		"serviceDesc": "自动操作(关闭 MIUI 广告)所需，若关闭则只能执行其他功能。",
-		"splashIcon": null,
+		"splashIcon": "res/drawable/ic_launcher.png",
 		"splashText": "MIUI广告清理工具",
 		"stableMode": false,
 		"volumeUpcontrol": true
@@ -16,5 +16,5 @@
 	"scripts": {},
 	"useFeatures": [],
 	"versionCode": 7,
-	"versionName": "2022.10.10.7"
+	"versionName": "2022.10.11.7"
 }

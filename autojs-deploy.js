@@ -128,7 +128,6 @@ class AutojsDeployPlugin {
 			if (!Array.isArray(ui)) {
 				ui = [ui];
 			}
-
 			ui.forEach(fileName => {
 				if (typeof fileName !== "string") {
 					fileName = config.main;
