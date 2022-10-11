@@ -6,6 +6,9 @@ const settings = require("./settings");
 const appDesc = require("./appDesc");
 const dialogs = require("./dialogs");
 
+const installerPackageName = "com.miui.packageinstaller";
+const installerAppName = app.getAppName(installerPackageName);
+
 const sysAppList = Object.keys(appDesc).map(packageName => ({
 	packageName,
 	summary: appDesc[packageName],
@@ -20,9 +23,8 @@ function clickButton (button, text) {
 
 // 卸载“纯净模式”
 function getInstaller (appList) {
-	const packageName = "com.miui.packageinstaller";
 	const packageInfo = getApplicationInfo({
-		packageName,
+		packageName: installerPackageName,
 		summary: "降级安装v380，以便移除“纯净模式”",
 	});
 	if (!packageInfo || packageInfo.getVersionCode() < 400) {
@@ -33,7 +35,6 @@ function getInstaller (appList) {
 	const srcPath = "res/" + fileName;
 	const copyPath = "/sdcard/Download/" + fileName;
 	const installPath = "/data/local/tmp/" + fileName;
-	const appName = app.getAppName(packageInfo.packageName);
 	files.copy(srcPath, copyPath);
 	packageInfo.cmd = [
 		`mv ${copyPath} ${installPath}`,
@@ -41,7 +42,7 @@ function getInstaller (appList) {
 		"rm -rf " + installPath,
 	].join("\n");
 	appList.push(packageInfo);
-	console.log(`发现${appName}(${packageName})，版本号${packageInfo.getVersionName()}，已释放版本号为v380的降级安装包到路径：${copyPath}`);
+	console.log(`发现${installerAppName}(${installerPackageName})，版本号${packageInfo.getVersionName()}，已释放版本号为v380的降级安装包到路径：${copyPath}`);
 }
 
 const whitelist = /^com\.(miui\.(voiceassist|personalassistant)|android\.(quicksearchbox|chrome))$/;
@@ -60,14 +61,11 @@ function getAppList () {
 	return appList;
 }
 
-const installerPackageName = "com.miui.packageinstaller";
-const installerAppName = app.getAppName(installerPackageName);
-
 function installerHelper () {
 	// 应用包安装程序选择界面，下次默认，不再提示
-	const isCheckBox = checkBox => (
-		checkBox.checkable() && !checkBox.checked() && /下次默认.*不再提示/.test(checkBox.text()) && /\bandroid\b/.test(checkBox.packageName())
-	);
+	// const isCheckBox = checkBox => (
+	// 	checkBox.checkable() && !checkBox.checked() && /下次默认.*不再提示/.test(checkBox.text()) && /\bandroid\b/.test(checkBox.packageName())
+	// );
 	// 应用包安装程序选择界面，通过“应用包管理组件”运行
 	const isInstallerSelect = btn => (
 		installerAppName === btn.text() && /\bandroid\b/.test(btn.packageName())
@@ -78,18 +76,19 @@ function installerHelper () {
 	);
 	clickButton(
 		selector().filter(
-			obj => isCheckBox(obj) || isInstallerSelect(obj) || isContinueBtn(obj),
+			obj => isInstallerSelect(obj) || isContinueBtn(obj),
 		).findOnce(),
 	);
 	setTimeout(installerHelper, 0x50);
 }
 
-function removeByInstaler (tasks) {
-	if (!tasks.length) {
-		return tasks;
+function removeByInstaler (taskList) {
+	const uninstallTaskList = taskList.filter(task => task.packageName !== installerPackageName);
+	if (!uninstallTaskList.length) {
+		return taskList;
 	}
 
-	toastLog(`尝试以常规权限卸载${tasks.length}个应用`);
+	toastLog(`尝试以常规权限卸载${uninstallTaskList.length}个应用`);
 	let helper;
 	return settings.set(
 		"accessibilityServiceEnabled",
@@ -101,12 +100,12 @@ function removeByInstaler (tasks) {
 		}
 	}).then(() =>
 		waitForBack(() => {
-			tasks.forEach(appInfo => {
+			uninstallTaskList.forEach(appInfo => {
 				app.uninstall(appInfo.packageName);
 			});
 		}).then(() => {
 			helper && helper.interrupt();
-			return tasks;
+			return taskList;
 		}),
 	);
 }
@@ -135,13 +134,13 @@ function removeByScript (tasks) {
 	} catch (ex) {
 		//
 	}
-	settings.set("adbInput", true, "自动打开“USB调试(安全设置)”，让电脑端有权限卸载这些APP").then((adbInput) => {
+	return settings.set("adbInput", true, "自动打开“USB调试(安全设置)”，让电脑端有权限卸载这些APP").then((adbInput) => {
 		// if (!adbInput) {
 		// 	toastLog("“USB调试(安全设置)”未打开，请打开后再试。");
 		// 	return;
 		// }
 		cmd = "adb shell " + cmd;
-		console.log("正以等候电脑端自动执行：\n" + cmd);
+		toastLog("正以等候电脑端自动执行：\t" + cmd);
 		const timeout = Date.now() + 0x800 + tasks.length * 0x200;
 		let fileExist;
 		return new Promise((resolve) => {
