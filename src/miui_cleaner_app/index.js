@@ -19,7 +19,7 @@ const mainActions = [
 			}, 0);
 			return app.startActivity("console");
 		},
-		icon: "./res/drawable/ic_debug.png",
+		icon: "./res/drawable/ic_log.png",
 	},
 	{
 		name: "退出",
@@ -37,6 +37,7 @@ function mainMenu () {
 }
 
 function regBack () {
+	ui.emitter.removeAllListeners("back_pressed");
 	ui.emitter.once("back_pressed", (e) => {
 		e.consumed = true;
 		mainMenu();
