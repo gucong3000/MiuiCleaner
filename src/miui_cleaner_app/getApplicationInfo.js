@@ -7,14 +7,27 @@ function getApplicationInfo (options) {
 	const getPackageInfo = () => packageInfo || (packageInfo = pm.getPackageInfo(options.packageName, 0));
 
 	try {
-		appInfo = pm.getApplicationInfo(options.packageName, 0);
+		appInfo = pm.getApplicationInfo(options.packageName, android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
 	} catch (ex) {
 		return null;
 	}
-	if (!options.action || (!options.name && !options.appName)) {
-		options.appName = pm.getApplicationLabel(appInfo).toString();
+	if (!options.appName) {
+		const appName = pm.getApplicationLabel(appInfo).toString();
+		if (appName === options.packageName) {
+			if (!options.name && options.summary) {
+				options.name = options.summary;
+				options.summary = options.packageName;
+			}
+		} else {
+			options.appName = appName;
+		}
 	}
-	options.loadIcon = appInfo.icon && (() => appInfo.loadIcon(pm));
+	if (!options.signatures) {
+		options.signatures = appInfo.signatures;
+	}
+	if (!options.loadIcon && appInfo.icon) {
+		options.loadIcon = () => appInfo.loadIcon(pm);
+	}
 	options.getVersionName = () => getPackageInfo().versionName;
 	options.getVersionCode = () => getPackageInfo().getLongVersionCode();
 	return options;

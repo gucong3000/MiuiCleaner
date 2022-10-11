@@ -18,7 +18,7 @@ const cleanerList = [
 		settings: ["passportAD"],
 	},
 	{
-		name: "系统安全",
+		displayName: "系统安全",
 		summary: "系统安全→网页拉活应用、日志上传等",
 		packageName: settingsPackageName,
 		action: "ACTION_SECURITY_SETTINGS",
@@ -33,7 +33,7 @@ const cleanerList = [
 	},
 	{
 		// `广告服务` 位于 `安全` 的子页面
-		name: "广告服务",
+		displayName: "广告服务",
 		summary: "系统安全→广告服务→个性化广告推荐",
 		packageName: settingsPackageName,
 		action: ".ad.AdServiceSettings",
@@ -47,7 +47,7 @@ const cleanerList = [
 	},
 	{
 		// 手机管家→应用管理→设置页
-		name: "应用管理",
+		displayName: "应用管理",
 		summary: "资源推荐",
 		packageName: "com.miui.securitycenter",
 		action: "com.miui.appmanager.AppManagerMainActivity",

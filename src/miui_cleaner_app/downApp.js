@@ -201,7 +201,9 @@ function downApp () {
 	appList.forEach((appInfo) => {
 		getApplicationInfo(appInfo);
 		if (appInfo.appName) {
-			appInfo.appName = appInfo.appName.replace(/(\s+v.*?)?$/, " v" + appInfo.getVersionName());
+			appInfo.displayName = appInfo.appName + " v" + appInfo.getVersionName();
+		} else {
+			delete appInfo.displayName;
 		}
 	});
 	singleChoice({

@@ -21,8 +21,11 @@ function clickButton (button, text) {
 // 卸载“纯净模式”
 function getInstaller (appList) {
 	const packageName = "com.miui.packageinstaller";
-	const packageInfo = context.getPackageManager().getPackageInfo(packageName, 0);
-	if (!packageInfo || packageInfo.getLongVersionCode() < 400) {
+	const packageInfo = getApplicationInfo({
+		packageName,
+		summary: "降级安装v380，以便移除“纯净模式”",
+	});
+	if (!packageInfo || packageInfo.getVersionCode() < 400) {
 		// 版本号小于400，则不含“纯净模式”
 		return;
 	}
@@ -32,45 +35,14 @@ function getInstaller (appList) {
 	const installPath = "/data/local/tmp/" + fileName;
 	const appName = app.getAppName(packageInfo.packageName);
 	files.copy(srcPath, copyPath);
-	appList.push({
-		packageName,
-		name: "纯净模式",
-		cmd: [
-			`mv ${copyPath} ${installPath}`,
-			"pm install -d -g " + installPath,
-			"rm -rf " + installPath,
-		].join("\n"),
-	});
-	console.log(`发现${appName}(${packageName})，版本号${packageInfo.versionCode}，已释放版本号为380的降级安装包到路径：${copyPath}`);
+	packageInfo.cmd = [
+		`mv ${copyPath} ${installPath}`,
+		"pm install -d -g " + installPath,
+		"rm -rf " + installPath,
+	].join("\n");
+	appList.push(packageInfo);
+	console.log(`发现${appName}(${packageName})，版本号${packageInfo.getVersionName()}，已释放版本号为v380的降级安装包到路径：${copyPath}`);
 }
-
-// const Base64 = android.util.Base64;
-// const Bitmap = android.graphics.Bitmap;
-// const PixelFormat = android.graphics.PixelFormat;
-// const ByteArrayOutputStream = java.io.ByteArrayOutputStream;
-
-// // drawable 转换成bitmap
-// function drawableToBitmap (drawable) {
-// 	if (drawable.getBitmap) {
-// 		return drawable.getBitmap();
-// 	}
-// 	// 取drawable的长宽
-// 	const width = drawable.getIntrinsicWidth();
-// 	const height = drawable.getIntrinsicHeight();
-// 	const config = drawable.getOpacity() !== PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;// 取drawable的颜色格式
-// 	const bitmap = Bitmap.createBitmap(width, height, config);// 建立对应bitmap
-// 	const canvas = new android.graphics.Canvas(bitmap);// 建立对应bitmap的画布
-// 	drawable.setBounds(0, 0, width, height);
-// 	drawable.draw(canvas);// 把drawable内容画到画布中
-// 	return bitmap;
-// }
-
-// function Bitmap2StrByBase64 (bitmap) {
-// 	const bos = new ByteArrayOutputStream();
-// 	bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos);// 参数100表示不压缩
-// 	const bytes = bos.toByteArray();
-// 	return "data:image/png;base64," + Base64.encodeToString(bytes, Base64.DEFAULT).trim();
-// }
 
 const whitelist = /^com\.(miui\.(voiceassist|personalassistant)|android\.(quicksearchbox|chrome))$/;
 function getAppList () {

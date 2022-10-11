@@ -4,13 +4,14 @@ const settings = require("./settings");
 const instApk = require("./instApk");
 const appDesc = require("./appDesc");
 
+const marketPackageName = "com.xiaomi.market";
+
 function launchMarket () {
 	return settings.set(
 		"accessibilityServiceEnabled",
 		true,
 		"自动打开“应用商店”的“系统应用管理”",
 	).then(accessibilityServiceEnabled => {
-		const marketPackageName = "com.xiaomi.market";
 		if (accessibilityServiceEnabled) {
 			return serviceMgr({
 				packageName: marketPackageName,
@@ -31,27 +32,27 @@ function getInstalledPackages () {
 		if (app.getAppName(appInfo.packageName)) {
 			return null;
 		}
+		const summary = appDesc[appInfo.packageName] || "";
+		let appName = pm.getApplicationLabel(appInfo).toString();
+		if (appName === appInfo.packageName) {
+			appName = null;
+		}
 		return {
-			appName: pm.getApplicationLabel(appInfo).toString(),
+			summary: appName ? summary : appInfo.packageName,
 			packageName: appInfo.packageName,
-			summary: appDesc[appInfo.packageName] || "",
 			loadIcon: appInfo.icon && (() => appInfo.loadIcon(pm)),
-			// versionCode: appInfo.versionCode,
-			// versionName: appInfo.versionName,
-			// dataDir: appInfo.dataDir,
 			apk: appInfo.sourceDir,
-			// publicSourceDir: appInfo.publicSourceDir,
-			// deviceProtectedDataDir: appInfo.deviceProtectedDataDir,
+			name: appName || summary,
+			appName,
 		};
 	}).filter(Boolean).sort((app1, app2) => (
 		app1.packageName.localeCompare(app2.packageName)
-	)).concat(
-		{
-			name: "其他",
-			fn: launchMarket,
-			summary: "去应用商店下载其他小米官方应用",
-		},
-	);
+	)).concat({
+		name: "其他",
+		loadIcon: () => pm.getApplicationInfo(marketPackageName, 0).loadIcon(pm),
+		fn: launchMarket,
+		summary: "去应用商店下载其他小米官方应用",
+	});
 }
 let requestInstallPackages;
 function recycle () {
