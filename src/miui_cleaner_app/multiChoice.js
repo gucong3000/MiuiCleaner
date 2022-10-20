@@ -62,8 +62,8 @@ function multiChoice (
 			item.icon = "file://" + files.path(item.icon);
 		}
 	});
+	bindDoneBtnVisibility();
 	ui.itemList.setDataSource(itemList);
-	bindDoneBtnVisibility(checked);
 
 	return new Promise((resolve) => {
 		ui.done.on("click", () => {
