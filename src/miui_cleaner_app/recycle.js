@@ -1,70 +1,82 @@
-const findClickableParent = require("./findClickableParent");
-const requestSettings = require("./requestSettings");
 const singleChoice = require("./singleChoice");
+const serviceMgr = require("./serviceMgr");
+const settings = require("./settings");
 const instApk = require("./instApk");
-const blur = require("./blur");
+const appDesc = require("./appDesc");
 
 const marketPackageName = "com.xiaomi.market";
-function clickMarketBtn (text) {
-	const btn = selector().packageName(marketPackageName).text(text).findOne(0x1000);
-	if (btn) {
-		findClickableParent(btn).click();
-		return btn;
-	}
-}
 
 function launchMarket () {
-	const opts = {
-		packageName: marketPackageName,
-		className: marketPackageName + ".ui.MarketTabActivity",
-	};
-
-	try {
-		app.startActivity(opts);
-	} catch (ex) {
-		app.launch(marketPackageName);
-	}
-
-	clickMarketBtn("我的") && clickMarketBtn("系统应用管理");
+	return settings.set(
+		"accessibilityServiceEnabled",
+		true,
+		"自动打开“应用商店”的“系统应用管理”",
+	).then(accessibilityServiceEnabled => {
+		if (accessibilityServiceEnabled) {
+			return serviceMgr({
+				packageName: marketPackageName,
+				action: ".ui.CommonWebActivity",
+				name: "系统应用管理",
+			});
+		} else {
+			return app.launchPackage(marketPackageName);
+		}
+	});
 }
 
 function getInstalledPackages () {
-	toastLog("正在查询回收站，请稍候");
 	const pm = context.getPackageManager();
 	return Array.from(
 		pm.getInstalledApplications(android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES),
 	).map(appInfo => {
-		if (/\b(analytics|systemAdSolution)$/.test(appInfo.packageName) || app.getAppName(appInfo.packageName)) {
+		if (app.getAppName(appInfo.packageName)) {
 			return null;
 		}
-		return {
-			appName: pm.getApplicationLabel(appInfo).toString(),
-			packageName: appInfo.packageName,
-			// versionCode: appInfo.versionCode,
-			// versionName: appInfo.versionName,
-			// dataDir: appInfo.dataDir,
-			apk: appInfo.sourceDir,
-			// publicSourceDir: appInfo.publicSourceDir,
-			// deviceProtectedDataDir: appInfo.deviceProtectedDataDir,
-		};
-	}).filter(Boolean);
-}
-
-function recycle () {
-	const appInfo = singleChoice("请选择要恢复的应用", getInstalledPackages().concat({ name: "其他" }));
-	if (appInfo) {
-		requestSettings({
-			accessibility: true,
-		});
-		if (appInfo.apk) {
-			instApk(appInfo.apk);
-			console.log("正在恢复：", appInfo);
-		} else {
-			launchMarket();
+		const summary = appDesc[appInfo.packageName] || "";
+		let appName = pm.getApplicationLabel(appInfo).toString();
+		if (appName === appInfo.packageName) {
+			appName = null;
 		}
-		blur();
-		recycle();
-	}
+		return {
+			summary: appName ? summary : appInfo.packageName,
+			packageName: appInfo.packageName,
+			loadIcon: appInfo.icon && (() => appInfo.loadIcon(pm)),
+			apk: appInfo.sourceDir,
+			name: appName || summary,
+			appName,
+		};
+	}).filter(Boolean).sort((app1, app2) => (
+		app1.packageName.localeCompare(app2.packageName)
+	)).concat({
+		name: "其他",
+		loadIcon: () => pm.getApplicationInfo(marketPackageName, 0).loadIcon(pm),
+		fn: launchMarket,
+		summary: "去应用商店下载其他小米官方应用",
+	});
+}
+let requestInstallPackages;
+function recycle () {
+	singleChoice({
+		title: "请选择要恢复的应用",
+		itemList: {
+			then: (resolve) => resolve(getInstalledPackages()),
+		},
+		fn: function (appInfo) {
+			if (!requestInstallPackages) {
+				requestInstallPackages = settings.set("requestInstallPackages", true, "打开应用安装权限");
+			}
+			return requestInstallPackages.then(() => {
+				instApk(appInfo.apk);
+				console.log("正在恢复：", appInfo);
+			});
+		},
+	});
+	require("./index")();
 }
 
-module.exports = recycle;
+module.exports = {
+	name: "回收站",
+	summary: "恢复已卸载的APP",
+	icon: "./res/drawable/ic_recovery.png",
+	fn: recycle,
+};

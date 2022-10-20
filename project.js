@@ -14,17 +14,17 @@ const axios = require("axios").default;
 		readFile("src/miui_cleaner_cmd/main.cmd"),
 		readFile("README.md"),
 	]);
+	const pkgInfo = packageConfig.json;
+	const appInfo = appConfig.json;
+
 	const date = new Date();
 	let versionCode;
 
 	if (process.env.GITHUB_RUN_NUMBER) {
 		versionCode = process.env.GITHUB_RUN_NUMBER - 0;
 	} else {
-		// appConfig.json.versionCode = ;
 		versionCode = (await axios.get("https://raw.fastgit.org/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json")).data.versionCode + 1;
 	}
-
-	appConfig.json.versionCode = versionCode;
 
 	const versionName = [
 		date.getUTCFullYear(),
@@ -32,12 +32,14 @@ const axios = require("axios").default;
 		date.getUTCDate(),
 		versionCode,
 	].join(".");
-
-	appConfig.json.versionName = versionName;
-	packageConfig.json.version = versionName;
-	appConfig.json.launchConfig.splashText = packageConfig.json.description;
-	packageConfig.json.scripts["build:pull"] = packageConfig.json.scripts["build:pull"].replace(/_v.*?\.apk/, `_v${versionName}.apk`);
-	cmd.constents = cmd.constents.replace(/^title\s+.*$/im, `title ${appConfig.json.name} - ${packageConfig.json.description} - v${appConfig.json.versionName}`);
+	pkgInfo.version = versionName;
+	appInfo.versionCode = versionCode;
+	appInfo.versionName = versionName;
+	appInfo.launchConfig.splashText = pkgInfo.description;
+	cmd.constents = cmd.constents.replace(
+		/^title\s+.*$/im,
+		`title ${appInfo.name} - ${pkgInfo.description}`,
+	);
 
 	const distCmd = fs.writeFile(
 		"dist/miui_cleaner_cmd/MiuiCleaner.cmd",
@@ -50,7 +52,10 @@ const axios = require("axios").default;
 			{
 				input: cmd.constents.replace(
 					/^chcp\s+\d+/im, "chcp 936",
-				),
+				).replace(
+					/^title\s+.*$/im,
+					`title ${appInfo.name} - ${pkgInfo.description} -v${pkgInfo.version}`,
+				).replace(/\r?\n/g, "\r\n"),
 			},
 		).stdout,
 	);
@@ -81,8 +86,10 @@ async function readFile (path) {
 			} else {
 				newContents = file.constents;
 			}
+			const finalNewline = /\.(cmd|bat)$/i.test(path) ? "\r\n" : "\n";
+			newContents = newContents.replace(/\r?\n/g, finalNewline);
 			if (constents.trim() !== newContents.trim()) {
-				return fs.writeFile(path, newContents.trim() + "\n", ...args);
+				return fs.writeFile(path, newContents.trim() + finalNewline, ...args);
 			}
 		},
 	};
@@ -92,7 +99,11 @@ async function readFile (path) {
 // 保持文档的描述和关闭广告的单元测试数据一致
 function updateDoc (readme) {
 	const docResult = [];
-	printTestCase(require("./src/miui_cleaner_app/test/offAppAdTest").testCase);
+	const testCase = require("./src/miui_cleaner_app/test/services").testCase;
+	delete testCase["关于手机"];
+	delete testCase["开发者选项"];
+
+	printTestCase(testCase);
 
 	readme.constents = readme.constents.replace(/(#+\s*关闭各应用广告[\s\S]*?<\/summary>[\s\S]*?)-[\s\S]*(<\/details>)/, (s, prefix, suffix) => {
 		return prefix + docResult.join("\n") + "\n\n" + suffix;

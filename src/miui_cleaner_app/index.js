@@ -1,43 +1,49 @@
 const singleChoice = require("./singleChoice");
-const project = require("./project.json");
 
 const mainActions = [
+	require("./sysAppRm"),
+	require("./downApp"),
+	require("./offAppAd"),
+	require("./appManager"),
+	require("./recycle"),
 	{
-		name: "预装应用卸载",
-		fn: require("./sysAppRm"),
-	},
-	{
-		name: "去广告应用",
-		fn: require("./downApp").choice,
-	},
-	{
-		name: "关闭各应用广告",
-		fn: require("./offAppAd"),
-	},
-	{
-		name: "应用管家",
-		subItems: require("./appManager"),
-	},
-	{
-		name: "回收站",
-		fn: require("./recycle"),
+		name: "控制台",
+		summary: "查看运行日志",
+		fn: () => {
+			setTimeout(() => {
+				const settings = require("./settings");
+				console.log(
+					"settings: \n" +
+						settings.keys().map(key => `\t${key}: ${JSON.stringify(settings[key])}`).join("\n"),
+				);
+			}, 0);
+			return app.startActivity("console");
+		},
+		icon: "./res/drawable/ic_log.png",
 	},
 	{
 		name: "退出",
-		fn: exit,
+		summary: "再见",
+		icon: "./res/drawable/ic_exit.png",
+		fn: () => ui.finish(),
 	},
 ];
-function showMenu (title, actions) {
-	const action = singleChoice(title, actions);
-	if (action) {
-		if (action.fn) {
-			action.fn();
-		} else if (Array.isArray(action.subItems)) {
-			showMenu(action.name, action.subItems);
-		}
-		showMenu(title, actions);
-	}
+
+function mainMenu () {
+	singleChoice({
+		title: "请选择你的操作",
+		itemList: mainActions,
+	});
 }
 
-// module.exports = mainMenu;
-showMenu(project.name, mainActions);
+function regBack () {
+	ui.emitter.removeAllListeners("back_pressed");
+	ui.emitter.once("back_pressed", (e) => {
+		e.consumed = true;
+		mainMenu();
+	});
+}
+
+module.exports = regBack;
+
+mainMenu();

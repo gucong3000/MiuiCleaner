@@ -11,7 +11,7 @@ MIUI广告清理工具
 		- [360手机助手](https://sj.360.cn/)
 		- [豌豆荚](https://www.wandoujia.com/)
 		- [Android SDK 平台工具](https://developer.android.google.cn/studio/releases/platform-tools?hl=zh-cn)
-	- 在该工具的安装目录中搜索到`adb.exe`所在的子目录，将`MiuiCleaner.cmd`放入其中并运行
+	- 在该工具的安装目录中搜索到`adb.exe`所在的子目录，将`MiuiCleaner.cmd`放入其中并运行（或者将这个目录加入环境变量`PATH`中）
 
 ## 功能介绍
 ### 预装应用卸载
@@ -58,11 +58,16 @@ MIUI广告清理工具
 	- 小米换机
 	- 小米社区
 	- 用户反馈
+	- KLO bug反馈
 	- 服务与反馈
+	- 我的服务
 	- 小米画报
 	- 动态壁纸
 	- 动态壁纸获取
+	- 壁纸备份
+	- 壁纸编辑器
 	- 收音机（蜻蜓FM）
+	- WPS Office Lite
 	- 阅读（番茄免费小说）
 	- 阅读（多看阅读器）
 	- 小米运动健康
@@ -80,6 +85,7 @@ MIUI广告清理工具
 	- 游戏中心
 	- 游戏服务
 	- 游戏中心 - pad 版
+	- Joyose
 - SIM 卡应用
 	- 小米移动
 	- 全球上网
@@ -113,10 +119,16 @@ MIUI广告清理工具
 	> Google Play版，无广告
 - 软件包安装程序
 	> Google版，代替MIUI的“应用包管理程序”，无广告和审查功能
+- [应用包管理组件](https://zisu.lanzoum.com/iI7LGwn5xjc)
+	> MIUI软件包安装程序v3.8.0，不含“纯净模式”
+- [QQ音乐简洁版](https://www.coolapk.com/apk/com.tencent.qqmusiclite)
+	> MIUI 音乐APP套壳的产品
 - [Holi 天气](https://www.coolapk.com/apk/com.joe.holi)
 	> 无广告，体较小，更漂亮，替代“小米天气”
 - [ES文件浏览器](https://423down.lanzouv.com/b0f1d7s2h)
 	> 修改版，去广告，代替“小米视频”和“小米音乐”
+- [WPS Office Lite](https://www.32r.com/app/109976.html)
+	> 国际版，无广告，替代“文档查看器”
 - [知乎](https://423down.lanzouo.com/b0f2lkafe)
 	> 集成“知了”，可在“知了”中关闭所有广告
 - [哔哩哔哩](https://423down.lanzouv.com/b0f1gksne)
@@ -250,13 +262,15 @@ MIUI广告清理工具
 ### 应用管家
 
 - 自启动管理
-	> 可管理所有应用的自启动权限
+	> 自启动及后台运行权限管理
 - 通知管理
-	> 可以将所有通知栏广告一网打尽
-- 应用卸载
-	> 可批量卸载第三方应用
-- 应用信息
-	> 管理各种权限
+	> 通知栏、悬浮提示、图标角标的管理
+- APP卸载
+	> APP的批量卸载
+- APP管理
+	> 手机管家的应用管理功能
+- APP信息
+	> 权限管理模块
 
 ### 回收站
 
@@ -270,6 +284,11 @@ MIUI广告清理工具
 
 ## CHANGELOG
 
+- v2022.10.20.7
+	- 重构UI，减少对弹出框权限的依赖，菜单项加入描述信息、图标	-
+	- 权限获取功能重构，修复不能正确请求权限的bug
+	- 增加若干可卸载APP
+	- 增加若干去广告APP
 - v2022.9.25.5
 	- PC端修复bug #1
 	- 预装应用卸载
@@ -319,4 +338,3 @@ MIUI广告清理工具
 	- 首个版本
 	- 提供若干内置APP卸载和恢复功能
 	- 提供第三方APP替换功能
-
