@@ -84,7 +84,7 @@ const appList = [
 	},
 	{
 		name: "QQ音乐简洁版",
-		summary: "v3.8.0 MIUI 音乐APP套壳的产品",
+		summary: "MIUI音乐APP套壳的产品",
 		icon: "http://i5.res.meizu.com/fileserver/app_icon/11507/2d07011365854d2c83832165e3e0d547.",
 		packageName: "com.tencent.qqmusiclite",
 		url: [

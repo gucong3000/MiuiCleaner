@@ -24,6 +24,7 @@ module.exports = {
 	"com.miui.video": "小米视频，应替换成ES文件浏览器",
 	"com.tencent.qqlivexiaomi": "小米视频插件-腾讯视频小米版",
 	"com.qiyi.video.sdkplayer": "小米视频插件-爱奇艺播放器",
+	// 天气
 	"com.miui.weather2": "小米天气，应替换成Holi天气",
 	// 支付、电商、理财类 APP
 	"com.xiaomi.shop": "小米商城",
@@ -53,6 +54,7 @@ module.exports = {
 	"com.dragon.read": "阅读/番茄免费小说",
 	"com.duokan.reader": "阅读/多看阅读器",
 	"com.mi.health": "小米健康/小米运动健康",
+	// 浏览器
 	"com.android.browser": "小米浏览器",
 	"com.mi.globalbrowser": "小米浏览器（国际版）",
 	"com.android.chrome": "Chrome",
@@ -61,10 +63,12 @@ module.exports = {
 	"com.sohu.inputmethod.sogou.xiaomi": "搜狗输入法-小米版",
 	"com.iflytek.inputmethod.miui": "讯飞输入法-小米版",
 	"com.miui.securityinputmethod": "小米安全键盘",
+	// 小米游戏中心
 	"com.xiaomi.migameservice": "// 游戏中心（旧版）",
 	"com.xiaomi.gamecenter": "游戏中心",
 	"com.xiaomi.gamecenter.sdk.service": "游戏中心-SDK服务",
 	"com.xiaomi.gamecenter.pad": "游戏中心-pad版",
+	"com.xiaomi.joyose": "云控/温控/记步",
 	// SIM 卡应用
 	"com.miui.virtualsim": "全球上网",
 	"com.xiaomi.mimobile": "小米移动",

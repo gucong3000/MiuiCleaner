@@ -71,9 +71,7 @@ function appManager () {
 		title: name,
 		icon,
 		itemList: actions,
-		fn: function (item) {
-			startActivity(item);
-		},
+		fn: startActivity,
 	});
 	require("./index")();
 }
