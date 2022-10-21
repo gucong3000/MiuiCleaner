@@ -241,7 +241,12 @@ function defineSettingProperty ({
 		depend,
 		space,
 		get: () => {
-			const value = settings[space]["get" + type](context.getContentResolver(), key);
+			let value;
+			try {
+				value = settings[space]["get" + type](context.getContentResolver(), key);
+			} catch (ex) {
+				return;
+			}
 			return get ? get(value) : value;
 		},
 		set: (expectValue) => {

@@ -36,6 +36,7 @@ function singleChoice (
 	emitItemShowEvent(ui.itemList, icon);
 
 	ui.itemList.on("item_click", function (item, i, itemView, listView) {
+		console.log(`已点击：${item.displayName || item.appName || item.name}`);
 		item.fn ? item.fn(item) : fn(item);
 	});
 

@@ -13,8 +13,14 @@ const mainActions = [
 			setTimeout(() => {
 				const settings = require("./settings");
 				console.log(
-					"settings: \n" +
-						settings.keys().map(key => `\t${key}: ${JSON.stringify(settings[key])}`).join("\n"),
+					[
+						`SDK: ${device.sdkInt}`,
+						`Android: ${device.release}`,
+						`MIUI: ${device.incremental}`,
+						"settings:",
+					].concat(
+						settings.keys().map(key => `\t${key}: ${JSON.stringify(settings[key])}`),
+					).join("\n"),
 				);
 			}, 0);
 			return app.startActivity("console");
