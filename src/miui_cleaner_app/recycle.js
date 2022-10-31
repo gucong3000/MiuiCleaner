@@ -59,7 +59,7 @@ function recycle () {
 	singleChoice({
 		title: "请选择要恢复的应用",
 		itemList: {
-			then: (resolve) => resolve(getInstalledPackages()),
+			then: (...args) => Promise.resolve(getInstalledPackages()).then(...args),
 		},
 		fn: function (appInfo) {
 			if (!requestInstallPackages) {

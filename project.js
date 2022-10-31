@@ -23,7 +23,15 @@ const axios = require("axios").default;
 	if (process.env.GITHUB_RUN_NUMBER) {
 		versionCode = process.env.GITHUB_RUN_NUMBER - 0;
 	} else {
-		versionCode = (await axios.get("https://raw.fastgit.org/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json")).data.versionCode + 1;
+		versionCode = (
+			await Promise.any(
+				[
+					"https://cdn.jsdelivr.net/gh/gucong3000/MiuiCleaner/src/miui_cleaner_app/project.json",
+					"https://raw.fastgit.org/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
+					"https://raw.githubusercontent.com/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
+				].map(axios.get),
+			)
+		).data.versionCode + 1;
 	}
 
 	const versionName = [

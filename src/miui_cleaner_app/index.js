@@ -53,3 +53,4 @@ function regBack () {
 module.exports = regBack;
 
 mainMenu();
+require("./update");

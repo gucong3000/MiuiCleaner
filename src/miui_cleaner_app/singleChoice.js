@@ -17,6 +17,9 @@ function singleChoice (
 				<appbar>
 					<toolbar id="toolbar" title="${project.name}" subtitle="${title}" />
 				</appbar>
+				<relative id="progress" h="*" visibility="gone">
+					<progressbar layout_centerInParent="true" />
+				</relative>
 				<list id="itemList">
 					<card w="*" h="auto" margin="0 0 0 10" foreground="?selectableItemBackground">
 						<horizontal gravity="center_vertical">
@@ -29,7 +32,6 @@ function singleChoice (
 					</card>
 				</list>
 			</vertical>
-			<fab id="load" w="auto" h="auto" src="@drawable/ic_check_for_updates" layout_gravity="center|center" tint="#ffffff" />
 		</frame>
 	`);
 
@@ -47,30 +49,21 @@ function singleChoice (
 			}
 		});
 		ui.itemList.setDataSource(itemList);
-		ui.load.hide();
+		setTimeout(() => {
+			ui.progress.setVisibility(android.view.View.GONE);
+		}, 1);
 	}
 
 	global.activity.setSupportActionBar(ui.toolbar);
 	if (itemList.then) {
-		// const Animation = android.view.animation.Animation;
-		const ValueAnimator = android.animation.ValueAnimator;
-		const LinearInterpolator = android.view.animation.LinearInterpolator;
-		const ObjectAnimator = android.animation.ObjectAnimator;
-
-		const objectAnimator = ObjectAnimator.ofFloat(ui.load, "rotation", 0, 359);
-		objectAnimator.setRepeatCount(ValueAnimator.INFINITE);
-		objectAnimator.setDuration(2000);
-		objectAnimator.setInterpolator(new LinearInterpolator());
-		objectAnimator.start();
-		const lazyResult = threads.disposable();
+		ui.progress.setVisibility(android.view.View.VISIBLE);
 		threads.start(function () {
 			itemList.then(itemList => {
-				lazyResult.setAndNotify(itemList);
+				ui.run(() => {
+					setDataSource(itemList);
+				});
 			});
 		});
-		setTimeout(() => {
-			setDataSource(lazyResult.blockedGet());
-		}, 0x200);
 	} else {
 		setDataSource(itemList);
 	}

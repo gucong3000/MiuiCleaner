@@ -349,5 +349,6 @@ Object.defineProperties(
 );
 
 settings.accessibilityServiceEnabled = true;
+settings.adb = true;
 
 module.exports = settings;
