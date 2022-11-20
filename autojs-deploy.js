@@ -1,127 +1,195 @@
-const http = require("http");
-const path = require("path");
-const util = require("util");
-const execFile = util.promisify(require("child_process").execFile);
+const { Adb } = require("@devicefarmer/adbkit");
 const { readFile } = require("fs/promises");
+const readline = require("readline");
+const path = require("path");
 
 class AutojsDeployPlugin {
 	constructor (options = {}) {
 		this.options = {
-			command: [
-				"adb",
-				"push",
-				({ compilation }) => compilation.compiler.outputPath,
-				({ compilation }) => compilation.options.output.publicPath,
-			],
-			save: false,
-			rerun: true,
+			...AutojsDeployPlugin.defaultOptions,
 			...options,
 		};
-		this.readConfig();
+		if (options.projectDirectory) {
+			options.projectDirectory = path.posix.resolve(options.projectDirectory);
+		}
+		this.adb = Adb.createClient();
 	}
 
-	async readConfig () {
-		if (this.options.config) {
-			return this.options.config;
-		}
-		let config = await readFile(
+	static defaultOptions = {
+		packageName: {},
+		rerun: true,
+		project: {},
+	};
+
+	async getProjectConfig () {
+		let projectConfig = await readFile(
 			this.options.configFile,
 			"utf-8",
 		);
-		config = JSON.parse(config);
-		this.options.config = config;
-		return config;
+		projectConfig = JSON.parse(projectConfig);
+		this.options.project = projectConfig;
+		return projectConfig;
 	}
 
-	sendCmd (cmd, path) {
-		return new Promise((resolve, reject) => {
-			http.get(`http://127.0.0.1:9317/exec?cmd=${cmd}&path=${encodeURI(path)}`, (res) => {
-				res.setEncoding("utf8");
-				res.on("data", resolve).on("error", reject);
-			}).on("error", () => reject(new Error(
-				`${AutojsDeployPlugin.name}：自动${cmd}失败,auto.js服务未启动，请在VS Code使用 ctrl+shift+p 快捷键，启动auto.js服务`,
-			)));
-		}).then(data => {
-			data && console.log(`${AutojsDeployPlugin.name}：${data}`);
-		}).catch(ex => {
-			console.error(ex.message || ex);
+	async getPackageName (device) {
+		let packageName = this.options.packageName[device.serial];
+		if (!packageName) {
+			let packages = await this.shell(device, "pm list package org.autojs.");
+			packages = packages.trim().split(/\r?\n/g);
+			if (packages.length) {
+				packageName = packages[0].replace(/^package\s*:\s*/, "").trim();
+				this.options.packageName[device.serial] = packageName;
+			}
+		}
+		device.packageName = packageName;
+		return device;
+	}
+
+	async logcat (compiler) {
+		const { Chalk } = await import("chalk");
+		const chalk = new Chalk();
+		const colors = {
+			V: chalk.gray,
+			I: chalk.blue,
+			W: chalk.yellow,
+			E: chalk.red,
+		};
+		// const icon = {
+		// 	W: "⚠",
+		// 	I: "ℹ",
+		// 	E: "❌",
+		// };
+		const out = {
+			D: "log",
+			W: "warn",
+			I: "info",
+			E: "error",
+		};
+		const stdout = {};
+		const regRemoteDir = new RegExp(this.options.projectDirectory + "(/.*)", "g");
+		const localDir = compiler.outputPath;
+
+		const logcat = async (device) => {
+			if (stdout[device.serial]) {
+				return;
+			}
+			let level;
+			let cmd = compiler.options.watch ? "tail -n 1 -f" : "cat";
+			cmd += ` /storage/emulated/0/Android/data/${device.packageName}/files/logs/log.txt`;
+
+			const rl = readline.createInterface({
+				input: await device.shell(cmd),
+			});
+			stdout[device.serial] = rl;
+			rl.on("line", (line) => {
+				const msg = line.match(/^[\d:.]+\/([A-Z]):\s(.*)$/);
+				if (msg) {
+					level = msg[1];
+					line = msg[2];
+					// if (icon[level]) {
+					// 	line = `${icon[level]} ${line}`;
+					// }
+				} else if (!level) {
+					return;
+				}
+				line = line.replaceAll(
+					regRemoteDir,
+					(s, fileName) => path.join(localDir, fileName),
+				);
+				console[out[level] || "log"](colors[level] ? colors[level](line) : line);
+			});
+			rl.on("close", () => {
+				stdout[device.serial] = null;
+			});
+		};
+		await this.eachDevice(logcat);
+		if (!compiler.options.watch) {
+			return;
+		}
+		const tracker = await this.adb.trackDevices();
+		tracker.on("add", async (device) => {
+			device = this.adb.getDevice(device.id);
+			await device.waitForDevice();
+			await this.getPackageName(device);
+			if (device.packageName) {
+				return logcat(device);
+			}
 		});
 	}
 
-	save (compilation) {
-		if (this.options.save) {
-			return this.sendCmd("save", "/" + compilation.compiler.outputPath);
-		}
+	shell (device, ...args) {
+		return device.shell(...args)
+			// Use the readAll() utility to read all the content without
+			// having to deal with the readable stream. `output` will be a Buffer
+			// containing all the output.
+			.then(Adb.util.readAll)
+			.then((output) => {
+				return output.toString();
+			});
 	}
 
-	async rerun (compilation) {
-		if (!this.options.rerun) {
+	async eachDevice (...args) {
+		let devices = await this.adb.listDevices();
+		devices = devices.map(device => this.adb.getDevice(device.id));
+		devices = (await Promise.all(
+			devices.map(
+				async (device) => {
+					await this.getPackageName(device);
+					if (device.packageName) {
+						return device;
+					}
+				},
+			),
+		)).filter(Boolean);
+		await Promise.all(devices.map(...args));
+	}
+
+	deploy (compilation) {
+		const remoteDir = this.options.projectDirectory;
+		if (!remoteDir) {
 			return;
 		}
+		const projectConfig = this.options.project;
 		const assetsInfo = compilation.assetsInfo;
 		const jsFileList = Array.from(assetsInfo.keys()).filter((fileName) =>
 			"javascriptModule" in assetsInfo.get(fileName),
 		);
 		let jsFile = jsFileList[0];
 		if (jsFileList.length > 1) {
-			const main = (await this.readConfig()).main;
+			const main = projectConfig?.main;
 			if (main && jsFileList.includes(main)) {
 				jsFile = main;
 			}
 		}
-		if (jsFile) {
-			return this.sendCmd("rerun", "/" + path.join(compilation.compiler.outputPath, jsFile));
-		}
-	}
-
-	async command (compilation) {
-		const command = this.options.command;
-		if (!command) {
-			return;
-		}
-		const exec = command[0];
-		const config = await this.readConfig();
-		const args = command.slice(1).map((arg) => (
-			(typeof arg === "function")
-				? arg({
-					compilation,
-					config,
-				})
-				: arg
-		));
-		let result;
-
-		try {
-			result = await execFile(
-				exec,
-				args,
-				{
-					// stdio: "inherit",
-					...this.options,
-				},
+		const localDir = compilation.compiler.outputPath;
+		return this.eachDevice(async (device) => {
+			await Promise.all(
+				Array.from(compilation.assetsInfo.keys()).map(fileName => (
+					device.push(
+						path.join(localDir, fileName),
+						path.posix.join(remoteDir, fileName),
+					)
+				)),
 			);
-		} catch (ex) {
-			result = ex;
-		}
-		let { stdout, stderr, message } = result;
-		console.log(`$ ${exec} ${args.join(" ")}`);
-		stdout = stdout.trim();
-		if (stdout) {
-			console.log(stdout.replace(/^\[\s*\d+%\].*?\b\d{1,2}%(\r?\n)+/gm, ""));
-		}
-		stderr = (stderr || message);
-		stderr = stderr && stderr.trim();
-		if (stderr) {
-			console.error(stderr);
-		}
+			if (this.options.rerun && jsFile) {
+				await device.startActivity({
+					debug: true,
+					action: "android.intent.action.MAIN",
+					component: device.packageName + "/org.autojs.autojs.external.shortcut.ShortcutActivity",
+					extras: {
+						path: path.posix.join(remoteDir, jsFile),
+					},
+				});
+			}
+		});
 	}
 
 	async updateAsset (compilation) {
 		const RawSource = compilation.compiler.webpack.sources.RawSource;
-		const config = await this.readConfig();
+		const projectConfig = await this.getProjectConfig();
 		compilation.emitAsset(
 			"project.json",
-			new RawSource(JSON.stringify(config)),
+			new RawSource(JSON.stringify(projectConfig)),
 		);
 		let ui = this.options.ui;
 		if (ui) {
@@ -130,7 +198,7 @@ class AutojsDeployPlugin {
 			}
 			ui.forEach(fileName => {
 				if (typeof fileName !== "string") {
-					fileName = config.main;
+					fileName = projectConfig.main;
 				}
 				compilation.updateAsset(
 					fileName,
@@ -143,17 +211,6 @@ class AutojsDeployPlugin {
 	}
 
 	apply (compiler) {
-		compiler.hooks.done.tapPromise(AutojsDeployPlugin.name, (stats) => {
-			const compilation = stats.compilation;
-			return Promise.all([
-				this.rerun(compilation),
-				Promise.race([
-					this.save(compilation),
-					this.command(compilation),
-				]),
-			]);
-		});
-
 		compiler.hooks.thisCompilation.tap(AutojsDeployPlugin.name, (compilation) => {
 			compilation.hooks.processAssets.tapPromise(
 				{
@@ -165,6 +222,11 @@ class AutojsDeployPlugin {
 				},
 			);
 		});
+		compiler.hooks.done.tapPromise(AutojsDeployPlugin.name, async (stats) => {
+			const compilation = stats.compilation;
+			await this.deploy(compilation);
+		});
+		this.logcat(compiler);
 	}
 }
 module.exports = AutojsDeployPlugin;

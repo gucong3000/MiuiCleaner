@@ -1,5 +1,6 @@
 const emitItemShowEvent = require("./emitItemShowEvent");
 const project = require("./project.json");
+const View = android.view.View;
 
 function singleChoice (
 	{
@@ -21,15 +22,17 @@ function singleChoice (
 					<progressbar layout_centerInParent="true" />
 				</relative>
 				<list id="itemList">
-					<card w="*" h="auto" margin="0 0 0 10" foreground="?selectableItemBackground">
-						<horizontal gravity="center_vertical">
-							<img id="icon" h="48" w="48" src="{{this.icon || '${icon}'}}" margin="10 10 0 10" />
-							<vertical h="auto" layout_weight="1" margin="10 15">
-								<text text="{{this.displayName || this.appName || this.name}}" textColor="#333333" textSize="16sp" maxLines="1" />
-								<text text="{{this.summary}}" textColor="#999999" textSize="14sp" maxLines="1" />
-							</vertical>
-						</horizontal>
-					</card>
+					<relative w="*">
+						<card w="*" margin="0 0 0 10" foreground="?selectableItemBackground">
+							<horizontal gravity="center_vertical">
+								<img id="icon" h="48" w="48" src="{{this.icon || '${icon}'}}" margin="10 10 0 10" />
+								<vertical h="auto" layout_weight="1" margin="10 0">
+									<text text="{{this.displayName || this.appName || this.name}}" textColor="#333333" textSize="16sp" maxLines="1" />
+									<text text="{{this.summary}}" textColor="#999999" textSize="14sp" maxLines="1" />
+								</vertical>
+							</horizontal>
+						</card>
+					</relative>
 				</list>
 			</vertical>
 		</frame>
@@ -39,7 +42,13 @@ function singleChoice (
 
 	ui.itemList.on("item_click", function (item, i, itemView, listView) {
 		console.log(`已点击：${item.displayName || item.appName || item.name}`);
-		item.fn ? item.fn(item) : fn(item);
+		item.fn ? item.fn(item, itemView) : fn(item, itemView);
+	});
+
+	ui.itemList.on("item_long_click", function (item, i, itemView, listView) {
+		if (item.url) {
+			app.openUrl(item.url);
+		}
 	});
 
 	function setDataSource (itemList) {
@@ -49,14 +58,14 @@ function singleChoice (
 			}
 		});
 		ui.itemList.setDataSource(itemList);
-		setTimeout(() => {
-			ui.progress.setVisibility(android.view.View.GONE);
-		}, 1);
+		ui.post(() => {
+			ui.progress.setVisibility(View.GONE);
+		});
 	}
 
 	global.activity.setSupportActionBar(ui.toolbar);
 	if (itemList.then) {
-		ui.progress.setVisibility(android.view.View.VISIBLE);
+		ui.progress.setVisibility(View.VISIBLE);
 		threads.start(function () {
 			itemList.then(itemList => {
 				ui.run(() => {

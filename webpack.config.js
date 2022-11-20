@@ -12,7 +12,6 @@ const config = {
 	},
 	output: {
 		path: path.resolve(__dirname, "dist/miui_cleaner_app"),
-		publicPath: "/sdcard/脚本/",
 		filename: "[name].js",
 		clean: true,
 	},
@@ -23,6 +22,7 @@ const config = {
 			ui: true,
 			// {String} 必须的 project.json 的文件路径
 			configFile: path.resolve(__dirname, "src/miui_cleaner_app/project.json"),
+			projectDirectory: "/storage/emulated/0/脚本/miui_cleaner_app",
 		}),
 	],
 	module: {

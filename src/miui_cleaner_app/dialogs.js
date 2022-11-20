@@ -53,19 +53,27 @@ function alertDialog (
 					if (attrValue) {
 						attrValue = [
 							typeof attrValue === "string" ? attrValue : btnLabelMap[attrName],
-							attrValue = createListener("Click", attrName),
+							createListener("Click", attrName),
 						];
 					} else {
 						return;
 					}
+				} else if (type === "MultiChoiceItems") {
+					attrValue = [
+						attrValue.map(String),
+						attrValue.map(Boolean),
+						createListener("Click", "multi_choice"),
+					];
+				} else if (type === "Items") {
+					attrValue = [
+						attrValue.map(String),
+						createListener("Click", "single_choice"),
+					];
 				}
 			} else {
 				return;
 			}
-			if (!Array.isArray(attrValue)) {
-				attrValue = [attrValue];
-			}
-			dialog[setName](...attrValue);
+			dialog[setName].apply(dialog, Array.isArray(attrValue) ? attrValue : [attrValue]);
 		});
 	}
 
@@ -84,23 +92,35 @@ function alertDialog (
 
 	setAttr(builder);
 
-	return Object.assign(Object.create(ui.run(() => {
-		const dialog = builder.create();
-		setAttr(dialog, attrName => !builder[attrName]);
-		dialog.show();
-		console.log(`对话框：“${message}”`);
-		return dialog;
-	})), {
-		emitter,
-		then: (...args) => {
-			return new Promise(resolve => {
-				emitter.once("positive", () => { resolve(true); });
-				emitter.once("negative", () => { resolve(false); });
-				emitter.once("neutral", () => { resolve(null); });
-				emitter.once("cancel", () => { resolve(); });
-			}).then(...args);
+	return Object.assign(
+		Object.create(
+			ui.run(() => {
+				const dialog = builder.create();
+				setAttr(dialog, attrName => !builder[attrName]);
+				dialog.show();
+				console.log(`对话框：“${options.message || options.title}”`);
+				return dialog;
+			}),
+		), {
+			emitter,
+			then: (...args) => {
+				return new Promise(resolve => {
+					function call (...args) {
+						ui.post(() => {
+							resolve(...args);
+						});
+					}
+					emitter.once("positive", () => { call(true); });
+					emitter.once("negative", () => { call(false); });
+					emitter.once("neutral", () => { call(null); });
+					emitter.once("cancel", () => { call(); });
+					emitter.once("single_choice", (dialog, index) => {
+						call(options.items[index]);
+					});
+				}).then(...args);
+			},
 		},
-	});
+	);
 }
 
 function confirm (
@@ -149,8 +169,25 @@ function prompt (
 	});
 }
 
+function singleChoice (
+	items,
+	options,
+) {
+	return alertDialog(
+		null,
+		{
+			items,
+			positive: false,
+			// negative: false,
+			cancelable: true,
+			...options,
+		},
+	);
+}
+
 module.exports = Object.assign(alertDialog, {
 	confirm,
 	alert,
 	prompt,
+	singleChoice,
 });

@@ -24,11 +24,7 @@ function waitForEngineStop () {
 function getEngine (task) {
 	return Promise.resolve().then(() => {
 		if (!scriptEngine || !scriptEngine.engine || scriptEngine.engine.destroyed) {
-			if (DEBUG && /^\[remote\]/.test(engines.myEngine().source.toString())) {
-				scriptEngine = engines.execScriptFile("./miui_cleaner_app/services.js");
-			} else {
-				scriptEngine = engines.execScriptFile("./services.js");
-			}
+			scriptEngine = engines.execScriptFile("./services.js");
 		}
 	});
 }
@@ -55,7 +51,7 @@ function parseTaskInfo (taskInfo) {
 function start (taskList) {
 	files.write(
 		files.join(
-			context.getFilesDir(),
+			context.getExternalFilesDir(null),
 			"taskList.json",
 		),
 		JSON.stringify(

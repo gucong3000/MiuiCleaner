@@ -1,7 +1,6 @@
 const DownloadManager = android.app.DownloadManager;
 const Cursor = android.database.Cursor;
 const Intent = android.content.Intent;
-const Uri = android.net.Uri;
 
 const downloadManager = context.getSystemService(context.DOWNLOAD_SERVICE);
 const mimeTypeMap = android.webkit.MimeTypeMap.getSingleton();
@@ -10,7 +9,8 @@ const emitter = events.emitter();
 function getValOfCursor (cursor, columnName, columnType) {
 	let columnIndex = cursor.getColumnIndex(columnName);
 	if (columnIndex < 0) {
-		columnIndex = cursor.getColumnIndex(DownloadManager[columnName]);
+		columnName = DownloadManager["COLUMN_" + columnName] || DownloadManager[columnName];
+		columnIndex = cursor.getColumnIndex(columnName);
 	}
 	if (columnIndex < 0) {
 		return;
@@ -51,24 +51,47 @@ function queryDownList (callback, query) {
 	return result;
 }
 
-function guessFileName (contentDisposition) {
-	if (contentDisposition) {
-		const fileName = contentDisposition.match(/(^|;)\s*filename\*?\s*=\s*(UTF-8(''|\/))?(.*?)(;|\s|$)/i);
-		return fileName && fileName[4];
+function guessFileName (disposition) {
+	if (disposition) {
+		const fileName = disposition.match(/(^|;)\s*filename\*?\s*=\s*(UTF-8(''|\/))?(.*?)(;|\s|$)/i);
+		return fileName && decodeURI(fileName[4]);
 	}
 }
 
-function guessFile (options) {
+function readConfig (options) {
+	let disposition;
+	if (options.headers) {
+		Object.keys(options.headers).forEach(key => {
+			switch (key.toLowerCase()) {
+				case "content-disposition": {
+					disposition = options.headers[key];
+					break;
+				}
+				case "content-length": {
+					options.size = +options.headers[key];
+					break;
+				}
+				case "content-type": {
+					if (options.headers[key] !== "application/octet-stream") {
+						options.mimeType = options.headers[key];
+					}
+					break;
+				}
+			}
+		});
+	}
+	options.url = decodeURI(options.url);
 	if (!options.fileName) {
-		options.fileName = (guessFileName(options.contentDisposition) || android.webkit.URLUtil.guessFileName(options.url, null, null)).replace(/_(Coolapk|\d+)(?=\.\w+$)/i, "");
+		options.fileName = (guessFileName(disposition || options.disposition) || android.webkit.URLUtil.guessFileName(options.url, null, null)).replace(/_(Coolapk|\d+)(?=\.\w+$)/i, "");
 	}
 	if (!options.mimeType || options.mimeType === "application/octet-stream") {
 		options.mimeType = mimeTypeMap.getMimeTypeFromExtension(files.getExtension(options.fileName));
 	}
+	return options;
 }
 
 function downFile (options) {
-	guessFile(options);
+	options = readConfig(options);
 	let downId;
 	let complete;
 	const downEmitter = Object.create(events.emitter());
@@ -98,7 +121,9 @@ function downFile (options) {
 		intent.setAction(Intent.ACTION_VIEW);
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-		intent.setPackage(null);
+		const googleInstaller = "com.google.android.packageinstaller";
+
+		intent.setPackage(app.getAppName(googleInstaller) ? googleInstaller : null);
 
 		downEmitter.emit("complete", intent);
 		downEmitter.removeAllListeners();
@@ -106,13 +131,14 @@ function downFile (options) {
 		complete = true;
 	}
 
-	function staerTask () {
+	function startTask () {
 		queryDownList((valueOf) => {
-			if (options.url !== valueOf("COLUMN_URI")) {
+			if (options.url === valueOf("URI")) {
+				downId = valueOf("ID");
+			} else {
 				return;
 			}
-			downId = valueOf("COLUMN_ID");
-			switch (valueOf("COLUMN_STATUS")) {
+			switch (valueOf("STATUS")) {
 				case DownloadManager.STATUS_SUCCESSFUL: {
 					emitCompleteEvent();
 					break;
@@ -135,9 +161,15 @@ function downFile (options) {
 		});
 
 		if (!downId) {
-			const request = new DownloadManager.Request(Uri.parse(options.url));
-			request.setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, options.fileName);
-			request.setDestinationInExternalFilesDir(context, "downloads", options.fileName);
+			const request = new DownloadManager.Request(android.net.Uri.parse(options.url));
+			if (options.userAgent) {
+				request.addRequestHeader("User-Agent", options.userAgent);
+			}
+			if (options.referer) {
+				request.addRequestHeader("Referer", options.referer);
+			}
+			// request.setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, options.fileName);
+			request.setDestinationInExternalFilesDir(context, android.os.Environment.DIRECTORY_DOWNLOADS, options.fileName);
 			request.setMimeType(options.mimeType);
 			console.log("开始下载：", options);
 			downId = downloadManager.enqueue(request);
@@ -159,7 +191,7 @@ function downFile (options) {
 		}
 	}
 	downEmitter.then = (...args) => promise.then(...args);
-	setTimeout(staerTask, 0);
+	setTimeout(startTask, 0);
 	return downEmitter;
 }
 
@@ -184,10 +216,10 @@ registerReceiver(DownloadManager.ACTION_NOTIFICATION_CLICKED, (context, intent) 
 
 function createProgressEvent (valueOf) {
 	// 已经下载文件大小
-	const progress = valueOf("COLUMN_BYTES_DOWNLOADED_SO_FAR");
+	const progress = valueOf("BYTES_DOWNLOADED_SO_FAR");
 	const speed = valueOf("downloading_current_speed");
 	// 下载文件的总大小
-	const size = valueOf("COLUMN_TOTAL_SIZE_BYTES");
+	const size = valueOf("TOTAL_SIZE_BYTES");
 	return {
 		progress,
 		speed: speed >= 0 ? speed : null,
@@ -201,10 +233,10 @@ let throttle = {};
 function downReceiver () {
 	let running;
 	queryDownList(valueOf => {
-		if (valueOf("COLUMN_STATUS") === DownloadManager.ACTION_DOWNLOAD_COMPLETE) {
+		if (valueOf("STATUS") === DownloadManager.ACTION_DOWNLOAD_COMPLETE) {
 			return;
 		}
-		const downId = valueOf("COLUMN_ID");
+		const downId = valueOf("ID");
 		const progressEvent = createProgressEvent(valueOf);
 		if (progressEvent.progress > 0 || progressEvent.size > 0) {
 			const key = JSON.stringify(progressEvent);
@@ -228,4 +260,5 @@ function startDownReceiver () {
 	}
 }
 
+downFile.queryDownList = queryDownList;
 module.exports = downFile;

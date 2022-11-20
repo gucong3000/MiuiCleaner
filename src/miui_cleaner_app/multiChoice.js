@@ -21,7 +21,7 @@ function multiChoice (
 					<card w="*" h="auto" margin="0 0 0 10" foreground="?selectableItemBackground">
 						<horizontal gravity="center_vertical">
 							<img id="icon" h="48" w="48" src="{{this.icon || '${icon}'}}" margin="10 10 0 10" />
-							<vertical h="auto" layout_weight="1" margin="10 15">
+							<vertical h="auto" layout_weight="1" margin="10 0">
 								<text text="{{this.displayName || this.appName || this.name}}" textColor="#333333" textSize="16sp" maxLines="1" />
 								<text text="{{this.summary}}" textColor="#999999" textSize="14sp" maxLines="1" />
 							</vertical>

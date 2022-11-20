@@ -1,3 +1,10 @@
+console.setGlobalLogConfig({
+	file: files.join(
+		context.getExternalFilesDir("logs"),
+		"log.txt",
+	),
+});
+
 const singleChoice = require("./singleChoice");
 
 const mainActions = [
@@ -31,7 +38,13 @@ const mainActions = [
 		name: "退出",
 		summary: "再见",
 		icon: "./res/drawable/ic_exit.png",
-		fn: () => ui.finish(),
+		fn: () => {
+			if (DEBUG) {
+				ui.finish();
+			} else {
+				java.lang.System.exit(0);
+			}
+		},
 	},
 ];
 
@@ -49,8 +62,11 @@ function regBack () {
 		mainMenu();
 	});
 }
-
 module.exports = regBack;
-
-mainMenu();
-require("./update");
+if (DEBUG && engines.myEngine().source.toString() !== "/storage/emulated/0/脚本/miui_cleaner_app/main.js") {
+	console.log("DEBUG");
+	engines.execScriptFile("/storage/emulated/0/脚本/miui_cleaner_app/main.js");
+} else {
+	mainMenu();
+	require("./update");
+}
