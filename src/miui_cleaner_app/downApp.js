@@ -1,7 +1,8 @@
 const getApplicationInfo = require("./getApplicationInfo");
+const getRemoteFileInfo = require("./getRemoteFileInfo");
 const singleChoice = require("./singleChoice");
-const getDownOpts = require("./getDownOpts");
-const downFile = require("./downFile");
+const prettyBytes = require("pretty-bytes");
+// const downFile = require("./downFile");
 const dialogs = require("./dialogs");
 
 // https://github.abskoop.workers.dev/
@@ -16,6 +17,21 @@ const appList = [
 		icon: "https://litiaotiao.cn/apple-touch-icon.png",
 		packageName: "cn.litiaotiao.app",
 		url: "https://wwe.lanzouw.com/b01v0g3wj#pwd=1233",
+		filter: files => files.filter(file => {
+			const info = file.fileName.match(/^(.*)_(.*?)((\d+\.)+\d+).\w+$/);
+			if (/李跳跳|MissLee/.test(info[1]) && !info[2].includes("真实好友")) {
+				file.versionName = info[2] + info[3];
+				return true;
+			}
+			return false;
+		}),
+	},
+	{
+		name: "QQ音乐简洁版",
+		summary: "MIUI音乐APP套壳的产品",
+		icon: "https://m.32r.com/logo/210807/202108070906595774.png",
+		packageName: "com.tencent.qqmusiclite",
+		url: "https://app.mi.com/details?id=com.tencent.qqmusiclite",
 	},
 	{
 		name: "Edge",
@@ -29,7 +45,7 @@ const appList = [
 		summary: "国际版",
 		icon: "https://m.32r.com/logo/210519/202105191427372351.png",
 		packageName: "com.mi.globalbrowser",
-		url: "https://wwm.lanzouj.com/tp/idzsf0bh062h",
+		url: "https://wwm.lanzoul.com/tp/idzsf0bh062h",
 	},
 	{
 		name: "讯飞输入法",
@@ -66,18 +82,33 @@ const appList = [
 		url: "https://zisu.lanzoum.com/tp/iI7LGwn5xjc",
 	},
 	{
-		name: "QQ音乐简洁版",
-		summary: "MIUI音乐APP套壳的产品",
-		icon: "https://m.32r.com/logo/210807/202108070906595774.png",
-		packageName: "com.tencent.qqmusiclite",
-		url: "https://app.mi.com/details?id=com.tencent.qqmusiclite",
-	},
-	{
 		name: "几何天气",
 		summary: "干净、小巧、漂亮、功能多",
 		icon: "https://raw.fastgit.org/WangDaYeeeeee/GeometricWeather/master/app/src/main/res/drawable/ic_launcher.png",
 		packageName: "wangdaye.com.geometricweather",
 		url: "https://github.com/WangDaYeeeeee/GeometricWeather/releases/latest",
+		filter: function (files) {
+			const appInfo = this;
+			files = files.filter(file => {
+				const verInfo = file.url.match(/\/(.+?)\/.*?\.\1_(\w+)\.\w+$/);
+				if (verInfo) {
+					const verName = verInfo[1];
+					const verType = verInfo[2];
+					file.versionName = `${verName}_${verType}`;
+					file.versionCode = Number.parseInt(verName.replace(/\./, ""), 10);
+				}
+				return verInfo;
+			});
+
+			if (appInfo.appName) {
+				let subVer = appInfo.getVersionName().match(/_\w+$/);
+				if (subVer) {
+					subVer = subVer[0] + ".apk";
+					return files.filter(file => file.fileName.endsWith(subVer));
+				}
+			}
+			return [files[files.length - 1]];
+		},
 	},
 	{
 		name: "ES文件浏览器",
@@ -100,6 +131,11 @@ const appList = [
 		packageName: "com.zhihu.android",
 		url: "https://423down.lanzouo.com/b0f2lkafe",
 		// url: "https://m.32r.com/app/80966.html",
+		filter: function (files) {
+			return files.filter(file => {
+				return /知乎.*知了/.test(file.fileName);
+			});
+		},
 	},
 	{
 		name: "哔哩哔哩",
@@ -107,6 +143,11 @@ const appList = [
 		icon: "https://m.32r.com/logo/221114/202211141125334046.png",
 		packageName: "tv.danmaku.bili",
 		url: "https://423down.lanzouv.com/b0f1gksne",
+		filter: function (files) {
+			return files.filter(file => {
+				return /哔哩哔哩.*漫游/.test(file.fileName);
+			});
+		},
 	},
 	{
 		name: "优酷视频",
@@ -114,6 +155,12 @@ const appList = [
 		icon: "https://img.alicdn.com/tfs/TB1WeJ9Xrj1gK0jSZFuXXcrHpXa-195-195.png",
 		packageName: "com.youku.phone",
 		url: "https://423down.lanzouv.com/b0f1avpib",
+		filter: function (files) {
+			return files.filter(file => {
+				file.fileName = file.fileName.replace(/忧(?=酷)/g, "优");
+				return file.fileName.includes("优酷视频");
+			});
+		},
 	},
 	{
 		name: "高德地图",
@@ -145,6 +192,24 @@ const appList = [
 	},
 ];
 
+function formatSize (number, options) {
+	if (!number || !Number.isSafeInteger(number)) {
+		return number;
+	}
+	return prettyBytes(number, {
+		binary: true,
+		...options,
+	});
+}
+
+function formatDate (number) {
+	if (!number || !Number.isSafeInteger(number)) {
+		return number;
+	}
+	const dateFormat = android.text.format.DateFormat.getDateFormat(activity);
+	return dateFormat.format(number) || number;
+}
+
 function download (appInfo, item) {
 	if (typeof appInfo === "string") {
 		appInfo = appList.find(info => info.packageName === appInfo);
@@ -166,35 +231,147 @@ function download (appInfo, item) {
 		`, item, true);
 	}
 	function hideProgress () {
+		// console.log(progress);
 		progress.setVisibility(android.view.View.GONE);
+		// item.removeView(progress);
+		// item.invalidate();
+		// progress.invalidate();
 	}
-	return getDownOpts(appInfo.url, appInfo).then(downOpts => {
-		if (!downOpts) {
+	return getRemoteFiles(appInfo).then(files => {
+		let dialog;
+		if (files.length > 1) {
+			console.log(JSON.stringify(files, 0, 4));
+			dialog = dialogs.singleChoice(files.map(file => ({
+				toString: () => file.fileName + "\n" + [
+					file.versionName,
+					formatSize(file.size),
+					formatDate(file.date),
+				].filter(Boolean).join(" | "),
+				file,
+			})), {
+				title: `请选择要下载的“${appInfo.appName || appInfo.name}”版本`,
+				neutral: true,
+			}).then(choice => choice && choice.file);
+		} else {
+			const localVer = appInfo.appName && appInfo.getVersionName();
+			dialog = dialogs.confirm([
+				files[0].versionName && `版本：${(localVer ? `${localVer} → ` : "") + files[0].versionName}`,
+				files[0].size && `大小：${formatSize(files[0].size)}`,
+				files[0].date && `日期：${formatDate(files[0].date)}`,
+			].filter(Boolean).join("\n"), {
+				title: `是否${appInfo.appName ? "更新" : "下载"}“${appInfo.appName || appInfo.name}”？`,
+				neutral: true,
+			}).then(confirm => confirm && files[0]);
+		}
+		return dialog;
+	}).then(file => {
+		if (!file) {
 			hideProgress();
+			if (file === null && appInfo.url) {
+				app.openUrl(appInfo.url);
+			}
 			return;
 		}
-		const downTask = downFile(downOpts);
-		downTask.on("progress", (e) => {
-			progress.indeterminate = false;
-			progress.max = e.size;
-			progress.progress = e.progress;
-		});
-		return downTask.then(intent => {
-			hideProgress();
-			let confirm = intent.getPackage();
-			if (confirm) {
-				confirm = Promise.resolve(confirm);
-			} else {
-				confirm = dialogs.confirm(`“${downOpts.fileName}”下载完毕，立即安装？`, {
-					title: "确认安装",
-				});
-			}
-			return confirm.then(confirm => {
-				if (confirm) {
-					return app.startActivity(intent);
+		file && console.log(file);
+	});
+
+	// return getRemoteFileInfo(appInfo.url).then(fileList => {
+	// 	if (Array.isArray(fileList)) {
+	// 		fileList = fileList.filter(appInfo.filter || (file => file.fileName.includes(appInfo.name)));
+	// 	} else {
+	// 		fileList = [fileList];
+	// 	}
+	// 	console.log(fileList);
+	// 	return;
+	// 	if (!downOpts) {
+	// 		hideProgress();
+	// 		return;
+	// 	}
+	// 	const downTask = downFile(downOpts);
+	// 	downTask.on("progress", (e) => {
+	// 		progress.indeterminate = false;
+	// 		progress.max = e.size;
+	// 		progress.progress = e.progress;
+	// 	});
+	// 	return downTask.then(intent => {
+	// 		hideProgress();
+	// 		let confirm = intent.getPackage();
+	// 		if (confirm) {
+	// 			confirm = Promise.resolve(confirm);
+	// 		} else {
+	// 			confirm = dialogs.confirm(`“${downOpts.fileName}”下载完毕，立即安装？`, {
+	// 				title: "确认安装",
+	// 			});
+	// 		}
+	// 		return confirm.then(confirm => {
+	// 			if (confirm) {
+	// 				return app.startActivity(intent);
+	// 			}
+	// 		});
+	// 	});
+	// });
+}
+
+function verCompare (verA, verB) {
+	function splitVer (versionName) {
+		return versionName.replace(/^\D+|\D+$/g, "").split(/\./g);
+	}
+	function parseNum (str) {
+		return Number.parseInt(str, 10) || 0;
+	}
+	verA = splitVer(verA);
+	verB = splitVer(verB);
+	const length = Math.max(verA.length, verB.length);
+	let result;
+	for (let i = 0; i < length && !result; i++) {
+		result = parseNum(verA[i]) - parseNum(verB[i]);
+	}
+	return result;
+}
+verCompare("3.013_gplay", "3.013_gplay");
+function fileCompare (b, a) {
+	let result;
+	if (a.versionCode && b.versionCode) {
+		result = a.versionCode - b.versionCode;
+	}
+	if (a.versionName && b.versionName) {
+		result = result || verCompare(a.versionName, b.versionName);
+	}
+	if (a.date && b.date) {
+		result = result || a.date - b.date;
+	}
+	return result;
+}
+
+function getRemoteFiles (appInfo) {
+	return getRemoteFileInfo(appInfo.url).then(fileList => {
+		if (!fileList) {
+			return;
+		}
+		try {
+			if (Array.isArray(fileList)) {
+				if (appInfo.filter) {
+					fileList = appInfo.filter(fileList) || fileList;
+				} else {
+					fileList = fileList.filter(file => file.fileName.includes(appInfo.name));
 				}
-			});
-		});
+				fileList = fileList.sort(fileCompare);
+				if (fileList[0] && fileList[0].versionName) {
+					fileList = fileList.filter(file => file.versionName === fileList[0].versionName);
+				}
+				if (fileList.length > 1) {
+					const mouse = fileList.find(file => /耗/.test(file.fileName));
+					if (mouse) {
+						fileList = [mouse];
+					}
+				}
+			} else {
+				fileList = [fileList];
+			}
+		} catch (ex) {
+			console.error(appInfo, fileList);
+		}
+		return fileList;
 	});
 }
 
@@ -203,6 +380,9 @@ function downApp () {
 		getApplicationInfo(appInfo);
 		if (appInfo.appName) {
 			appInfo.displayName = appInfo.appName + " v" + appInfo.getVersionName();
+			if (!/^\w+:\/\/app.mi.com\//i.test(appInfo.url)) {
+				getRemoteFiles(appInfo);
+			}
 		} else {
 			delete appInfo.displayName;
 		}

@@ -4,6 +4,7 @@ const AlertDialog = android.app.AlertDialog;
 const btnLabelMap = {
 	positive: resString.ok,
 	negative: resString.cancel,
+	neutral: "在浏览器中打开",
 };
 
 function alertDialog (
@@ -91,36 +92,32 @@ function alertDialog (
 	}
 
 	setAttr(builder);
-
-	return Object.assign(
-		Object.create(
-			ui.run(() => {
-				const dialog = builder.create();
-				setAttr(dialog, attrName => !builder[attrName]);
-				dialog.show();
-				console.log(`对话框：“${options.message || options.title}”`);
-				return dialog;
-			}),
-		), {
-			emitter,
-			then: (...args) => {
-				return new Promise(resolve => {
-					function call (...args) {
-						ui.post(() => {
-							resolve(...args);
-						});
-					}
-					emitter.once("positive", () => { call(true); });
-					emitter.once("negative", () => { call(false); });
-					emitter.once("neutral", () => { call(null); });
-					emitter.once("cancel", () => { call(); });
-					emitter.once("single_choice", (dialog, index) => {
-						call(options.items[index]);
+	ui.post(() => {
+		const dialog = builder.create();
+		setAttr(dialog, attrName => !builder[attrName]);
+		dialog.show();
+		console.log(`对话框：“${options.message || options.title}”`);
+		return dialog;
+	}, 1);
+	return {
+		emitter,
+		then: (...args) => {
+			return new Promise(resolve => {
+				function call (...args) {
+					ui.post(() => {
+						resolve(...args);
 					});
-				}).then(...args);
-			},
+				}
+				emitter.once("positive", () => { call(true); });
+				emitter.once("negative", () => { call(false); });
+				emitter.once("neutral", () => { call(null); });
+				emitter.once("cancel", () => { call(); });
+				emitter.once("single_choice", (dialog, index) => {
+					call(options.items[index]);
+				});
+			}).then(...args);
 		},
-	);
+	};
 }
 
 function confirm (
@@ -179,7 +176,6 @@ function singleChoice (
 			items,
 			positive: false,
 			// negative: false,
-			cancelable: true,
 			...options,
 		},
 	);

@@ -1,4 +1,4 @@
-const PackageManager = android.content.pm.PackageManager;
+// const PackageManager = android.content.pm.PackageManager;
 const pm = context.getPackageManager();
 // https://developer.android.google.cn/reference/kotlin/android/content/pm/ApplicationInfo
 // https://developer.android.google.cn/reference/kotlin/android/content/pm/PackageInfo
@@ -31,8 +31,15 @@ function getApplicationInfo (options) {
 	if (!options.loadIcon && appInfo.icon) {
 		options.loadIcon = () => appInfo.loadIcon(pm);
 	}
-	options.getVersionName = () => getPackageInfo().versionName;
+	options.getVersionName = () => {
+		let versionName = getPackageInfo().versionName;
+		if (options.packageName === "com.miui.packageinstaller") {
+			versionName = versionName.replace(/^\d+(?=-)/, () => Array.from(String(packageInfo.getLongVersionCode())).join("."));
+		}
+		return versionName;
+	};
 	options.getVersionCode = () => getPackageInfo().getLongVersionCode();
+	options.getUpdateTime = () => getPackageInfo().lastUpdateTime;
 	return options;
 }
 module.exports = getApplicationInfo;

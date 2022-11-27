@@ -45,7 +45,7 @@ function singleChoice (
 		item.fn ? item.fn(item, itemView) : fn(item, itemView);
 	});
 
-	ui.itemList.on("item_long_click", function (item, i, itemView, listView) {
+	ui.itemList.on("item_long_click", function (event, item, i, itemView, listView) {
 		if (item.url) {
 			app.openUrl(item.url);
 		}
@@ -68,7 +68,7 @@ function singleChoice (
 		ui.progress.setVisibility(View.VISIBLE);
 		threads.start(function () {
 			itemList.then(itemList => {
-				ui.run(() => {
+				ui.post(() => {
 					setDataSource(itemList);
 				});
 			});

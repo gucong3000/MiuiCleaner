@@ -2,7 +2,7 @@ const prettyBytes = require("pretty-bytes");
 const project = require("./project.json");
 const downFile = require("./downFile");
 const dialogs = require("./dialogs");
-const request = require("./request");
+const request = require("./http");
 
 function iec (number, options) {
 	return prettyBytes(number, {
@@ -88,20 +88,36 @@ function getFastUrl (remote) {
 	);
 }
 
-request.getJson([
+// https://zhuanlan.zhihu.com/p/314071453
+// http://raw.githubusercontent.com 替换为 http://raw.staticdn.net 即可加速。
+
+// GitHub + Jsdelivr
+// https://github.com.cnpmjs.org
+// https://hub.fastgit.org
+// 也就是说上面的镜像就是一个克隆版的 GitHub，你可以访问上面的镜像网站，网站的内容跟 GitHub 是完整同步的镜像，然后在这个网站里面进行下载克隆等操作。
+
+// GitHub 文件加速
+// 利用 Cloudflare Workers 对 github release 、archive 以及项目文件进行加速，部署无需服务器且自带CDN.
+
+// https://gh.api.99988866.xyz
+// https://g.ioiox.com
+request([
 	"https://cdn.jsdelivr.net/gh/gucong3000/MiuiCleaner/src/miui_cleaner_app/project.json",
 	"https://raw.fastgit.org/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
+	// "http://raw.staticdn.net/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
 	"https://raw.githubusercontent.com/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
-]).then(remote => {
+]).then(res => res.ok && res.json()).then(remote => {
+	if (!remote) {
+		return;
+	}
 	if (project.versionCode >= parseInt(remote.versionCode)) {
 		return;
 	}
-
 	return dialogs.confirm(
 		`发现新版本：${remote.versionName}，是否升级？`,
 		{
 			title: "版本更新",
-			neutral: "在浏览器中打开",
+			neutral: true,
 		},
 	).then(confirm => {
 		if (!confirm) {

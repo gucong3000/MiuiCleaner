@@ -1,6 +1,6 @@
 {
 	"name": "miui_cleaner",
-	"version": "2022.10.31.8",
+	"version": "2022.11.21.8",
 	"private": true,
 	"description": "MIUI广告清理工具",
 	"scripts": {
@@ -26,9 +26,9 @@
 		"@babel/plugin-transform-runtime": "^7.19.1",
 		"@babel/preset-env": "^7.19.1",
 		"@devicefarmer/adbkit": "^3.2.3",
+		"ansi-styles": "^5.2.0",
 		"axios": "^0.27.2",
 		"babel-loader": "^8.2.5",
-		"chalk": "^5.1.2",
 		"eslint": "^8.24.0",
 		"eslint-config-standard": "^17.0.0",
 		"gulp": "^4.0.2",
@@ -38,7 +38,9 @@
 		"wrapper-webpack-plugin": "^2.2.2"
 	},
 	"dependencies": {
+		"blob-polyfill": "^7.0.20220408",
 		"core-js": "^3.26.0",
+		"headers-polyfill": "^3.1.2",
 		"pretty-bytes": "^5.6.0"
 	}
 }

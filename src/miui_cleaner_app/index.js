@@ -5,6 +5,13 @@ console.setGlobalLogConfig({
 	),
 });
 
+delete global.Promise;
+require("core-js/modules/web.url.js");
+require("core-js/modules/web.url-search-params");
+require("core-js/modules/es.promise");
+require("core-js/modules/es.promise.any");
+require("core-js/modules/es.promise.finally");
+
 const singleChoice = require("./singleChoice");
 
 const mainActions = [
@@ -62,11 +69,36 @@ function regBack () {
 		mainMenu();
 	});
 }
+
 module.exports = regBack;
-if (DEBUG && engines.myEngine().source.toString() !== "/storage/emulated/0/脚本/miui_cleaner_app/main.js") {
-	console.log("DEBUG");
-	engines.execScriptFile("/storage/emulated/0/脚本/miui_cleaner_app/main.js");
-} else {
+(() => {
+	if (DEBUG) {
+		console.log("DEBUG");
+		console.log(context.getPackageName());
+		if (context.getPackageName() === "com.github.gucong3000.miui.cleaner") {
+			if (!engines.myEngine().source.toString().startsWith("/")) {
+				engines.execScriptFile("/storage/emulated/0/脚本/miui_cleaner_app/main.js");
+				// return;
+			}
+		} else {
+			// app.launch("com.github.gucong3000.miui.cleaner");
+		}
+		const util = global.$util;
+		const format = util.format;
+		util.format = (...args) => {
+			args = args.map(e => {
+				if (e instanceof Error) {
+					return [
+						e.toString(),
+						e.stack,
+					].filter(Boolean).join("\n");
+				} else {
+					return e;
+				}
+			});
+			return format.apply(util, args);
+		};
+	}
 	mainMenu();
 	require("./update");
-}
+})();
