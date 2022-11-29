@@ -73,12 +73,12 @@ function regBack () {
 module.exports = regBack;
 (() => {
 	if (DEBUG) {
-		console.log("DEBUG");
-		console.log(context.getPackageName());
-		if (context.getPackageName() === "com.github.gucong3000.miui.cleaner") {
+		const thisPackageName = context.getPackageName();
+		console.log("DEBUG in", thisPackageName);
+		if (thisPackageName === "com.github.gucong3000.miui.cleaner") {
 			if (!engines.myEngine().source.toString().startsWith("/")) {
-				engines.execScriptFile("/storage/emulated/0/脚本/miui_cleaner_app/main.js");
-				// return;
+				engines.execScriptFile(`/storage/emulated/0/脚本/${thisPackageName}/main.js`);
+				return;
 			}
 		} else {
 			// app.launch("com.github.gucong3000.miui.cleaner");

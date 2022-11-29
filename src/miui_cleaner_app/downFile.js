@@ -59,32 +59,32 @@ function guessFileName (disposition) {
 }
 
 function readConfig (options) {
-	let disposition;
-	if (options.headers) {
-		Object.keys(options.headers).forEach(key => {
-			switch (key.toLowerCase()) {
-				case "content-disposition": {
-					disposition = options.headers[key];
-					break;
-				}
-				case "content-length": {
-					options.size = +options.headers[key];
-					break;
-				}
-				case "content-type": {
-					if (options.headers[key] !== "application/octet-stream") {
-						options.mimeType = options.headers[key];
-					}
-					break;
-				}
-			}
-		});
-	}
-	options.url = decodeURI(options.url);
+	// let disposition;
+	// if (options.headers) {
+	// 	Object.keys(options.headers).forEach(key => {
+	// 		switch (key.toLowerCase()) {
+	// 			case "content-disposition": {
+	// 				disposition = options.headers[key];
+	// 				break;
+	// 			}
+	// 			case "content-length": {
+	// 				options.size = +options.headers[key];
+	// 				break;
+	// 			}
+	// 			case "content-type": {
+	// 				if (options.headers[key] !== "application/octet-stream") {
+	// 					options.mimeType = options.headers[key];
+	// 				}
+	// 				break;
+	// 			}
+	// 		}
+	// 	});
+	// }
+	options.location = decodeURI(options.location || options.url);
 	if (!options.fileName) {
-		options.fileName = (guessFileName(disposition || options.disposition) || android.webkit.URLUtil.guessFileName(options.url, null, null)).replace(/_(Coolapk|\d+)(?=\.\w+$)/i, "");
+		options.fileName = (guessFileName(options.disposition) || android.webkit.URLUtil.guessFileName(options.location, null, null)).replace(/_(Coolapk|\d+)(?=\.\w+$)/i, "");
 	}
-	if (!options.mimeType || options.mimeType === "application/octet-stream") {
+	if (!options.mimeType || /^application\/octet-stream$/.test(options.mimeType)) {
 		options.mimeType = mimeTypeMap.getMimeTypeFromExtension(files.getExtension(options.fileName));
 	}
 	return options;
@@ -133,7 +133,7 @@ function downFile (options) {
 
 	function startTask () {
 		queryDownList((valueOf) => {
-			if (options.url === valueOf("URI")) {
+			if (options.location === valueOf("URI")) {
 				downId = valueOf("ID");
 			} else {
 				return;
@@ -161,10 +161,8 @@ function downFile (options) {
 		});
 
 		if (!downId) {
-			const request = new DownloadManager.Request(android.net.Uri.parse(options.url));
-			if (options.userAgent) {
-				request.addRequestHeader("User-Agent", options.userAgent);
-			}
+			const request = new DownloadManager.Request(android.net.Uri.parse(options.location));
+			request.addRequestHeader("User-Agent", options.userAgent || android.webkit.WebSettings.getDefaultUserAgent(context));
 			if (options.referer) {
 				request.addRequestHeader("Referer", options.referer);
 			}

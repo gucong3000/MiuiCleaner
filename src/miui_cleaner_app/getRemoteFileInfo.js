@@ -1,4 +1,4 @@
-const request = require("./http");
+const request = require("./fetch");
 const lanzou = require("./lanzou");
 // const downFile = require("./downFile");
 
@@ -28,9 +28,9 @@ function parseGithubRelease (url) {
 			return release.assets.map(
 				asset => ({
 					fileName: asset.name,
-					mimeType: asset.content_type,
+					type: asset.content_type,
 					size: asset.size,
-					date: Date.parse(asset.updated_at),
+					lastModified: Date.parse(asset.updated_at),
 					id: asset.node_id,
 					url: asset.browser_download_url,
 					referer,
@@ -75,13 +75,12 @@ function parse32r (url) {
 		} else {
 			json = {};
 		}
-		console.log(res.headers?.get("Content-type"));
 		let versionName = json.title?.match(/\d+(\.+\d+)+/);
 		versionName = versionName && versionName[0];
 		return {
 			fileName: res.url && files.getName(new URL(res.url).pathname).replace(/_\d+(?=\.\w+$)/i, ""),
-			size: +res.headers?.get("Content-Length"),
-			date: Date.parse(res.headers?.get("Last-Modified") || json.upDate || json.pubDate),
+			size: +res.headers?.get("content-length"),
+			lastModified: Date.parse(res.headers?.get("last-modified") || json.upDate || json.pubDate),
 			id,
 			url: res.url || appUrl,
 			referer: htmlUrl,
@@ -116,26 +115,50 @@ function getRemoteFileInfo (url) {
 		return parse32r(url);
 	} else if (/^(\w+\.)*lanzou\w*(\.\w+)*$/.test(url.hostname)) {
 		console.log("正在解析网盘", url.href);
-		return lanzou(url);
+		const options = {};
+		url.hash.replace(/^#+/, "").split(/\s*&\s*/g).forEach(
+			value => {
+				value = value.split(/\s*=\s*/g);
+				options[value[0]] = value[1];
+			},
+		);
+		function getVersion (fileInfo) {
+			const versionName = fileInfo.fileName.match(/\d+(\.+\d+)+/);
+			if (versionName) {
+				fileInfo.versionName = versionName[0];
+			}
+			const versionCode = fileInfo.fileName.match(/\(\s*(\d+)\s*\)/);
+			if (versionCode) {
+				fileInfo.versionCode = +versionCode[1];
+			}
+		}
+		return lanzou(url, options).then(fileInfo => {
+			if (Array.isArray(fileInfo)) {
+				fileInfo.forEach(getVersion);
+			} else {
+				getVersion(fileInfo);
+			}
+			return fileInfo;
+		});
 	}
 }
 
-function createFnCache (fn, cache = {}) {
-	return (url) => {
-		const key = encodeURI(url);
-		const result = cache[key];
-		if (result) {
-			return Promise.resolve(result);
-		}
-		return fn(url).then(result => {
-			cache[key] = result;
-			return result;
-		}).catch(console.error);
-	};
-}
+// function createFnCache (fn, cache = {}) {
+// 	return (url) => {
+// 		const key = encodeURI(url);
+// 		const result = cache[key];
+// 		if (result) {
+// 			return Promise.resolve(result);
+// 		}
+// 		return fn(url).then(result => {
+// 			cache[key] = result;
+// 			return result;
+// 		});
+// 	};
+// }
 
-module.exports = createFnCache(getRemoteFileInfo);
-// module.exports = getRemoteFileInfo;
+// module.exports = createFnCache(getRemoteFileInfo);
+module.exports = getRemoteFileInfo;
 
 if (DEBUG) {
 	require("./test/getRemoteFileInfo")(module.exports);

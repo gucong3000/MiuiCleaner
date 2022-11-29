@@ -2,7 +2,7 @@ const prettyBytes = require("pretty-bytes");
 const project = require("./project.json");
 const downFile = require("./downFile");
 const dialogs = require("./dialogs");
-const request = require("./http");
+const request = require("./fetch");
 
 function iec (number, options) {
 	return prettyBytes(number, {

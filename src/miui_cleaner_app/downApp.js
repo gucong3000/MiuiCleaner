@@ -2,7 +2,7 @@ const getApplicationInfo = require("./getApplicationInfo");
 const getRemoteFileInfo = require("./getRemoteFileInfo");
 const singleChoice = require("./singleChoice");
 const prettyBytes = require("pretty-bytes");
-// const downFile = require("./downFile");
+const downFile = require("./downFile");
 const dialogs = require("./dialogs");
 
 // https://github.abskoop.workers.dev/
@@ -80,6 +80,21 @@ const appList = [
 		icon: "https://img.1xiazai.net/d/file/android/20220407/2021731123154350.png",
 		packageName: "com.miui.packageinstaller",
 		url: "https://zisu.lanzoum.com/tp/iI7LGwn5xjc",
+		filter: function (files) {
+			files = files.map(file => {
+				const miuiInst = file.fileName.match(/(应用包管理组件).*?([\d.]+)-(\d+).*?(\.\w+)$/);
+				if (miuiInst) {
+					const appName = miuiInst[1];
+					const versionCode = Number.parseInt(miuiInst[2].replace(/\./g, ""), 10);
+					const versionName = `${Array.from(String(versionCode)).join(".")}-${miuiInst[3]}`;
+					file.fileName = `${appName}_v${versionName}${miuiInst[4]}`;
+					file.versionName = versionName;
+					file.versionCode = versionCode;
+					console.log(file);
+				}
+				return file;
+			});
+		},
 	},
 	{
 		name: "几何天气",
@@ -210,7 +225,7 @@ function formatDate (number) {
 	return dateFormat.format(number) || number;
 }
 
-function download (appInfo, item) {
+async function download (appInfo, item) {
 	if (typeof appInfo === "string") {
 		appInfo = appList.find(info => info.packageName === appInfo);
 	}
@@ -237,79 +252,57 @@ function download (appInfo, item) {
 		// item.invalidate();
 		// progress.invalidate();
 	}
-	return getRemoteFiles(appInfo).then(files => {
-		let dialog;
-		if (files.length > 1) {
-			console.log(JSON.stringify(files, 0, 4));
-			dialog = dialogs.singleChoice(files.map(file => ({
-				toString: () => file.fileName + "\n" + [
-					file.versionName,
-					formatSize(file.size),
-					formatDate(file.date),
-				].filter(Boolean).join(" | "),
-				file,
-			})), {
-				title: `请选择要下载的“${appInfo.appName || appInfo.name}”版本`,
-				neutral: true,
-			}).then(choice => choice && choice.file);
-		} else {
-			const localVer = appInfo.appName && appInfo.getVersionName();
-			dialog = dialogs.confirm([
-				files[0].versionName && `版本：${(localVer ? `${localVer} → ` : "") + files[0].versionName}`,
-				files[0].size && `大小：${formatSize(files[0].size)}`,
-				files[0].date && `日期：${formatDate(files[0].date)}`,
-			].filter(Boolean).join("\n"), {
-				title: `是否${appInfo.appName ? "更新" : "下载"}“${appInfo.appName || appInfo.name}”？`,
-				neutral: true,
-			}).then(confirm => confirm && files[0]);
+	let file = await getRemoteFiles(appInfo);
+	if (file.length > 1) {
+		const choice = await dialogs.singleChoice(file.map(file => ({
+			toString: () => file.fileName + "\n" + [
+				file.versionName,
+				formatSize(file.size),
+				formatDate(file.lastModified),
+			].filter(Boolean).join(" | "),
+			file,
+		})), {
+			title: `请选择要下载的“${appInfo.appName || appInfo.name}”版本`,
+			neutral: true,
+		});
+		file = choice && choice.file;
+	} else {
+		file = file[0];
+		if (file.getLocation) {
+			file = await file.getLocation(true);
 		}
-		return dialog;
-	}).then(file => {
-		if (!file) {
-			hideProgress();
-			if (file === null && appInfo.url) {
-				app.openUrl(appInfo.url);
-			}
-			return;
-		}
-		file && console.log(file);
-	});
+		const localVer = appInfo.appName && appInfo.getVersionName();
+		const confirm = await dialogs.confirm([
+			file.versionName && `版本：${(localVer ? `${localVer} → ` : "") + file.versionName}`,
+			file.size && `大小：${formatSize(file.size)}`,
+			file.lastModified && `日期：${formatDate(file.lastModified)}`,
+		].filter(Boolean).join("\n"), {
+			title: `是否${appInfo.appName ? "更新" : "下载"}“${appInfo.appName || appInfo.name}”？`,
+			neutral: true,
+		});
+		file = confirm && file;
+	}
 
-	// return getRemoteFileInfo(appInfo.url).then(fileList => {
-	// 	if (Array.isArray(fileList)) {
-	// 		fileList = fileList.filter(appInfo.filter || (file => file.fileName.includes(appInfo.name)));
-	// 	} else {
-	// 		fileList = [fileList];
-	// 	}
-	// 	console.log(fileList);
-	// 	return;
-	// 	if (!downOpts) {
-	// 		hideProgress();
-	// 		return;
-	// 	}
-	// 	const downTask = downFile(downOpts);
-	// 	downTask.on("progress", (e) => {
-	// 		progress.indeterminate = false;
-	// 		progress.max = e.size;
-	// 		progress.progress = e.progress;
-	// 	});
-	// 	return downTask.then(intent => {
-	// 		hideProgress();
-	// 		let confirm = intent.getPackage();
-	// 		if (confirm) {
-	// 			confirm = Promise.resolve(confirm);
-	// 		} else {
-	// 			confirm = dialogs.confirm(`“${downOpts.fileName}”下载完毕，立即安装？`, {
-	// 				title: "确认安装",
-	// 			});
-	// 		}
-	// 		return confirm.then(confirm => {
-	// 			if (confirm) {
-	// 				return app.startActivity(intent);
-	// 			}
-	// 		});
-	// 	});
-	// });
+	if (file) {
+		const downTask = downFile(file);
+		downTask.on("progress", (e) => {
+			progress.indeterminate = false;
+			progress.max = e.size;
+			progress.progress = e.progress;
+		});
+		const intent = await downTask;
+		const confirm = intent.getPackage() || (await dialogs.confirm(`“${file.fileName}”下载完毕，立即安装？`, {
+			title: "确认安装",
+		}));
+		if (confirm) {
+			app.startActivity(intent);
+		}
+	} else {
+		if (file === null && appInfo.url) {
+			app.openUrl(appInfo.url);
+		}
+	}
+	hideProgress();
 }
 
 function verCompare (verA, verB) {
@@ -328,7 +321,7 @@ function verCompare (verA, verB) {
 	}
 	return result;
 }
-verCompare("3.013_gplay", "3.013_gplay");
+
 function fileCompare (b, a) {
 	let result;
 	if (a.versionCode && b.versionCode) {
@@ -337,8 +330,8 @@ function fileCompare (b, a) {
 	if (a.versionName && b.versionName) {
 		result = result || verCompare(a.versionName, b.versionName);
 	}
-	if (a.date && b.date) {
-		result = result || a.date - b.date;
+	if (a.lastModified && b.lastModified) {
+		result = result || a.lastModified - b.lastModified;
 	}
 	return result;
 }
@@ -348,28 +341,23 @@ function getRemoteFiles (appInfo) {
 		if (!fileList) {
 			return;
 		}
-		try {
-			if (Array.isArray(fileList)) {
-				if (appInfo.filter) {
-					fileList = appInfo.filter(fileList) || fileList;
-				} else {
-					fileList = fileList.filter(file => file.fileName.includes(appInfo.name));
-				}
-				fileList = fileList.sort(fileCompare);
-				if (fileList[0] && fileList[0].versionName) {
-					fileList = fileList.filter(file => file.versionName === fileList[0].versionName);
-				}
-				if (fileList.length > 1) {
-					const mouse = fileList.find(file => /耗/.test(file.fileName));
-					if (mouse) {
-						fileList = [mouse];
-					}
-				}
-			} else {
-				fileList = [fileList];
+		if (!Array.isArray(fileList)) {
+			fileList = [fileList];
+		}
+		if (appInfo.filter) {
+			fileList = appInfo.filter(fileList) || fileList;
+		} else if (fileList.length > 1) {
+			fileList = fileList.filter(file => file.fileName.includes(appInfo.name));
+		}
+		fileList = fileList.sort(fileCompare);
+		if (fileList.length > 1 && fileList[0].versionName) {
+			fileList = fileList.filter(file => file.versionName === fileList[0].versionName);
+		}
+		if (fileList.length > 1) {
+			const mouse = fileList.find(file => /耗/.test(file.fileName));
+			if (mouse) {
+				fileList = [mouse];
 			}
-		} catch (ex) {
-			console.error(appInfo, fileList);
 		}
 		return fileList;
 	});
@@ -380,9 +368,9 @@ function downApp () {
 		getApplicationInfo(appInfo);
 		if (appInfo.appName) {
 			appInfo.displayName = appInfo.appName + " v" + appInfo.getVersionName();
-			if (!/^\w+:\/\/app.mi.com\//i.test(appInfo.url)) {
-				getRemoteFiles(appInfo);
-			}
+			// if (!/^\w+:\/\/app.mi.com\//i.test(appInfo.url)) {
+			// 	getRemoteFiles(appInfo);
+			// }
 		} else {
 			delete appInfo.displayName;
 		}

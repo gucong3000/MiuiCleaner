@@ -1,7 +1,7 @@
-const okhttp3 = global.Packages.okhttp3;
+const okhttp3 = global.Packages?.okhttp3;
 const Headers = global.Headers || require("headers-polyfill").Headers;
 // const ReadableStream = global.ReadableStream || require("web-streams-ponyfill").ReadableStream;
-const Blob = require("blob-polyfill").Blob;
+const Blob = global.Blob || require("blob-polyfill").Blob;
 // const FormData = global.FormData || require("formdata-polyfill").Headers;
 
 function fetchAny (url, options = {}) {
@@ -29,49 +29,51 @@ function fetchAny (url, options = {}) {
 }
 
 function fetch (url, options = {}) {
-	options = {
-		method: "GET",
-		...options,
-	};
-
-	if (options.signal?.aborted) {
-		return;
-	}
-
-	console.time(url);
-	const call = http.client().newCall(http.buildRequest(url, options));
-	const work = events.emitter(threads.currentThread());
-	call.enqueue(new okhttp3.Callback({
-		onResponse: function (call, res) {
-			try {
-				res = wrapResponse(res, options);
-			} catch (ex) {
-				work.emit("error", ex);
-				return;
-			}
-			work.emit("response", res);
-			console.timeEnd(url);
-		},
-		onFailure: function (call, err) {
-			work.emit("error", err);
-		},
-	}));
-
-	if (options.signal) {
-		const abort = () => {
-			call.isCanceled() || call.cancel();
-			work.emit("error", new Error(options.signal.reason || "The user aborted a request."));
-		};
-		if (options.signal.addEventListener) {
-			options.signal.addEventListener("abort", abort);
-		} else if (options.signal.on) {
-			options.signal.on("abort", abort);
-		}
-	}
 	return new Promise((resolve, reject) => {
+		options = {
+			redirect: "follow",
+			method: "GET",
+			...options,
+		};
+		options.method = options.method.toUpperCase();
+		// console.time(url);
+		const client = http.client().newBuilder()
+			.followRedirects(/^follow$/i.test(options.redirect))
+			.build();
+		const call = client.newCall(http.buildRequest(url, options));
+		const work = events.emitter(threads.currentThread());
 		work.once("response", resolve);
-		work.once("railure", reject);
 		work.once("error", reject);
+		call.enqueue(new okhttp3.Callback({
+			onResponse: function (call, res) {
+				try {
+					res = wrapResponse(res, options);
+				} catch (ex) {
+					work.emit("error", ex);
+					return;
+				}
+				work.emit("response", res);
+				// console.timeEnd(url);
+			},
+			onFailure: function (call, err) {
+				work.emit("error", err);
+			},
+		}));
+
+		if (options.signal) {
+			const abort = () => {
+				call.isCanceled() || call.cancel();
+				work.emit("error", new Error(options.signal.reason || "The user aborted a request."));
+			};
+			if (options.signal.aborted) {
+				return abort();
+			}
+			if (options.signal.addEventListener) {
+				options.signal.addEventListener("abort", abort);
+			} else if (options.signal.on) {
+				options.signal.on("abort", abort);
+			}
+		}
 	});
 }
 
@@ -86,7 +88,7 @@ class Response {
 	}
 
 	get url () {
-		return _response.get(this).request().url();
+		return _response.get(this).request().url().toString();
 	}
 
 	get redirected () {
@@ -135,7 +137,10 @@ function hexToArrayUint8Array (input) {
 	return view;
 }
 // https://square.github.io/okhttp/4.x/okhttp/okhttp3/-response/
-function wrapResponse (res) {
+function wrapResponse (res, options) {
+	if (/^error$/i.test(options.redirect) && res.isRedirect()) {
+		throw new Error("unexpected redirect");
+	}
 	const response = Object.create(Response.prototype);
 	_response.set(response, res);
 	let headers;
@@ -186,3 +191,18 @@ function wrapResponse (res) {
 }
 
 module.exports = fetchAny;
+
+// fetch(
+// 	"https://developer.lanzoug.com/file/?UjRbZQw9UGEHDgY+AzYGalJtAjpe5FPCA5BVtlaZU/sG41CUAchX5lOWB/gAsweqUKYC41ewUNtSs1fHAOUEUVIEW+sM2FCMB3wGYQN5BjFSJgIxXixTtAOLVfxW7VPOBo1Q4gHgV71T4AfoAMEH4FCeAqhXJlAzUiVXOgB6BGNSO1tgDDRQWwc4BjQDagY1UjkCPl42U2ADPVVjVjhTdAZgUHQBYVc0UzwHYABkBz9QPwIxVy5QIlIlV2wAbgQ1UmBbPAx+UDQHZQZ/A2UGP1InAjNeNFNoAz1ValY6U2EGM1A3AThXNVNgBzcAMAcyUDoCN1c+UGFSYldnAD8EMlJiWzwMM1A2B2gGYwNkBjJSOgIpXmBTIQNvVXVWf1MhBmNQdQE1V2dTOAdoAGMHMFA6AjBXLlAmUjxXPAA5BGNSb1s9DGdQMgdoBmgDZgYzUjoCMl4yU3cDYlU/Vn1TbwY3UDEBalc6Uz0HYABnBzBQOwIzVy5QJ1IlVyYAYQQ0UmdbNAxpUDQHaQZoA2MGMVIwAiFedFM4A3RVblY4U2IGMlApAW1XOlM8B38AZgc0UD8CKVc7UGNSc1c1ADAEOFJi",
+// 	{
+// 		redirect: "follow",
+// 		// method: "HEAD",
+// 		headers: {
+// 			"accept": "*/*",
+// 			"user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1",
+// 			"referer": "https://423down.lanzouv.com/tp/ic1wllc",
+// 			"x-forwarded-for": "202.247.192.146",
+// 			"client-ip": "59.142.129.197",
+// 		},
+// 	},
+// );
