@@ -157,7 +157,7 @@ class AutojsDeployPlugin {
 		let assets = compilation.getAssets();
 		if (this.options.deploy.skipSourceMap) {
 			assets = assets.filter(asset =>
-				!("development" in asset.info),
+				!("development" in asset.info) && !("extractedComments" in asset.info),
 			);
 		}
 		const localDir = compilation.compiler.outputPath;
