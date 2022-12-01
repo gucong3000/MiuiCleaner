@@ -27,7 +27,6 @@
 		"@babel/preset-env": "^7.19.1",
 		"@devicefarmer/adbkit": "^3.2.3",
 		"ansi-styles": "^5.2.0",
-		"axios": "^0.27.2",
 		"babel-loader": "^8.2.5",
 		"eslint": "^8.24.0",
 		"eslint-config-standard": "^17.0.0",
