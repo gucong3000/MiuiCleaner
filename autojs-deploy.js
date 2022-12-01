@@ -1,6 +1,5 @@
 const { Adb } = require("@devicefarmer/adbkit");
 const { readFile } = require("fs/promises");
-const { Transform } = require("stream");
 const EventEmitter = require("events");
 const path = require("path");
 const {
@@ -284,6 +283,8 @@ class AutojsDeployPlugin {
 	}
 }
 module.exports = AutojsDeployPlugin;
+
+const { Transform } = require("stream");
 const styles = require("ansi-styles");
 const json5 = require("json5");
 class LogTransform extends Transform {

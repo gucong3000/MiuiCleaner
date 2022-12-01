@@ -1,6 +1,5 @@
 const fetch = require("./fetch");
 const lanzou = require("./lanzou");
-// const downFile = require("./downFile");
 
 class Asset {
 	constructor (data) {

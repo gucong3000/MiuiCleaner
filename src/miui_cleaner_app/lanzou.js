@@ -1,3 +1,4 @@
+const jsonParse = require("json5/lib/parse");
 const fetch = global.fetch || require("./fetch");
 // const webView = global.ui && require("./webView");
 let userAgent;
@@ -47,10 +48,9 @@ async function getFileInfoFromUrl (url, options) {
 			return that[code];
 		}
 		try {
-			/* eslint no-new-func: "off" */
-			return new Function(`return ${code};`).call(that);
+			return jsonParse(code);
 		} catch (ex) {
-			//
+			// console.error(ex);
 		}
 	}
 	for await (const script of html.match(/<script\s+type="text\/javascript">[\s\S]+?<\/script>/ig).map(
@@ -67,13 +67,12 @@ async function getFileInfoFromUrl (url, options) {
 		if (!ajaxCode) {
 			continue;
 		}
-
 		script.slice(0, ajaxCode.index).split(/\r?\n/).forEach(line => {
 			line = line.trim();
 			if (line.startsWith("//")) {
 				return;
 			}
-			line = line.match(/^((var|let|const)\s+)?(\w+)\s*=\s*(.*?);?$/);
+			line = line.match(/^((var|let|const)\s+)?(\w+)\s*=\s*(.*?)(;|$)/);
 			if (line) {
 				that[line[3]] = getVal(line[4]) || that[line[3]];
 			}
