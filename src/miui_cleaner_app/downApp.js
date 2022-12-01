@@ -252,38 +252,51 @@ async function download (appInfo, item) {
 		// item.invalidate();
 		// progress.invalidate();
 	}
-	let file = await getRemoteFiles(appInfo);
-	if (file.length > 1) {
-		const choice = await dialogs.singleChoice(file.map(file => ({
-			toString: () => file.fileName + "\n" + [
-				file.versionName,
-				formatSize(file.size),
-				formatDate(file.lastModified),
-			].filter(Boolean).join(" | "),
-			file,
-		})), {
-			title: `请选择要下载的“${appInfo.appName || appInfo.name}”版本`,
-			neutral: true,
-		});
-		file = choice && choice.file;
-	} else {
-		file = file[0];
-		if (file.getLocation) {
-			file = await file.getLocation(true);
+	let file;
+	let getLocationTask;
+	function getLocation () {
+		if (file && file.getLocation) {
+			getLocationTask = file.getLocation(true);
 		}
-		const localVer = appInfo.appName && appInfo.getVersionName();
-		const confirm = await dialogs.confirm([
-			file.versionName && `版本：${(localVer ? `${localVer} → ` : "") + file.versionName}`,
-			file.size && `大小：${formatSize(file.size)}`,
-			file.lastModified && `日期：${formatDate(file.lastModified)}`,
-		].filter(Boolean).join("\n"), {
-			title: `是否${appInfo.appName ? "更新" : "下载"}“${appInfo.appName || appInfo.name}”？`,
-			neutral: true,
-		});
-		file = confirm && file;
+	};
+	try {
+		file = await getRemoteFiles(appInfo);
+		if (file.length > 1) {
+			const choice = await dialogs.singleChoice(file.map(file => ({
+				toString: () => file.fileName + "\n" + [
+					file.versionName,
+					formatSize(file.size),
+					formatDate(file.lastModified),
+				].filter(Boolean).join(" | "),
+				file,
+			})), {
+				title: `请选择要下载的“${appInfo.appName || appInfo.name}”版本`,
+				neutral: true,
+			});
+			file = choice && choice.file;
+			getLocation();
+		} else {
+			file = file[0];
+			getLocation();
+			const localVer = appInfo.appName && appInfo.getVersionName();
+			const confirm = await dialogs.confirm([
+				file.versionName && `版本：${(localVer ? `${localVer} → ` : "") + file.versionName}`,
+				file.size && `大小：${formatSize(file.size)}`,
+				file.lastModified && `日期：${formatDate(file.lastModified)}`,
+			].filter(Boolean).join("\n"), {
+				title: `是否${appInfo.appName ? "更新" : "下载"}“${appInfo.appName || appInfo.name}”？`,
+				neutral: true,
+			});
+			file = confirm && file;
+		}
+	} catch (ex) {
+		console.error(ex);
+		file = null;
+		return;
 	}
 
 	if (file) {
+		await getLocationTask;
 		const downTask = downFile(file);
 		downTask.on("progress", (e) => {
 			progress.indeterminate = false;

@@ -130,7 +130,7 @@ function getCleanerList () {
 	return cleanerList.filter((cleaner) => {
 		// 通过系统设置判断是否已经关闭该板块的广告，如果已经全部关闭，则不显示该模块
 		if (cleaner.settings && cleaner.settings.every(key => settings[key] === false)) {
-			return false;
+			cleaner.checked = false;
 		}
 		return !cleaner.packageName || getApplicationInfo(cleaner);
 	});

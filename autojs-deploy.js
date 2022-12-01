@@ -108,7 +108,9 @@ class AutojsDeployPlugin {
 				].map(packageName => logcat(device, packageName)),
 			);
 		};
-		if (!this.options.logcat.manager) {
+		if (this.options.logcat.manager) {
+			this.options.logcat.manager.emit("close");
+		} else {
 			this.options.logcat.manager = new EventEmitter();
 			if (compilation.compiler.options.watch) {
 				process.nextTick(async () => {
@@ -121,8 +123,6 @@ class AutojsDeployPlugin {
 					});
 				});
 			}
-		} else {
-			this.options.logcat.manager.emit("close");
 		}
 		await this.eachDevice(start);
 	}
@@ -204,7 +204,7 @@ class AutojsDeployPlugin {
 	async updateAsset (compilation) {
 		const project = await this.getProjectConfig();
 
-		if (this.options.logcat?.sourceMap) {
+		if (compilation.compiler.options.watch && this.options.logcat?.sourceMap) {
 			this.options.logcat.sourceMap = {};
 			const remoteDir = project.projectDirectory;
 			const posixPath = (sPath) => (path.isAbsolute(sPath) ? path.relative(process.cwd(), sPath) : sPath).replaceAll(path.win32.sep, path.posix.sep);
@@ -268,8 +268,18 @@ class AutojsDeployPlugin {
 		});
 		compiler.hooks.done.tapPromise(AutojsDeployPlugin.name, async (stats) => {
 			const compilation = stats.compilation;
-			await this.deploy(compilation);
-			await this.logcat(compilation);
+			try {
+				await this.deploy(compilation);
+			} catch (ex) {
+				if (ex.cause?.code === "ENOENT") {
+					console.error("Could not find 'adb' in PATH. Please set options.adb of " + AutojsDeployPlugin.name);
+				} else {
+					throw ex;
+				}
+			}
+			if (compilation.compiler.options.watch) {
+				await this.logcat(compilation);
+			}
 		});
 	}
 }

@@ -70,7 +70,6 @@ function regBack () {
 	});
 }
 
-module.exports = regBack;
 (() => {
 	if (DEBUG) {
 		const thisPackageName = context.getPackageName();
@@ -102,3 +101,4 @@ module.exports = regBack;
 	mainMenu();
 	require("./update");
 })();
+module.exports = regBack;

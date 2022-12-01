@@ -1,6 +1,6 @@
 {
 	"name": "miui_cleaner",
-	"version": "2022.11.21.8",
+	"version": "2022.12.1.8",
 	"private": true,
 	"description": "MIUI广告清理工具",
 	"scripts": {
@@ -8,10 +8,10 @@
 		"test:fix": "npm run test -- --fix",
 		"start": "npx webpack --config webpack.config.js --watch --mode=development",
 		"build:pack": "npx webpack --config webpack.config.js --mode=production",
-		"build:pull": "adb pull sdcard/脚本/miui_cleaner_app/build ./dist/",
+		"build:pull": "adb pull sdcard/脚本/com.github.gucong3000.miui.cleaner/build ./dist/",
 		"build:init": "sh -c \"mkdir -p dist/miui_cleaner_cmd\" && node project.js",
 		"build": "npm run build:init && npm run build:pack",
-		"deploy:res": "adb push ./res /sdcard/脚本/miui_cleaner_app/",
+		"deploy:res": "adb push ./res /sdcard/脚本/com.github.gucong3000.miui.cleaner/",
 		"deploy": "npm run build & npm run deploy:res",
 		"dump:ui": "adb shell uiautomator dump && (adb shell cat /sdcard/window_dump.xml | xmllint --format - > window_dump.xml) && code window_dump.xml",
 		"dump:act": "adb shell dumpsys activity activities | grep Hist",

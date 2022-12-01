@@ -1,32 +1,53 @@
-const request = require("./fetch");
+const fetch = require("./fetch");
 const lanzou = require("./lanzou");
 // const downFile = require("./downFile");
 
-function parseGithubRelease (url) {
+class Asset {
+	constructor (data) {
+		Object.assign(this, data);
+	}
+
+	async getLocation () {
+		const location = await parseGithubRelease(new URL(this.url), false);
+		if (location) {
+			this.location = location;
+		}
+		return this;
+	}
+}
+
+function parseGithubRelease (url, redirect) {
 	const pathInfo = url.pathname.match(/\/releases\/(.+)$/);
 	if (!pathInfo) {
 		return;
 	}
 	if (pathInfo[1].includes("/")) {
-		return request(
+		return fetch(
 			[
 				url.href,
 				url.protocol + "//gh.api.99988866.xyz/" + url.href,
 				url.protocol + "//download.fastgit.org" + url.pathname + url.search,
 			],
 			{
+				redirect: redirect ? "follow" : "manual",
 				method: "HEAD",
 			},
-		);
+		).then(res => {
+			const location = res.headers.get("location");
+			if (location) {
+				return location;
+			} else if (res.ok) {
+				return res.url;
+			}
+		});
 	} else {
 		url.hostname = "api." + url.hostname;
 		url.pathname = "/repos" + url.pathname;
-		return request(url.href).then(res => res.json()).then(release => {
+		return fetch(url.href).then(res => res.json()).then(release => {
 			const referer = release.html_url;
 			const versionName = release.tag_name.replace(/^v/, "");
-
 			return release.assets.map(
-				asset => ({
+				asset => new Asset({
 					fileName: asset.name,
 					type: asset.content_type,
 					size: asset.size,
@@ -52,7 +73,7 @@ function parse32r (url) {
 	let html;
 	let res = {};
 	return Promise.all([
-		request(
+		fetch(
 			appUrl,
 			{
 				method: "HEAD",
@@ -63,7 +84,7 @@ function parse32r (url) {
 		).then(data => {
 			res = data;
 		}, console.error),
-		request(
+		fetch(
 			htmlUrl,
 		).then(res => res.text()).then(data => {
 			html = data;
