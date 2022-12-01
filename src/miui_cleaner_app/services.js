@@ -280,7 +280,7 @@ function startAct ({
 				activity: className,
 			});
 		} else {
-			console.error(ex.message);
+			console.error(ex);
 		}
 		return false;
 	}
@@ -538,8 +538,6 @@ function switchBroHomePage (listView, options) {
 				options.handle[text] = true;
 				console.log(`“${options.appName}”首页已切换为“${text}”`);
 				delay();
-			} else {
-				console.error(linear);
 			}
 			return true;
 		});
@@ -670,6 +668,18 @@ const cleanerList = [
 			));
 		},
 	},
+
+	// public void testStartChooseDialog() {
+	//     Intent intent = new Intent();
+	//     intent.setAction("android.intent.action.VIEW");
+	//     intent.addCategory("android.intent.category.BROWSABLE");
+	//     intent.setData(Uri.parse("http://jb51.net"));
+	//     intent.setComponent(new ComponentName("android","com.android.internal.app.ResolverActivity"));
+	//     getActivity().startActivity(intent);
+	// https://blog.csdn.net/bzczceebdwq/article/details/42805397
+	// https://github.com/CrackerCat/simpread/blob/9443111ecb666d809163da829298bd1a8ba00e5b/md/MIUI%2012.5%20%E4%B8%8B%E4%BD%BF%E7%94%A8%20Magisk%20v24.2%20%E9%9A%8F%E6%9C%BA%E5%8C%85%E5%90%8D.md
+	// $ adb shell am start -a android.intent.action.VIEW -d content://a.apk -n android/com.android.internal.app.ResolverActivity
+
 	// {
 	// 	packageName: "com.miui.packageinstaller",
 	// 	// activity: "com.android.packageinstaller.SettingsActivity",
@@ -946,7 +956,7 @@ function runTaskList (taskList) {
 
 function init () {
 	const configFilePath = files.join(
-		context.getFilesDir(),
+		context.getExternalFilesDir(null),
 		"taskList.json",
 	);
 	runTaskList(

@@ -12,7 +12,6 @@ const config = {
 	},
 	output: {
 		path: path.resolve(__dirname, "dist/miui_cleaner_app"),
-		publicPath: "/sdcard/脚本/",
 		filename: "[name].js",
 		clean: true,
 	},
@@ -20,7 +19,6 @@ const config = {
 	plugins: [
 		new AutojsDeployPlugin({
 			// {boolean|String|boolean[]|String[]} 添加`"ui";`前缀的chunk（output）名单，true代表project.json中定义的main，字符串代表文件名
-			ui: true,
 			// {String} 必须的 project.json 的文件路径
 			configFile: path.resolve(__dirname, "src/miui_cleaner_app/project.json"),
 		}),

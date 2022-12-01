@@ -223,7 +223,7 @@ module.exports = (options, result) => {
 		}
 		compiler(result.handle, data, options);
 	} catch (ex) {
-		console.error(ex.message);
+		console.error(ex);
 	}
 };
 

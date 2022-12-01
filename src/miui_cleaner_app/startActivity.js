@@ -5,7 +5,7 @@ function startActivity (options) {
 	try {
 		app.startActivity(options);
 	} catch (ex) {
-		console.error(ex.message);
+		console.error(ex);
 	}
 }
 

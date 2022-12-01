@@ -1,8 +1,8 @@
+const debounce = require("debounce");
 const Rect = android.graphics.Rect;
 const inNightMode = Boolean(activity.getApplicationContext().getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_YES);
 function emitItemShowEvent (listView, defaultIcon) {
 	const itemList = new Map();
-	const itemVisible = new Map();
 	listView.on("item_bind", function (itemView, itemHolder) {
 		itemList.set(itemView, itemHolder);
 		setTimeout(() => {
@@ -12,7 +12,7 @@ function emitItemShowEvent (listView, defaultIcon) {
 			}
 		}, 0);
 	});
-	listView.on("scroll_change", () => {
+	listView.on("scroll_change", debounce(() => {
 		const parentRect = new Rect();
 		listView.getGlobalVisibleRect(parentRect);
 		function isVisible (target) {
@@ -22,16 +22,10 @@ function emitItemShowEvent (listView, defaultIcon) {
 		}
 		itemList.forEach((itemHolder, itemView) => {
 			if (isVisible(itemView)) {
-				if (!itemVisible.get(itemView)) {
-					listView.emit("item_show", itemHolder.item, itemView, listView);
-				}
-				itemVisible.set(itemView, true);
-			} else {
-				itemVisible.set(itemView, false);
+				listView.emit("item_show", itemHolder.item, itemView, listView);
 			}
 		});
-	});
-
+	}, 80));
 	listView.on("item_show", function (item, itemView, listView) {
 		const imageView = itemView.icon;
 		if (item.loadIcon) {
