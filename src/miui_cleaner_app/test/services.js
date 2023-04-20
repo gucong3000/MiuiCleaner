@@ -188,7 +188,8 @@ const testCase = {
 		"USB调试（安全设置）": true,
 	},
 };
-function compiler (result, data, options, parent = []) {
+function compiler (result, data, options, parent) {
+	parent = parent || [];
 	for (const key in data) {
 		const curr = parent.concat(key);
 		if (isObject(data[key])) {

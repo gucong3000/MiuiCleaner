@@ -15,23 +15,20 @@ const appList = [
 		name: "李跳跳",
 		summary: "干净小巧的广告自动跳过工具",
 		icon: "https://litiaotiao.cn/apple-touch-icon.png",
-		packageName: "cn.litiaotiao.app",
-		url: "https://wwe.lanzouw.com/b01v0g3wj#pwd=1233",
-		filter: files => files.filter(file => {
-			const info = file.fileName.match(/^(.*)_(.*?)((\d+\.)+\d+).\w+$/);
-			if (/李跳跳|MissLee/.test(info[1]) && !info[2].includes("真实好友")) {
-				file.versionName = info[2] + info[3];
-				return true;
-			}
-			return false;
-		}),
+		packageName: "hello.litiaotiao.app",
+		url: "https://www.123pan.com/s/ZYAZVv-TBYjd",
+		filter: function (files) {
+			return files.filter(file => {
+				return /李跳跳|MissLee/.test(file.fileName) && !file.fileName.includes("真实好友");
+			});
+		},
 	},
 	{
 		name: "QQ音乐简洁版",
 		summary: "MIUI音乐APP套壳的产品",
 		icon: "https://m.32r.com/logo/210807/202108070906595774.png",
 		packageName: "com.tencent.qqmusiclite",
-		url: "https://app.mi.com/details?id=com.tencent.qqmusiclite",
+		url: "https://www.coolapk.com/apk/com.tencent.qqmusiclite",
 	},
 	{
 		name: "Edge",
@@ -77,7 +74,7 @@ const appList = [
 	{
 		name: "应用包管理组件",
 		summary: "MIUI软件包安装程序v3.8.0，不含“纯净模式”",
-		icon: "https://img.1xiazai.net/d/file/android/20220407/2021731123154350.png",
+		icon: "http://pic.danji100.com/upload/2022-4/20224261118377118.png",
 		packageName: "com.miui.packageinstaller",
 		url: "https://zisu.lanzoum.com/tp/iI7LGwn5xjc",
 		filter: function (files) {
@@ -144,8 +141,10 @@ const appList = [
 		summary: "集成“知了”，“设置→知了”中有去广告开关",
 		icon: "https://static.zhihu.com/heifetz/assets/apple-touch-icon-60.8f6c52aa.png",
 		packageName: "com.zhihu.android",
-		url: "https://423down.lanzouo.com/b0f2lkafe",
+		url: "https://www.123pan.com/s/A6cA-dJAJh",
+		// url: "https://423down.lanzouo.com/b0f2lkafe",
 		// url: "https://m.32r.com/app/80966.html",
+		// https://www.423down.com/11775.html
 		filter: function (files) {
 			return files.filter(file => {
 				return /知乎.*知了/.test(file.fileName);
@@ -157,7 +156,9 @@ const appList = [
 		summary: "“设置→哔哩漫游→关于版本”点五下有惊喜",
 		icon: "https://m.32r.com/logo/221114/202211141125334046.png",
 		packageName: "tv.danmaku.bili",
+		// url: "https://www.123pan.com/s/A6cA-gT9Jh",
 		url: "https://423down.lanzouv.com/b0f1gksne",
+		// https://www.423down.com/12235.html
 		filter: function (files) {
 			return files.filter(file => {
 				return /哔哩哔哩.*漫游/.test(file.fileName);
@@ -236,9 +237,10 @@ async function download (appInfo, item) {
 		});
 		return;
 	}
+	const View = android.view.View;
 	let progress = item.progress;
 	if (progress) {
-		progress.setVisibility(android.view.View.VISIBLE);
+		progress.setVisibility(View.VISIBLE);
 		progress.indeterminate = true;
 	} else {
 		progress = ui.inflate(`
@@ -247,7 +249,7 @@ async function download (appInfo, item) {
 	}
 	function hideProgress () {
 		// console.log(progress);
-		progress.setVisibility(android.view.View.GONE);
+		progress.setVisibility(View.GONE);
 		// item.removeView(progress);
 		// item.invalidate();
 		// progress.invalidate();
@@ -292,7 +294,6 @@ async function download (appInfo, item) {
 	} catch (ex) {
 		console.error(ex);
 		file = null;
-		return;
 	}
 
 	if (file) {

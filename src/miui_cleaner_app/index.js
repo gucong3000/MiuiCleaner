@@ -20,6 +20,7 @@ const mainActions = [
 	require("./offAppAd"),
 	require("./appManager"),
 	require("./recycle"),
+	require("./support"),
 	{
 		name: "控制台",
 		summary: "查看运行日志",
@@ -82,23 +83,9 @@ function regBack () {
 		} else {
 			// app.launch("com.github.gucong3000.miui.cleaner");
 		}
-		const util = global.$util;
-		const format = util.format;
-		util.format = (...args) => {
-			args = args.map(e => {
-				if (e instanceof Error) {
-					return [
-						e.toString(),
-						e.stack,
-					].filter(Boolean).join("\n");
-				} else {
-					return e;
-				}
-			});
-			return format.apply(util, args);
-		};
 	}
 	mainMenu();
 	require("./update");
 })();
 module.exports = regBack;
+module.exports.mainMenu = mainMenu;

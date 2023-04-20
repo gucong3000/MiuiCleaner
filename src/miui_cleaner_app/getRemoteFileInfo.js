@@ -1,5 +1,6 @@
 const fetch = require("./fetch");
 const lanzou = require("./lanzou");
+const _123pan = require("./123pan");
 
 class Asset {
 	constructor (data) {
@@ -109,6 +110,37 @@ function parse32r (url) {
 	});
 }
 
+function getVersionForFile (fileInfo) {
+	if (Array.isArray(fileInfo)) {
+		fileInfo.forEach(getVersion);
+	} else {
+		getVersion(fileInfo);
+	}
+	return fileInfo;
+}
+
+function getVersion (fileInfo) {
+	const versionName = fileInfo.fileName.match(/\d+(\.+\d+)+/);
+	if (versionName) {
+		fileInfo.versionName = versionName[0];
+	}
+	const versionCode = fileInfo.fileName.match(/\(\s*(\d+)\s*\)/);
+	if (versionCode) {
+		fileInfo.versionCode = +versionCode[1];
+	}
+}
+
+function getOptsFromUrl (url) {
+	const options = {};
+	url.hash.replace(/^#+/, "").split(/\s*&\s*/g).forEach(
+		value => {
+			value = value.split(/\s*=\s*/g);
+			options[value[0]] = value[1];
+		},
+	);
+	return options;
+}
+
 function getRemoteFileInfo (url) {
 	if (!url.href) {
 		url = new URL(url);
@@ -135,31 +167,10 @@ function getRemoteFileInfo (url) {
 		return parse32r(url);
 	} else if (/^(\w+\.)*lanzou\w*(\.\w+)*$/.test(url.hostname)) {
 		console.log("正在解析网盘", url.href);
-		const options = {};
-		url.hash.replace(/^#+/, "").split(/\s*&\s*/g).forEach(
-			value => {
-				value = value.split(/\s*=\s*/g);
-				options[value[0]] = value[1];
-			},
-		);
-		function getVersion (fileInfo) {
-			const versionName = fileInfo.fileName.match(/\d+(\.+\d+)+/);
-			if (versionName) {
-				fileInfo.versionName = versionName[0];
-			}
-			const versionCode = fileInfo.fileName.match(/\(\s*(\d+)\s*\)/);
-			if (versionCode) {
-				fileInfo.versionCode = +versionCode[1];
-			}
-		}
-		return lanzou(url, options).then(fileInfo => {
-			if (Array.isArray(fileInfo)) {
-				fileInfo.forEach(getVersion);
-			} else {
-				getVersion(fileInfo);
-			}
-			return fileInfo;
-		});
+		return lanzou(url, getOptsFromUrl(url)).then(getVersionForFile);
+	} else if (/^(\w+\.)*123pan(\.\w+)*$/.test(url.hostname)) {
+		console.log("正在解析网盘", url.href);
+		return _123pan(url, getOptsFromUrl(url)).then(getVersionForFile);
 	}
 }
 
