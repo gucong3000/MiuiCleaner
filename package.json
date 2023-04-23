@@ -1,6 +1,6 @@
 {
 	"name": "miui_cleaner",
-	"version": "2022.10.20.7",
+	"version": "2023.4.23.8",
 	"private": true,
 	"description": "MIUI广告清理工具",
 	"scripts": {
@@ -8,10 +8,10 @@
 		"test:fix": "npm run test -- --fix",
 		"start": "npx webpack --config webpack.config.js --watch --mode=development",
 		"build:pack": "npx webpack --config webpack.config.js --mode=production",
-		"build:pull": "adb pull sdcard/脚本/miui_cleaner_app/build ./dist/",
+		"build:pull": "adb pull sdcard/脚本/com.github.gucong3000.miui.cleaner/build ./dist/",
 		"build:init": "sh -c \"mkdir -p dist/miui_cleaner_cmd\" && node project.js",
 		"build": "npm run build:init && npm run build:pack",
-		"deploy:res": "adb push ./res /sdcard/脚本/miui_cleaner_app/",
+		"deploy:res": "adb push ./res /sdcard/脚本/com.github.gucong3000.miui.cleaner/",
 		"deploy": "npm run build & npm run deploy:res",
 		"dump:ui": "adb shell uiautomator dump && (adb shell cat /sdcard/window_dump.xml | xmllint --format - > window_dump.xml) && code window_dump.xml",
 		"dump:act": "adb shell dumpsys activity activities | grep Hist",
@@ -25,14 +25,21 @@
 		"@babel/plugin-syntax-jsx": "^7.18.6",
 		"@babel/plugin-transform-runtime": "^7.19.1",
 		"@babel/preset-env": "^7.19.1",
-		"axios": "^0.27.2",
+		"@devicefarmer/adbkit": "^3.2.3",
+		"ansi-styles": "^5.2.0",
 		"babel-loader": "^8.2.5",
 		"eslint": "^8.24.0",
 		"eslint-config-standard": "^17.0.0",
-		"gulp": "^4.0.2",
-		"gulp-babel": "^8.0.0",
 		"webpack": "^5.74.0",
 		"webpack-cli": "^4.10.0",
 		"wrapper-webpack-plugin": "^2.2.2"
+	},
+	"dependencies": {
+		"blob-polyfill": "^7.0.20220408",
+		"core-js": "^3.26.0",
+		"debounce": "^1.2.1",
+		"headers-polyfill": "^3.1.2",
+		"json5": "^2.2.1",
+		"pretty-bytes": "^5.6.0"
 	}
 }

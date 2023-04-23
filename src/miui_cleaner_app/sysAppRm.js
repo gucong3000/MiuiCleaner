@@ -21,29 +21,29 @@ function clickButton (button, text) {
 	}
 }
 
-// 卸载“纯净模式”
-function getInstaller (appList) {
-	const packageInfo = getApplicationInfo({
-		packageName: installerPackageName,
-		summary: "降级安装v380，以便移除“纯净模式”",
-	});
-	if (!packageInfo || packageInfo.getVersionCode() < 400) {
-		// 版本号小于400，则不含“纯净模式”
-		return;
-	}
-	const fileName = "MiuiPackageInstaller.apk";
-	const srcPath = "res/" + fileName;
-	const copyPath = "/sdcard/Download/" + fileName;
-	const installPath = "/data/local/tmp/" + fileName;
-	files.copy(srcPath, copyPath);
-	packageInfo.cmd = [
-		`mv ${copyPath} ${installPath}`,
-		"pm install -d -g " + installPath,
-		"rm -rf " + installPath,
-	].join("\n");
-	appList.push(packageInfo);
-	console.log(`发现${installerAppName}(${installerPackageName})，版本号${packageInfo.getVersionName()}，已释放版本号为v380的降级安装包到路径：${copyPath}`);
-}
+// // 卸载“纯净模式”
+// function getInstaller (appList) {
+// 	const packageInfo = getApplicationInfo({
+// 		packageName: installerPackageName,
+// 		summary: "降级安装v380，以便移除“纯净模式”",
+// 	});
+// 	if (!packageInfo || packageInfo.getVersionCode() < 400) {
+// 		// 版本号小于400，则不含“纯净模式”
+// 		return;
+// 	}
+// 	const fileName = "MiuiPackageInstaller.apk";
+// 	const srcPath = "res/" + fileName;
+// 	const copyPath = "/sdcard/Download/" + fileName;
+// 	const installPath = "/data/local/tmp/" + fileName;
+// 	files.copy(srcPath, copyPath);
+// 	packageInfo.cmd = [
+// 		`mv ${copyPath} ${installPath}`,
+// 		"pm install -d -g " + installPath,
+// 		"rm -rf " + installPath,
+// 	].join("\n");
+// 	appList.push(packageInfo);
+// 	console.log(`发现${installerAppName}(${installerPackageName})，版本号${packageInfo.getVersionName()}，已释放版本号为v380的降级安装包到路径：${copyPath}`);
+// }
 
 const whitelist = /^com\.(miui\.(voiceassist|personalassistant)|android\.(quicksearchbox|chrome))$/;
 function getAppList () {
@@ -57,7 +57,6 @@ function getAppList () {
 		// item.isSysApp = appInfo.flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM;
 		return true;
 	});
-	getInstaller(appList);
 	return appList;
 }
 

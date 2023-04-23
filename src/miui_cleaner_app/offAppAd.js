@@ -40,6 +40,24 @@ const cleanerList = [
 		settings: ["personalizedAD"],
 	},
 	{
+		// 应用商店
+		packageName: "com.xiaomi.market",
+		summary: "新手帮助、个性化服务、福利活动等",
+		// activity: ".ui.MarketTabActivity",
+	},
+	{
+		// 应用包管理组件
+		summary: "安装监控、纯净模式、安全检查",
+		packageName: "com.miui.packageinstaller",
+		// action: "com.android.browser.BrowserActivity",
+	},
+	{
+		// 下载管理程序
+		packageName: "com.android.providers.downloads.ui",
+		summary: "资源推荐、热榜推荐",
+		action: ".activity.DownloadSettingActivity",
+	},
+	{
 		// 手机管家→设置页
 		summary: "在线服务、个性化推荐等",
 		packageName: "com.miui.securitycenter",
@@ -57,18 +75,6 @@ const cleanerList = [
 		packageName: "com.miui.cleanmaster",
 		summary: "推荐内容、扫描内存",
 		action: "com.miui.optimizecenter.settings.SettingsActivity",
-	},
-	{
-		// 应用商店
-		packageName: "com.xiaomi.market",
-		summary: "新手帮助、个性化服务、福利活动等",
-		// activity: ".ui.MarketTabActivity",
-	},
-	{
-		// 下载管理程序
-		packageName: "com.android.providers.downloads.ui",
-		summary: "资源推荐、热榜推荐",
-		action: ".activity.DownloadSettingActivity",
 	},
 	{
 		// 日历
@@ -129,8 +135,8 @@ const cleanerList = [
 function getCleanerList () {
 	return cleanerList.filter((cleaner) => {
 		// 通过系统设置判断是否已经关闭该板块的广告，如果已经全部关闭，则不显示该模块
-		if (cleaner.settings && !cleaner.settings.some(key => settings[key])) {
-			return false;
+		if (cleaner.settings && cleaner.settings.every(key => settings[key] === false)) {
+			cleaner.checked = false;
 		}
 		return !cleaner.packageName || getApplicationInfo(cleaner);
 	});

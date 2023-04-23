@@ -274,13 +274,13 @@ function startAct ({
 		result = app.startActivity(opts);
 	} catch (ex) {
 		if (/Permission Denial/.test(ex.message)) {
-			console.log(ex.message);
+			console.error(ex);
 			return startPkg({
 				packageName,
 				activity: className,
 			});
 		} else {
-			console.error(ex.message);
+			console.error(ex);
 		}
 		return false;
 	}
@@ -538,8 +538,6 @@ function switchBroHomePage (listView, options) {
 				options.handle[text] = true;
 				console.log(`“${options.appName}”首页已切换为“${text}”`);
 				delay();
-			} else {
-				console.error(linear);
 			}
 			return true;
 		});
@@ -657,6 +655,95 @@ const cleanerList = [
 		entry: openCfgPageBySubPage,
 	},
 	{
+		// 应用包管理组件
+		packageName: "com.miui.packageinstaller",
+		fn: function (options) {
+			const googlePkgName = "com.google.android.packageinstaller";
+			let googleAppName = app.getAppName(googlePkgName);
+			const miuiPkgName = "com.miui.packageinstaller";
+			const Intent = android.content.Intent;
+
+			const Uri = android.net.Uri;
+
+			function installApk (apkPath, resolver) {
+				const intent = new Intent();
+				intent.setAction(Intent.ACTION_VIEW);
+				if (resolver) {
+					intent.setComponent(new android.content.ComponentName("android", "com.android.internal.app.ResolverActivity"));
+				} else {
+					intent.setPackage(miuiPkgName);
+				}
+				intent.setDataAndType(
+					Uri.parse(apkPath),
+					"application/vnd.android.package-archive",
+				);
+				app.startActivity(intent);
+			}
+
+			function closeApp (pkgName) {
+				if (selector().packageName(pkgName).findOne(0x500)) {
+					back();
+					delay();
+				}
+			}
+
+			function selectApp (pkgName, appName) {
+				appName = appName || app.getAppName(pkgName);
+				const checkBox = selector().filter(checkBox =>
+					/\balways_option$/.test(checkBox.id()),
+				).packageName("android").checkable(true).findOne(0x500);
+				if (checkBox) {
+					if (!checkBox.checked()) {
+						clickButton(
+							checkBox,
+						);
+					}
+					clickButton(
+						selector().text(appName).packageName("android").findOnce(),
+					);
+				}
+				closeApp(pkgName);
+			}
+
+			installApk(googleAppName ? `content://${context.getPackageName()}/null.apk` : "file:///system/priv-app/PackageInstaller/PackageInstaller.apk");
+			if (selector().packageName(miuiPkgName).findOne(0x500)) {
+				const btnSetting = selector().id("setting_icon").packageName(miuiPkgName).clickable(true).findOnce();
+				if (btnSetting) {
+					// 关闭安装监控、安全检查
+					clickButton(btnSetting);
+					walkListView(options);
+				}
+				if (!googleAppName) {
+					// 自动安装google安装器
+					clickButton(
+						selector().text("安装").packageName(miuiPkgName).findOne(),
+					);
+					clickButton(
+						selector().text("完成").packageName(miuiPkgName).findOne(),
+					);
+					googleAppName = app.getAppName(googlePkgName);
+				}
+				closeApp(miuiPkgName);
+			}
+
+			if (googleAppName) {
+				// 设置默认由miui安装器卸载APP
+				const intent = new Intent();
+				intent.setAction(Intent.ACTION_DELETE);
+				intent.setData(
+					Uri.parse("package:" + miuiPkgName),
+				);
+				app.startActivity(intent);
+				selectApp(miuiPkgName);
+				closeApp(miuiPkgName);
+				// 设置默认由google安装器安装APP
+				installApk("content://null.null/null.apk", true);
+				selectApp(googlePkgName, googleAppName);
+			}
+		},
+		regSwitchOff: /安全检查|安装监控|纯净模式|资源推荐/,
+	},
+	{
 		// 应用商店
 		packageName: marketPackageName,
 		action: ".ui.CommonWebActivity",
@@ -670,23 +757,6 @@ const cleanerList = [
 			));
 		},
 	},
-	// {
-	// 	packageName: "com.miui.packageinstaller",
-	// 	// activity: "com.android.packageinstaller.SettingsActivity",
-	// 	fn: function () {
-	// 		const appInfo = downApp("com.google.android.packageinstaller");
-	// 		if (appInfo) {
-	// 			// const helper = setInterval(openInstallerHelper, 0x50);
-	// 			instApk(appInfo.apk);
-	// 		}
-	// 		// instApk("/system/priv-app/MiuiPackageInstaller/MiuiPackageInstaller.apk");
-	// 		// setTimeout(() => {
-	// 		// 	clearInterval(helper);
-	// 		// }, 0x1000);
-	// 	},
-	// 	walk: noop,
-	// 	entry: openCfgPage,
-	// },
 	{
 		// 下载管理程序
 		packageName: "com.android.providers.downloads.ui",
@@ -751,7 +821,7 @@ const cleanerList = [
 					linearList.findIndex(isFrameLayout),
 				).reverse();
 				linearList.forEach(linear => {
-					linear.findOne(selector().clickable()).click();
+					linear.findOne(selector().clickable(true)).click();
 				});
 				if (linearList.length) {
 					console.log("已关闭“热榜管理”中的所模块");
@@ -946,7 +1016,7 @@ function runTaskList (taskList) {
 
 function init () {
 	const configFilePath = files.join(
-		context.getFilesDir(),
+		context.getExternalFilesDir(null),
 		"taskList.json",
 	);
 	runTaskList(

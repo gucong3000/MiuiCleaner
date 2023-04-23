@@ -1,7 +1,9 @@
 const getApplicationInfo = require("./getApplicationInfo");
+const getRemoteFileInfo = require("./getRemoteFileInfo");
 const singleChoice = require("./singleChoice");
-const waitForBack = require("./waitForBack");
-const settings = require("./settings");
+const prettyBytes = require("pretty-bytes");
+const downFile = require("./downFile");
+const dialogs = require("./dialogs");
 
 // https://github.abskoop.workers.dev/
 // http://fastgit.org/
@@ -13,123 +15,155 @@ const appList = [
 		name: "李跳跳",
 		summary: "干净小巧的广告自动跳过工具",
 		icon: "https://litiaotiao.cn/apple-touch-icon.png",
-		packageName: "cn.litiaotiao.app",
-		url: [
-			"https://litiaotiao.cn/",
-			"https://www.123pan.com/s/A6cA-edAJh",
-		],
-		// 'cn.litiaotiao.app/com.litiaotiao.app.LttService'
-	},
-
-	{
-		name: "Edge",
-		summary: "浏览器，微软出品，带广告屏蔽功能",
-		icon: "http://i5.res.meizu.com/fileserver/app_icon/11841/3ea088fedc65436b84b718170cef7738.png",
-		packageName: "com.microsoft.emmx",
-		url: [
-			"https://www.coolapk.com/apk/com.microsoft.emmx",
-			"https://app.mi.com/details?id=com.microsoft.emmx",
-		],
-	},
-	{
-		name: "小米浏览器",
-		summary: "国际版",
-		icon: "http://img.itmop.com/upload/2018-2/2018227171959917.png",
-		packageName: "com.mi.globalbrowser",
-		url: [
-			"https://wwm.lanzouj.com/idzsf0bh062h",
-			"https://www.firepx.com/app/android-mi-browser-google-play/",
-			"https://com-globalbrowser.cn.aptoide.com/app",
-		],
-	},
-	{
-		name: "讯飞输入法",
-		summary: "定制版、Google Play版",
-		icon: "http://i5.res.meizu.com/fileserver/app_icon/11859/6866676385f64b329f56fe51731e23d3.png",
-		packageName: "com.iflytek.inputmethod",
-		url: [
-			"https://firepx.lanzoul.com/b00vf92jc#\n密码:647w",
-			// "https://app.meizu.com/apps/public/detail?package_name=com.iflytek.inputmethod",
-			"https://423down.lanzouv.com/b0f24av5i",
-		],
-		// [
-		// 	"https://www.coolapk.com/apk/com.iflytek.inputmethod",
-		// 	"https://app.mi.com/details?id=com.iflytek.inputmethod",
-		// ]
-	},
-	{
-		name: "软件包安装程序",
-		summary: "Google版",
-		packageName: "com.google.android.packageinstaller",
-		icon: "https://file.1xiazai.net/d/file/android/20220728/202266164286724.png",
-		url: {
-			// 3.01 MB 版本号 未知 适用于安卓 13 SDK 33
-			33: "https://www.123pan.com/s/OZe0Vv-iOKl3",
-			// 3.14 MB 版本号 12-7567768 适用于安卓 12 SDK 31
-			31: "https://www.123pan.com/s/OZe0Vv-LOKl3",
-			// 3.13 MB 版本号 11-7532981 适用于安卓 11 SDK 30
-			30: "https://www.123pan.com/s/OZe0Vv-zOKl3",
-			// 1.83 MB 版本号 10-7029319 适用于安卓 10 SDK 29
-			29: "https://www.123pan.com/s/OZe0Vv-tOKl3",
-			// 8.55 MB 版本号 9-7126274 适用于安卓 9 SDK 28
-			28: "https://www.123pan.com/s/OZe0Vv-qOKl3",
-		}[device.sdkInt],
-	},
-	{
-		name: "应用包管理组件",
-		summary: "MIUI软件包安装程序v3.8.0，不含“纯净模式”",
-		icon: "https://img.1xiazai.net/d/file/android/20220407/2021731123154350.png",
-		packageName: "com.miui.packageinstaller",
-		url: "https://zisu.lanzoum.com/iI7LGwn5xjc",
+		packageName: "hello.litiaotiao.app",
+		url: "https://www.123pan.com/s/ZYAZVv-TBYjd",
+		filter: function (files) {
+			return files.filter(file => {
+				return /李跳跳|MissLee/.test(file.fileName) && !file.fileName.includes("真实好友");
+			});
+		},
 	},
 	{
 		name: "QQ音乐简洁版",
 		summary: "MIUI音乐APP套壳的产品",
-		icon: "http://i5.res.meizu.com/fileserver/app_icon/11507/2d07011365854d2c83832165e3e0d547.",
+		icon: "https://m.32r.com/logo/210807/202108070906595774.png",
 		packageName: "com.tencent.qqmusiclite",
-		url: [
-			"https://www.coolapk.com/apk/com.tencent.qqmusiclite",
-			"https://app.mi.com/details?id=com.tencent.qqmusiclite",
-		],
+		url: "https://www.coolapk.com/apk/com.tencent.qqmusiclite",
 	},
 	{
-		name: "Holi天气",
+		name: "Edge",
+		summary: "浏览器，微软出品，带广告屏蔽功能",
+		icon: "https://edgefrecdn.azureedge.net/welcome/static/favicon.png",
+		packageName: "com.microsoft.emmx",
+		url: "https://app.mi.com/details?id=com.microsoft.emmx",
+	},
+	{
+		name: "小米浏览器",
+		summary: "国际版",
+		icon: "https://m.32r.com/logo/210519/202105191427372351.png",
+		packageName: "com.mi.globalbrowser",
+		url: "https://wwm.lanzoul.com/tp/idzsf0bh062h",
+	},
+	{
+		name: "讯飞输入法",
+		summary: "定制版、Google Play版",
+		icon: "https://srf.xunfei.cn/favicon.ico",
+		packageName: "com.iflytek.inputmethod",
+		// url: "https://app.meizu.com/apps/public/detail?package_name=com.iflytek.inputmethod",
+		// url: "https://m.32r.com/app/7401.html",
+		url: "https://firepx.lanzoul.com/b00vf92jc#pwd=647w",
+	},
+	// {
+	// 	name: "软件包安装程序",
+	// 	summary: "Google版",
+	// 	packageName: "com.google.android.packageinstaller",
+	// 	icon: "https://file.1xiazai.net/d/file/android/20220728/202266164286724.png",
+	// 	url: {
+	// 		// 3.01 MB 版本号 未知 适用于安卓 13 SDK 33
+	// 		33: "https://www.123pan.com/s/OZe0Vv-iOKl3",
+	// 		// 3.14 MB 版本号 12-7567768 适用于安卓 12 SDK 31
+	// 		31: "https://www.123pan.com/s/OZe0Vv-LOKl3",
+	// 		// 3.13 MB 版本号 11-7532981 适用于安卓 11 SDK 30
+	// 		30: "https://www.123pan.com/s/OZe0Vv-zOKl3",
+	// 		// 1.83 MB 版本号 10-7029319 适用于安卓 10 SDK 29
+	// 		29: "https://www.123pan.com/s/OZe0Vv-tOKl3",
+	// 		// 8.55 MB 版本号 9-7126274 适用于安卓 9 SDK 28
+	// 		28: "https://www.123pan.com/s/OZe0Vv-qOKl3",
+	// 	}[device.sdkInt],
+	// },
+	{
+		name: "应用包管理组件",
+		summary: "MIUI软件包安装程序v3.8.0，不含“纯净模式”",
+		icon: "http://pic.danji100.com/upload/2022-4/20224261118377118.png",
+		packageName: "com.miui.packageinstaller",
+		url: "https://zisu.lanzoum.com/tp/iI7LGwn5xjc",
+		filter: function (files) {
+			files = files.map(file => {
+				const miuiInst = file.fileName.match(/(应用包管理组件).*?([\d.]+)-(\d+).*?(\.\w+)$/);
+				if (miuiInst) {
+					const appName = miuiInst[1];
+					const versionCode = Number.parseInt(miuiInst[2].replace(/\./g, ""), 10);
+					const versionName = `${Array.from(String(versionCode)).join(".")}-${miuiInst[3]}`;
+					file.fileName = `${appName}_v${versionName}${miuiInst[4]}`;
+					file.versionName = versionName;
+					file.versionCode = versionCode;
+					console.log(file);
+				}
+				return file;
+			});
+		},
+	},
+	{
+		name: "几何天气",
 		summary: "干净、小巧、漂亮、功能多",
-		icon: "http://i5.res.meizu.com/fileserver/app_icon/11520/a7affd641ea44a0789bf39daef5998c7.png",
-		packageName: "com.joe.holi",
-		url: [
-			"https://www.coolapk.com/apk/com.joe.holi",
-			"https://app.mi.com/details?id=com.joe.holi",
-		],
+		icon: "https://raw.fastgit.org/WangDaYeeeeee/GeometricWeather/master/app/src/main/res/drawable/ic_launcher.png",
+		packageName: "wangdaye.com.geometricweather",
+		url: "https://github.com/WangDaYeeeeee/GeometricWeather/releases/latest",
+		filter: function (files) {
+			const appInfo = this;
+			files = files.filter(file => {
+				const verInfo = file.url.match(/\/(.+?)\/.*?\.\1_(\w+)\.\w+$/);
+				if (verInfo) {
+					const verName = verInfo[1];
+					const verType = verInfo[2];
+					file.versionName = `${verName}_${verType}`;
+					file.versionCode = Number.parseInt(verName.replace(/\./, ""), 10);
+				}
+				return verInfo;
+			});
+
+			if (appInfo.appName) {
+				let subVer = appInfo.getVersionName().match(/_\w+$/);
+				if (subVer) {
+					subVer = subVer[0] + ".apk";
+					return files.filter(file => file.fileName.endsWith(subVer));
+				}
+			}
+			return [files[files.length - 1]];
+		},
 	},
 	{
 		name: "ES文件浏览器",
 		summary: "去广告版，替代MIUI视频、音乐、文档查看器",
-		icon: "http://i5.res.meizu.com/fileserver/app_icon/11477/a504f85503544b27b9b93090a3eede5c.png",
+		icon: "https://m.32r.com/logo/220311/202203111728435421.png",
 		packageName: "com.estrongs.android.pop",
 		url: "https://423down.lanzouv.com/b0f1d7s2h",
 	},
 	{
 		name: "WPS Office Lite",
 		summary: "国际版，无广告，替代“文档查看器”",
-		icon: "https://findorra.com/apps/app/images/appicons/85525195-e34c-4314-a771-454e60c2e7de.PNG",
+		icon: "https://m.32r.com/logo/220908/202209081617517363.png",
 		packageName: "cn.wps.moffice_i18n",
-		url: "https://www.32r.com/app/109976.html",
+		url: "https://m.32r.com/app/109976.html",
 	},
 	{
 		name: "知乎",
 		summary: "集成“知了”，“设置→知了”中有去广告开关",
 		icon: "https://static.zhihu.com/heifetz/assets/apple-touch-icon-60.8f6c52aa.png",
 		packageName: "com.zhihu.android",
-		url: "https://423down.lanzouo.com/b0f2lkafe",
-		// url: "www.baidu.com",
+		url: "https://www.123pan.com/s/A6cA-dJAJh",
+		// url: "https://423down.lanzouo.com/b0f2lkafe",
+		// url: "https://m.32r.com/app/80966.html",
+		// https://www.423down.com/11775.html
+		filter: function (files) {
+			return files.filter(file => {
+				return /知乎.*知了/.test(file.fileName);
+			});
+		},
 	},
 	{
 		name: "哔哩哔哩",
 		summary: "“设置→哔哩漫游→关于版本”点五下有惊喜",
-		icon: "http://i5.res.meizu.com/fileserver/app_icon/11862/778e4f1b19364fcba562557f240fa0cb.png",
+		icon: "https://m.32r.com/logo/221114/202211141125334046.png",
 		packageName: "tv.danmaku.bili",
+		// url: "https://www.123pan.com/s/A6cA-gT9Jh",
 		url: "https://423down.lanzouv.com/b0f1gksne",
+		// https://www.423down.com/12235.html
+		filter: function (files) {
+			return files.filter(file => {
+				return /哔哩哔哩.*漫游/.test(file.fileName);
+			});
+		},
 	},
 	{
 		name: "优酷视频",
@@ -137,11 +171,24 @@ const appList = [
 		icon: "https://img.alicdn.com/tfs/TB1WeJ9Xrj1gK0jSZFuXXcrHpXa-195-195.png",
 		packageName: "com.youku.phone",
 		url: "https://423down.lanzouv.com/b0f1avpib",
+		filter: function (files) {
+			return files.filter(file => {
+				file.fileName = file.fileName.replace(/忧(?=酷)/g, "优");
+				return file.fileName.includes("优酷视频");
+			});
+		},
+	},
+	{
+		name: "高德地图",
+		summary: "Google版、纯净版",
+		icon: "https://m.amap.com/img/screenLogo.png",
+		packageName: "com.autonavi.minimap",
+		url: "https://423down.lanzouv.com/b0f29j15c",
 	},
 	{
 		name: "百度贴吧",
 		summary: "去广告版",
-		icon: "http://i5.res.meizu.com/fileserver/app_icon/11862/21ad75e2cddb49dc8753ed788952c470.png",
+		icon: "https://m.32r.com/logo/210810/202108101711331977.png",
 		packageName: "com.baidu.tieba",
 		url: "https://423down.lanzouv.com/b0f1b6q8d",
 	},
@@ -153,48 +200,181 @@ const appList = [
 		url: "https://423down.lanzouv.com/b0f2uzq2b",
 	},
 	{
-		name: "AppShare",
+		name: "App分享",
 		summary: "应用商店，刷机包，国际版提取的APP",
 		icon: "http://pic.xfdown.com/uploads/2022-5/2022551511344265.png",
 		packageName: "info.muge.appshare",
-		url: "https://423down.lanzouv.com/iHmmD06tw9xa",
+		url: "https://423down.lanzouv.com/tp/iHmmD06tw9xa",
 	},
 ];
 
-function download (appInfo) {
+function formatSize (number, options) {
+	if (!number || !Number.isSafeInteger(number)) {
+		return number;
+	}
+	return prettyBytes(number, {
+		binary: true,
+		...options,
+	});
+}
+
+function formatDate (number) {
+	if (!number || !Number.isSafeInteger(number)) {
+		return number;
+	}
+	const dateFormat = android.text.format.DateFormat.getDateFormat(activity);
+	return dateFormat.format(number) || number;
+}
+
+async function download (appInfo, item) {
 	if (typeof appInfo === "string") {
 		appInfo = appList.find(info => info.packageName === appInfo);
 	}
-
-	if (appInfo.url) {
-		return (
-			Array.isArray(appInfo.url)
-				? dialogs.select("请选一个网址", appInfo.url).then(index => appInfo.url[index] || appInfo.url[0])
-				: Promise.resolve(appInfo.url)
-		).then(url => waitForBack(() => {
-			if (url.startsWith("https://app.mi.com/")) {
-				app.startActivity({
-					action: "android.intent.action.VIEW",
-					data: "market://details?id=" + appInfo.packageName,
-				});
-			} else {
-				app.openUrl(url);
-			}
-		})).then(() => {
-			const appName = app.getAppName(appInfo.packageName);
-			if (appName) {
-				appInfo.appName = appName;
-				return appInfo;
-			}
-			const liTiaoTiao = "cn.litiaotiao.app";
-			if (app.getAppName(liTiaoTiao)) {
-				settings.accessibilityServices.add(liTiaoTiao + "/com.litiaotiao.app.LttService");
-			}
-		}).catch(console.error);
-	} else {
-		alert("该应用暂不支持您的设备");
-		return null;
+	if (/^\w+:\/\/app.mi.com\//i.test(appInfo.url)) {
+		app.startActivity({
+			action: "android.intent.action.VIEW",
+			data: "market://details?id=" + appInfo.packageName,
+		});
+		return;
 	}
+	const View = android.view.View;
+	let progress = item.progress;
+	if (progress) {
+		progress.setVisibility(View.VISIBLE);
+		progress.indeterminate = true;
+	} else {
+		progress = ui.inflate(`
+			<progressbar id="progress" indeterminate="true" layout_centerHorizontal="true" layout_alignParentBottom="true" w="*" h="auto"style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal" />
+		`, item, true);
+	}
+	function hideProgress () {
+		// console.log(progress);
+		progress.setVisibility(View.GONE);
+		// item.removeView(progress);
+		// item.invalidate();
+		// progress.invalidate();
+	}
+	let file;
+	let getLocationTask;
+	function getLocation () {
+		if (file && file.getLocation) {
+			getLocationTask = file.getLocation(true);
+		}
+	};
+	try {
+		file = await getRemoteFiles(appInfo);
+		if (file.length > 1) {
+			const choice = await dialogs.singleChoice(file.map(file => ({
+				toString: () => file.fileName + "\n" + [
+					file.versionName,
+					formatSize(file.size),
+					formatDate(file.lastModified),
+				].filter(Boolean).join(" | "),
+				file,
+			})), {
+				title: `请选择要下载的“${appInfo.appName || appInfo.name}”版本`,
+				neutral: true,
+			});
+			file = choice && choice.file;
+			getLocation();
+		} else {
+			file = file[0];
+			getLocation();
+			const localVer = appInfo.appName && appInfo.getVersionName();
+			const confirm = await dialogs.confirm([
+				file.versionName && `版本：${(localVer ? `${localVer} → ` : "") + file.versionName}`,
+				file.size && `大小：${formatSize(file.size)}`,
+				file.lastModified && `日期：${formatDate(file.lastModified)}`,
+			].filter(Boolean).join("\n"), {
+				title: `是否${appInfo.appName ? "更新" : "下载"}“${appInfo.appName || appInfo.name}”？`,
+				neutral: true,
+			});
+			file = confirm && file;
+		}
+	} catch (ex) {
+		console.error(ex);
+		file = null;
+	}
+
+	if (file) {
+		await getLocationTask;
+		const downTask = downFile(file);
+		downTask.on("progress", (e) => {
+			progress.indeterminate = false;
+			progress.max = e.size;
+			progress.progress = e.progress;
+		});
+		const intent = await downTask;
+		const confirm = intent.getPackage() || (await dialogs.confirm(`“${file.fileName}”下载完毕，立即安装？`, {
+			title: "确认安装",
+		}));
+		if (confirm) {
+			app.startActivity(intent);
+		}
+	} else {
+		if (file === null && appInfo.url) {
+			app.openUrl(appInfo.url);
+		}
+	}
+	hideProgress();
+}
+
+function verCompare (verA, verB) {
+	function splitVer (versionName) {
+		return versionName.replace(/^\D+|\D+$/g, "").split(/\./g);
+	}
+	function parseNum (str) {
+		return Number.parseInt(str, 10) || 0;
+	}
+	verA = splitVer(verA);
+	verB = splitVer(verB);
+	const length = Math.max(verA.length, verB.length);
+	let result;
+	for (let i = 0; i < length && !result; i++) {
+		result = parseNum(verA[i]) - parseNum(verB[i]);
+	}
+	return result;
+}
+
+function fileCompare (b, a) {
+	let result;
+	if (a.versionCode && b.versionCode) {
+		result = a.versionCode - b.versionCode;
+	}
+	if (a.versionName && b.versionName) {
+		result = result || verCompare(a.versionName, b.versionName);
+	}
+	if (a.lastModified && b.lastModified) {
+		result = result || a.lastModified - b.lastModified;
+	}
+	return result;
+}
+
+function getRemoteFiles (appInfo) {
+	return getRemoteFileInfo(appInfo.url).then(fileList => {
+		if (!fileList) {
+			return;
+		}
+		if (!Array.isArray(fileList)) {
+			fileList = [fileList];
+		}
+		if (appInfo.filter) {
+			fileList = appInfo.filter(fileList) || fileList;
+		} else if (fileList.length > 1) {
+			fileList = fileList.filter(file => file.fileName.includes(appInfo.name));
+		}
+		fileList = fileList.sort(fileCompare);
+		if (fileList.length > 1 && fileList[0].versionName) {
+			fileList = fileList.filter(file => file.versionName === fileList[0].versionName);
+		}
+		if (fileList.length > 1) {
+			const mouse = fileList.find(file => /耗/.test(file.fileName));
+			if (mouse) {
+				fileList = [mouse];
+			}
+		}
+		return fileList;
+	});
 }
 
 function downApp () {
@@ -202,6 +382,9 @@ function downApp () {
 		getApplicationInfo(appInfo);
 		if (appInfo.appName) {
 			appInfo.displayName = appInfo.appName + " v" + appInfo.getVersionName();
+			// if (!/^\w+:\/\/app.mi.com\//i.test(appInfo.url)) {
+			// 	getRemoteFiles(appInfo);
+			// }
 		} else {
 			delete appInfo.displayName;
 		}

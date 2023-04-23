@@ -1,3 +1,17 @@
+console.setGlobalLogConfig({
+	file: files.join(
+		context.getExternalFilesDir("logs"),
+		"log.txt",
+	),
+});
+
+delete global.Promise;
+require("core-js/modules/web.url.js");
+require("core-js/modules/web.url-search-params");
+require("core-js/modules/es.promise");
+require("core-js/modules/es.promise.any");
+require("core-js/modules/es.promise.finally");
+
 const singleChoice = require("./singleChoice");
 
 const mainActions = [
@@ -6,6 +20,7 @@ const mainActions = [
 	require("./offAppAd"),
 	require("./appManager"),
 	require("./recycle"),
+	require("./support"),
 	{
 		name: "控制台",
 		summary: "查看运行日志",
@@ -13,8 +28,14 @@ const mainActions = [
 			setTimeout(() => {
 				const settings = require("./settings");
 				console.log(
-					"settings: \n" +
-						settings.keys().map(key => `\t${key}: ${JSON.stringify(settings[key])}`).join("\n"),
+					[
+						`SDK: ${device.sdkInt}`,
+						`Android: ${device.release}`,
+						`MIUI: ${device.incremental}`,
+						"settings:",
+					].concat(
+						settings.keys().map(key => `\t${key}: ${JSON.stringify(settings[key])}`),
+					).join("\n"),
 				);
 			}, 0);
 			return app.startActivity("console");
@@ -25,7 +46,13 @@ const mainActions = [
 		name: "退出",
 		summary: "再见",
 		icon: "./res/drawable/ic_exit.png",
-		fn: () => ui.finish(),
+		fn: () => {
+			if (DEBUG) {
+				ui.finish();
+			} else {
+				java.lang.System.exit(0);
+			}
+		},
 	},
 ];
 
@@ -44,6 +71,21 @@ function regBack () {
 	});
 }
 
+(() => {
+	if (DEBUG) {
+		const thisPackageName = context.getPackageName();
+		console.log("DEBUG in", thisPackageName);
+		if (thisPackageName === "com.github.gucong3000.miui.cleaner") {
+			if (!engines.myEngine().source.toString().startsWith("/")) {
+				engines.execScriptFile(`/storage/emulated/0/脚本/${thisPackageName}/main.js`);
+				return;
+			}
+		} else {
+			// app.launch("com.github.gucong3000.miui.cleaner");
+		}
+	}
+	mainMenu();
+	require("./update");
+})();
 module.exports = regBack;
-
-mainMenu();
+module.exports.mainMenu = mainMenu;
