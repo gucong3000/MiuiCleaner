@@ -244,15 +244,8 @@ async function download (appInfo, item) {
 		progress.indeterminate = true;
 	} else {
 		progress = ui.inflate(`
-			<progressbar id="progress" indeterminate="true" layout_centerHorizontal="true" layout_alignParentBottom="true" w="*" h="auto"style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal" />
+			<progressbar id="progress" indeterminate="true" layout_centerHorizontal="true" layout_alignParentBottom="true" w="*" h="auto" style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal" />
 		`, item, true);
-	}
-	function hideProgress () {
-		// console.log(progress);
-		progress.setVisibility(View.GONE);
-		// item.removeView(progress);
-		// item.invalidate();
-		// progress.invalidate();
 	}
 	let file;
 	let getLocationTask;
@@ -311,12 +304,10 @@ async function download (appInfo, item) {
 		if (confirm) {
 			app.startActivity(intent);
 		}
-	} else {
-		if (file === null && appInfo.url) {
-			app.openUrl(appInfo.url);
-		}
+	} else if (appInfo.url) {
+		app.openUrl(appInfo.url);
 	}
-	hideProgress();
+	progress.setVisibility(View.GONE);
 }
 
 function verCompare (verA, verB) {

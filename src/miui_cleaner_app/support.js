@@ -1,19 +1,21 @@
 const project = require("./project.json");
 const View = android.view.View;
-const url = "https://support.qq.com/products/565003";
 
 function support () {
-	const postData = new URLSearchParams({
+	const openid = device.getAndroidId();
+	const postData = {
 		clientInfo: project.name,
 		clientVersion: project.versionName,
 		os: `${device.brand}/${device.model}`,
 		osVersion: device.fingerprint,
 		// netType: "",
 		// customInfo: ,
-		// openid
-		// nickname
-		// avatar
-	}).toString();
+		// nickname,avatar,openid 必填
+		nickname: device.model,
+		avatar: `https://txc.gtimg.com/static/v2/img/avatar/${Number.parseInt(openid.slice(-2), 16) + 1}.svg`,
+		openid,
+	};
+
 	// console.log(device);
 
 	ui.layout(`
@@ -23,7 +25,7 @@ function support () {
 			</appbar>
 			<relative w="*" w="*">
 				<webview id="webView" layout_below="title" w="*" h="*" />
-				<progressbar id="progressbar" indeterminate="true" layout_centerHorizontal="true" layout_alignParentTop="true" w="*" h="auto"style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal" />
+				<progressbar id="progressbar" indeterminate="true" layout_centerHorizontal="true" layout_alignParentTop="true" w="*" h="auto" style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal" />
 			</relative>
 		</vertical>
 	`);
@@ -41,8 +43,32 @@ function support () {
 			},
 		}),
 	);
+
 	// https://developer.android.google.cn/reference/android/webkit/WebViewClient
 	webView.setWebViewClient(new JavaAdapter(android.webkit.WebViewClient, {
+		shouldOverrideUrlLoading: (webView, webResourceRequest) => {
+			progressbar.indeterminate = true;
+			progressbar.setVisibility(View.VISIBLE);
+			let url = webResourceRequest.getUrl().toString();
+			if (/^https?:\/\//i.test(url)) {
+				url = url.match(/^https?:\/\/\w+\.qq\.com\/.*?\/link-jump\?jump=(.*)$/i);
+				if (url) {
+					url = decodeURIComponent(url[1]);
+					setTimeout(() => {
+						webView.loadUrl(url);
+					}, 0);
+					return true;
+				} else {
+					return false;
+				}
+			}
+			const Intent = android.content.Intent;
+			const Uri = android.net.Uri;
+
+			const intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+			app.startActivity(intent);
+			return true;
+		},
 		onPageStarted: () => {
 			progressbar.indeterminate = false;
 			progressbar.setVisibility(View.VISIBLE);
@@ -59,7 +85,13 @@ function support () {
 	settings.setJavaScriptEnabled(true);
 	settings.setDomStorageEnabled(true);
 
-	webView.loadUrl(`${url}?${postData}`);
+	webView.postUrl(
+		"https://support.qq.com/products/565003",
+		java.lang.String(
+			new URLSearchParams(postData).toString(),
+		).getBytes(),
+	);
+
 	ui.emitter.prependListener("back_pressed", (e) => {
 		if (webView.canGoBack()) {
 			webView.goBack();

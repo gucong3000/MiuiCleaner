@@ -662,7 +662,6 @@ const cleanerList = [
 			let googleAppName = app.getAppName(googlePkgName);
 			const miuiPkgName = "com.miui.packageinstaller";
 			const Intent = android.content.Intent;
-
 			const Uri = android.net.Uri;
 
 			function installApk (apkPath, resolver) {
