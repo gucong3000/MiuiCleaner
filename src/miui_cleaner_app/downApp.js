@@ -190,7 +190,8 @@ const appList = [
 		summary: "去广告版",
 		icon: "https://m.32r.com/logo/210810/202108101711331977.png",
 		packageName: "com.baidu.tieba",
-		url: "https://423down.lanzouv.com/b0f1b6q8d",
+		url: "https://www.123pan.com/s/A6cA-Y89Jh",
+		// url: "https://423down.lanzouv.com/b0f1b6q8d",
 	},
 	{
 		name: "酷安",
@@ -304,7 +305,7 @@ async function download (appInfo, item) {
 		if (confirm) {
 			app.startActivity(intent);
 		}
-	} else if (appInfo.url) {
+	} else if (file === null && appInfo.url) {
 		app.openUrl(appInfo.url);
 	}
 	progress.setVisibility(View.GONE);
