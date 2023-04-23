@@ -14,7 +14,7 @@ MIUI广告清理工具
 	- 在该工具的安装目录中搜索到`adb.exe`所在的子目录，将`MiuiCleaner.cmd`放入其中并运行（或者将这个目录加入环境变量`PATH`中）
 
 ## 功能介绍
-### 预装应用卸载
+### 预装APP卸载
 
 勾选你想要卸载的APP，点击确定就可以一键删除了。支持以下62款应用的卸载：
 <details>
@@ -103,7 +103,7 @@ MIUI广告清理工具
 	- 小爱通话（AI虚拟助手）
 </details>
 
-### 去广告应用
+### 去广告版APP
 
 内置多款去广告应用的下载链接：
 <details>
@@ -117,13 +117,11 @@ MIUI广告清理工具
 	> 国际版，广告可关，有网页广告屏蔽功能
 - [讯飞输入法](https://423down.lanzouv.com/b0f24av5i)
 	> Google Play版，无广告
-- 软件包安装程序
-	> Google版，代替MIUI的“应用包管理程序”，无广告和审查功能
 - [应用包管理组件](https://zisu.lanzoum.com/iI7LGwn5xjc)
 	> MIUI软件包安装程序v3.8.0，不含“纯净模式”
 - [QQ音乐简洁版](https://www.coolapk.com/apk/com.tencent.qqmusiclite)
 	> MIUI 音乐APP套壳的产品
-- [Holi 天气](https://www.coolapk.com/apk/com.joe.holi)
+- [几何天气](https://github.com/WangDaYeeeeee/GeometricWeather/releases/latest)
 	> 无广告，体较小，更漂亮，替代“小米天气”
 - [ES文件浏览器](https://423down.lanzouv.com/b0f1d7s2h)
 	> 修改版，去广告，代替“小米视频”和“小米音乐”
@@ -135,6 +133,8 @@ MIUI广告清理工具
 	> 集成“哔哩漫游”，可在“哔哩漫游”中关闭所有广告（需点击其版本号7次）
 - [优酷视频](https://423down.lanzouv.com/b0f1avpib)
 	> 修改版，去广告
+- [高德地图](https://423down.lanzouv.com/b0f29j15c)
+	> Google版、纯净版
 - [百度贴吧](https://423down.lanzouv.com/b0f1b6q8d)
 	> 修改版，去广告
 - [酷安](https://423down.lanzouv.com/b0f2uzq2b)
@@ -144,9 +144,9 @@ MIUI广告清理工具
 
 </details>
 
-### 关闭各应用广告
+### 关闭各APP广告
 
-支持在以下17款应用中，自动搜索50多个广告开关的具体位置，并自动给予处置。
+支持在以下18款应用中，自动搜索50多个广告开关的具体位置，并自动给予处置。
 <details>
 <summary>点击查看详细名单</summary>
 
@@ -185,6 +185,10 @@ MIUI广告清理工具
 			- 个性化服务：`关闭`
 	- 功能设置
 		- 显示福利活动：`关闭`
+- 应用包管理组件
+	- 安全检查：`关闭`
+	- 资源推荐：`关闭`
+	- 默认 APP 安装器：否
 - 下载管理
 	- 信息流设置
 		- 仅在WLAN下加载：`打开`
@@ -259,7 +263,8 @@ MIUI广告清理工具
 </details>
 
 [演示视频：MiuiCleaner新功能演示-广告全自动关闭](https://www.zhihu.com/zvideo/1555993019102552064)
-### 应用管家
+
+### APP管家
 
 - 自启动管理
 	> 自启动及后台运行权限管理
@@ -275,6 +280,14 @@ MIUI广告清理工具
 ### 回收站
 
 你可以在这里重新安装已卸载的预装应用
+
+### 帮助与反馈
+
+你可以在这里与作者或其他用户交流你遇到的问题
+
+### 控制台
+
+查看本软件的运行日志
 
 ## 常见问题
 - 电脑连不上手机，咋办？

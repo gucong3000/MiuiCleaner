@@ -47,7 +47,7 @@ const cleanerList = [
 	},
 	{
 		// 应用包管理组件
-		summary: "安装监控、纯净模式、安全检查",
+		summary: "安装监控、纯净模式、安全检查、资源推荐",
 		packageName: "com.miui.packageinstaller",
 		// action: "com.android.browser.BrowserActivity",
 	},

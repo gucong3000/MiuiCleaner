@@ -64,7 +64,7 @@ module.exports = {
 	"com.iflytek.inputmethod.miui": "讯飞输入法-小米版",
 	"com.miui.securityinputmethod": "小米安全键盘",
 	// 小米游戏中心
-	"com.xiaomi.migameservice": "// 游戏中心（旧版）",
+	"com.xiaomi.migameservice": "游戏中心（旧版）",
 	"com.xiaomi.gamecenter": "游戏中心",
 	"com.xiaomi.gamecenter.sdk.service": "游戏中心-SDK服务",
 	"com.xiaomi.gamecenter.pad": "游戏中心-pad版",

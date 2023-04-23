@@ -398,7 +398,7 @@ function downApp () {
 }
 // downApp.download = downApp;
 module.exports = {
-	name: "去广告APP",
+	name: "去广告版APP",
 	summary: "各APP的去广告版和广告自动跳过工具",
 	icon: "./res/drawable/ic_download.png",
 	fn: downApp,

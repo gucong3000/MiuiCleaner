@@ -23,12 +23,12 @@ function support () {
 			</appbar>
 			<relative w="*" w="*">
 				<webview id="webView" layout_below="title" w="*" h="*" />
-				<progressbar id="progress" indeterminate="true" layout_centerHorizontal="true" layout_alignParentTop="true" w="*" h="auto"style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal" />
+				<progressbar id="progressbar" indeterminate="true" layout_centerHorizontal="true" layout_alignParentTop="true" w="*" h="auto"style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal" />
 			</relative>
 		</vertical>
 	`);
 	const webView = ui.findView("webView");
-	const progress = ui.findView("progress");
+	const progressbar = ui.findView("progressbar");
 	global.activity.setSupportActionBar(ui.findView("toolbar"));
 
 	// https://developer.android.google.cn/reference/android/webkit/WebChromeClient
@@ -36,7 +36,7 @@ function support () {
 		new JavaAdapter(android.webkit.WebChromeClient, {
 			onProgressChanged: (webView, i) => {
 				if (i) {
-					progress.progress = i;
+					progressbar.progress = i;
 				}
 			},
 		}),
@@ -44,11 +44,11 @@ function support () {
 	// https://developer.android.google.cn/reference/android/webkit/WebViewClient
 	webView.setWebViewClient(new JavaAdapter(android.webkit.WebViewClient, {
 		onPageStarted: () => {
-			progress.indeterminate = false;
-			progress.setVisibility(View.VISIBLE);
+			progressbar.indeterminate = false;
+			progressbar.setVisibility(View.VISIBLE);
 		},
 		onPageFinished: () => {
-			progress.setVisibility(View.GONE);
+			progressbar.setVisibility(View.GONE);
 		},
 		onCloseWindow: () => {
 			console.log("onCloseWindow");
