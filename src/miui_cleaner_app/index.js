@@ -11,6 +11,7 @@ require("core-js/modules/web.url-search-params");
 require("core-js/modules/es.promise");
 require("core-js/modules/es.promise.any");
 require("core-js/modules/es.promise.finally");
+require("core-js/modules/es.array.flat");
 
 const singleChoice = require("./singleChoice");
 

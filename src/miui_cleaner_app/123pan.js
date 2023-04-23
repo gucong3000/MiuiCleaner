@@ -32,6 +32,7 @@ async function parseFileInfo (fileInfo, url, initialProps) {
 	if (Array.isArray(fileInfo)) {
 		// 解析多个结果
 		fileInfo = await Promise.all(fileInfo.map(fileInfo => parseFileInfo(fileInfo, url, initialProps)));
+		fileInfo = fileInfo.flat();
 		if (fileInfo.length === 1) {
 			fileInfo = fileInfo[0];
 		}
@@ -42,9 +43,11 @@ async function parseFileInfo (fileInfo, url, initialProps) {
 		fileInfo = new FileInfo(fileInfo);
 	} else {
 		// 解析文件夹
-		const api = new URL(`share/get?limit=999&next=1&orderBy=share_id&orderDirection=desc&shareKey=${initialProps.res.data.ShareKey}&ParentFileId=${fileInfo.FileId}&Page=1`, initialProps.publicPath);
 		let res = await fetch(
-			api.href,
+			new URL(
+				`share/get?limit=999&next=1&orderBy=share_id&orderDirection=desc&shareKey=${initialProps.res.data.ShareKey}&ParentFileId=${fileInfo.FileId}&Page=1`,
+				initialProps.publicPath,
+			).href,
 			{
 				headers: {
 					"accept": "application/json",
@@ -110,22 +113,28 @@ async function parse (url, options) {
 }
 
 async function getRealFile (fileInfo, redirect) {
-	let res = await fetch("https://www.123pan.com/a/api/share/download/info", {
-		headers: {
-			"accept": "application/json",
-			"content-type": "application/json;charset=UTF-8",
-			"user-agent": userAgent,
+	let res = await fetch(
+		new URL(
+			"share/download/info",
+			fileInfo.publicPath,
+		).href,
+		{
+			headers: {
+				"accept": "application/json",
+				"content-type": "application/json;charset=UTF-8",
+				"user-agent": userAgent,
+			},
+			referrerPolicy: "no-referrer",
+			body: JSON.stringify({
+				ShareKey: fileInfo.shareKey,
+				FileID: fileInfo.FileId,
+				S3keyFlag: fileInfo.S3KeyFlag,
+				Size: fileInfo.Size,
+				Etag: fileInfo.Etag,
+			}),
+			method: "POST",
 		},
-		referrerPolicy: "no-referrer",
-		body: JSON.stringify({
-			ShareKey: fileInfo.shareKey,
-			FileID: fileInfo.FileId,
-			S3keyFlag: fileInfo.S3KeyFlag,
-			Size: fileInfo.Size,
-			Etag: fileInfo.Etag,
-		}),
-		method: "POST",
-	});
+	);
 	await checkResponse(res);
 	res = await res.json();
 	fileInfo.location = decodeURI(atob(new URL(res.data.DownloadURL).searchParams.get("params")));

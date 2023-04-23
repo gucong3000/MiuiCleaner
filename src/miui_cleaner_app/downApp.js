@@ -87,7 +87,6 @@ const appList = [
 					file.fileName = `${appName}_v${versionName}${miuiInst[4]}`;
 					file.versionName = versionName;
 					file.versionCode = versionCode;
-					console.log(file);
 				}
 				return file;
 			});
@@ -127,7 +126,9 @@ const appList = [
 		summary: "去广告版，替代MIUI视频、音乐、文档查看器",
 		icon: "https://m.32r.com/logo/220311/202203111728435421.png",
 		packageName: "com.estrongs.android.pop",
-		url: "https://423down.lanzouv.com/b0f1d7s2h",
+		url: "https://www.123pan.com/s/A6cA-C29Jh",
+		// url: "https://423down.lanzouv.com/b0f1d7s2h",
+		// https://www.423down.com/6011.html
 	},
 	{
 		name: "WPS Office Lite",
@@ -171,6 +172,7 @@ const appList = [
 		icon: "https://img.alicdn.com/tfs/TB1WeJ9Xrj1gK0jSZFuXXcrHpXa-195-195.png",
 		packageName: "com.youku.phone",
 		url: "https://423down.lanzouv.com/b0f1avpib",
+		// https://www.423down.com/8526.html
 		filter: function (files) {
 			return files.filter(file => {
 				file.fileName = file.fileName.replace(/忧(?=酷)/g, "优");
@@ -184,6 +186,7 @@ const appList = [
 		icon: "https://m.amap.com/img/screenLogo.png",
 		packageName: "com.autonavi.minimap",
 		url: "https://423down.lanzouv.com/b0f29j15c",
+		// https://www.423down.com/14492.html
 	},
 	{
 		name: "百度贴吧",
@@ -192,20 +195,26 @@ const appList = [
 		packageName: "com.baidu.tieba",
 		url: "https://www.123pan.com/s/A6cA-Y89Jh",
 		// url: "https://423down.lanzouv.com/b0f1b6q8d",
+		// https://www.423down.com/4815.html
 	},
 	{
 		name: "酷安",
 		summary: "应用商店，去广告版",
 		icon: "https://static.coolapk.com/static/web/v8/images/header-logo.png",
 		packageName: "com.coolapk.market",
-		url: "https://423down.lanzouv.com/b0f2uzq2b",
+		url: "https://www.123pan.com/s/A6cA-Om9Jh",
+		// url: "https://423down.lanzouv.com/b0f2uzq2b",
+		// https://www.423down.com/10777.html
 	},
 	{
 		name: "App分享",
 		summary: "应用商店，刷机包，国际版提取的APP",
 		icon: "http://pic.xfdown.com/uploads/2022-5/2022551511344265.png",
 		packageName: "info.muge.appshare",
-		url: "https://423down.lanzouv.com/tp/iHmmD06tw9xa",
+		// url: "https://www.123pan.com/s/A6cA-Jb9Jh",
+		url: "https://www.123pan.com/s/s1luVv-LbkXv",
+		// url: "https://423down.lanzouv.com/tp/iDS6A0sl6vsf",
+		// https://www.423down.com/13728.html
 	},
 ];
 
