@@ -71,7 +71,7 @@ function readConfig (options) {
 	// 				options.size = +options.headers[key];
 	// 				break;
 	// 			}
-	// 			case "content-type": {
+	// 			case "Content-Type": {
 	// 				if (options.headers[key] !== "application/octet-stream") {
 	// 					options.mimeType = options.headers[key];
 	// 				}

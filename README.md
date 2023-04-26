@@ -122,6 +122,8 @@ MIUI广告清理工具
 - [QQ音乐简洁版](https://www.coolapk.com/apk/com.tencent.qqmusiclite)
 	> MIUI 音乐APP套壳的产品
 - [几何天气](https://github.com/WangDaYeeeeee/GeometricWeather/releases/latest)
+	> 干净、小巧、漂亮、功能多
+- [Holi 天气](https://www.coolapk.com/apk/com.joe.holi)
 	> 无广告，体较小，更漂亮，替代“小米天气”
 - [ES文件浏览器](https://423down.lanzouv.com/b0f1d7s2h)
 	> 修改版，去广告，代替“小米视频”和“小米音乐”

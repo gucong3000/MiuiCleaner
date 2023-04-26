@@ -11,7 +11,7 @@ function support () {
 		// netType: "",
 		// customInfo: ,
 		// nickname,avatar,openid 必填
-		nickname: device.model,
+		nickname: device.product,
 		avatar: `https://txc.gtimg.com/static/v2/img/avatar/${Number.parseInt(openid.slice(-2), 16) + 1}.svg`,
 		openid,
 	};

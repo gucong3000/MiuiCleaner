@@ -1,6 +1,6 @@
 const jsonParse = require("json5/lib/parse");
 const fetch = global.fetch || require("./fetch");
-// const webView = global.ui && require("./webView");
+
 let userAgent;
 try {
 	userAgent = android.webkit.WebSettings.getDefaultUserAgent(context);
@@ -16,9 +16,9 @@ async function getFileInfoFromUrl (url, options) {
 		url.href,
 		{
 			headers: {
-				"accept": "text/html",
-				"user-agent": userAgent,
-				"x-forwarded-for": getRandomIP(),
+				"Accept": "text/html",
+				"User-Agent": userAgent,
+				"X-Forwarded-For": getRandomIP(),
 				"client-ip": getRandomIP(),
 			},
 		},
@@ -167,12 +167,12 @@ async function getFileInfoByAjax (url, fileInfo, ajaxConfig, options) {
 		new URL(ajaxConfig.url, url.origin).href,
 		{
 			headers: {
-				"content-type": "application/x-www-form-urlencoded",
-				"accept": "application/json",
+				"Content-Type": "application/x-www-form-urlencoded",
+				"Accept": "application/json",
 				"x-requested-with": "XMLHttpRequest",
-				"user-agent": userAgent,
-				"referer": url.href,
-				"x-forwarded-for": getRandomIP(),
+				"User-Agent": userAgent,
+				"Referer": url.href,
+				"X-Forwarded-For": getRandomIP(),
 				"client-ip": getRandomIP(),
 			},
 			body: new URLSearchParams(ajaxConfig.data).toString(),
@@ -213,8 +213,8 @@ async function getFileInfoByAjax (url, fileInfo, ajaxConfig, options) {
 // 	).then(html => getFileInfo(url, html, (ajaxInfo) => web.evaluate(
 // 		ajaxInfo => fetch(ajaxInfo.url, {
 // 			headers: {
-// 				"accept": "application/json",
-// 				"content-type": "application/x-www-form-urlencoded",
+// 				"Accept": "application/json",
+// 				"Content-Type": "application/x-www-form-urlencoded",
 // 				"x-requested-with": "XMLHttpRequest",
 // 			},
 // 			body: new URLSearchParams(ajaxInfo.data).toString(),
@@ -244,6 +244,7 @@ function getFileInfo (url, options) {
 	}
 	return getFileInfoFromUrl(url, options);
 }
+
 async function getRealFile (fileInfo, redirect) {
 	const cache = realFileCache[fileInfo.id];
 	const now = Date.now();
@@ -262,7 +263,7 @@ async function getRealFile (fileInfo, redirect) {
 			redirect: redirect ? "follow" : "manual",
 			// redirect: "error",
 			headers: {
-				"Accept": "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
+				"Accept": "text/html",
 				"Accept-Encoding": "gzip, deflate, br",
 				"Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
 				// "Cache-Control": "no-cache",
@@ -271,8 +272,8 @@ async function getRealFile (fileInfo, redirect) {
 				"Upgrade-Insecure-Requests": 1,
 				"Cookie": "down_ip=1",
 				"User-Agent": userAgent,
-				"referer": fileInfo.url,
-				"x-forwarded-for": getRandomIP(),
+				"Referer": fileInfo.url,
+				"X-Forwarded-For": getRandomIP(),
 				"client-ip": getRandomIP(),
 			},
 			referrer: fileInfo.url,
@@ -293,7 +294,7 @@ async function getRealFile (fileInfo, redirect) {
 			if (expires) {
 				fileInfo.expires = Date.parse(expires);
 			}
-			const type = res.headers.get("content-type");
+			const type = res.headers.get("Content-Type");
 			if (type && !/^application\/octet-stream$/i.test(type)) {
 				fileInfo.type = type;
 			}

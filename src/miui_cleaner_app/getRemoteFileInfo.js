@@ -1,5 +1,6 @@
 const fetch = require("./fetch");
 const lanzou = require("./lanzou");
+const coolapk = require("./coolapk");
 const _123pan = require("./123pan");
 
 class Asset {
@@ -69,7 +70,7 @@ function parse32r (url) {
 	}
 	id = id[1];
 	const htmlUrl = `https://m.32r.com/app/${id}.html`;
-	const appUrl = `https://m.32r.com/downapp/${id}`;
+	const appUrl = `https://api.32r.com/downm/${id}`;
 	let html;
 	let res = {};
 	return Promise.all([
@@ -80,9 +81,12 @@ function parse32r (url) {
 				headers: {
 					Referer: htmlUrl,
 				},
+				redirect: "follow",
 			},
 		).then(data => {
-			res = data;
+			if (data.headers?.get("Content-Type") === "application/vnd.android.package-archive") {
+				res = data;
+			}
 		}, console.error),
 		fetch(
 			htmlUrl,
@@ -165,6 +169,9 @@ function getRemoteFileInfo (url) {
 	} else if (/^(\w+\.)*32r(\.\w+)*$/i.test(url.hostname)) {
 		console.log("正在解析网页", url.href);
 		return parse32r(url);
+	} else if (/^(\w+\.)*coolapk(\.\w+)*$/i.test(url.hostname)) {
+		console.log("正在解析网页", url.href);
+		return coolapk(url);
 	} else if (/^(\w+\.)*lanzou\w*(\.\w+)*$/.test(url.hostname)) {
 		console.log("正在解析网盘", url.href);
 		return lanzou(url, getOptsFromUrl(url)).then(getVersionForFile);

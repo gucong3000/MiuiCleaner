@@ -28,7 +28,8 @@ const appList = [
 		summary: "MIUI音乐APP套壳的产品",
 		icon: "https://m.32r.com/logo/210807/202108070906595774.png",
 		packageName: "com.tencent.qqmusiclite",
-		url: "https://www.coolapk.com/apk/com.tencent.qqmusiclite",
+		url: "https://wwi.lanzout.com/b046evhng#pwd=eeee",
+		// https://www.32r.com/app/106580.html
 	},
 	{
 		name: "Edge",
@@ -120,6 +121,13 @@ const appList = [
 			}
 			return [files[files.length - 1]];
 		},
+	},
+	{
+		name: "Holi天气",
+		summary: "无广告，体较小，更漂亮，替代“小米天气”",
+		icon: "http://pp.myapp.com/ma_icon/0/icon_42394164_1637810437/256",
+		packageName: "com.joe.holi",
+		url: "https://www.coolapk.com/apk/com.joe.holi",
 	},
 	{
 		name: "ES文件浏览器",

@@ -2,7 +2,6 @@ const jsonParse = require("json5/lib/parse");
 const fetch = global.fetch || require("./fetch");
 const atob = global.atob || global.$base64.decode;
 
-// const webView = global.ui && require("./webView");
 let userAgent;
 try {
 	userAgent = android.webkit.WebSettings.getDefaultUserAgent(context);
@@ -16,8 +15,8 @@ async function getFileInfo (url) {
 		url.href,
 		{
 			headers: {
-				"accept": "text/html",
-				"user-agent": userAgent,
+				"Accept": "text/html",
+				"User-Agent": userAgent,
 			},
 		},
 	);
@@ -50,8 +49,8 @@ async function parseFileInfo (fileInfo, url, initialProps) {
 			).href,
 			{
 				headers: {
-					"accept": "application/json",
-					"user-agent": userAgent,
+					"Accept": "application/json",
+					"User-Agent": userAgent,
 				},
 				referrerPolicy: "no-referrer",
 			},
@@ -120,11 +119,10 @@ async function getRealFile (fileInfo, redirect) {
 		).href,
 		{
 			headers: {
-				"accept": "application/json",
-				"content-type": "application/json;charset=UTF-8",
-				"user-agent": userAgent,
+				"Accept": "application/json",
+				"Content-Type": "application/json;charset=UTF-8",
+				"User-Agent": userAgent,
 			},
-			referrerPolicy: "no-referrer",
 			body: JSON.stringify({
 				ShareKey: fileInfo.shareKey,
 				FileID: fileInfo.FileId,
@@ -144,14 +142,3 @@ async function getRealFile (fileInfo, redirect) {
 	return fileInfo;
 }
 module.exports = parse;
-// (async () => {
-// 	let file = await parse("https://423down.lanzouv.com/tp/iKBGf0hcsq5e");
-// 	console.log(file.url);
-// 	file = await parse("https://423down.lanzouv.com/tp/iKBGf0hcsq5e");
-// 	console.log(file.url);
-// })();
-//
-// getFileInfoFromUrl("https://www.123pan.com/s/A6cA-gT9Jh").then(async file => console.log(await file.getLocation(true)));
-// getFileInfoFromUrl("https://www.123pan.com/s/A6cA-dJAJh").then(file => console.log(file));
-
-// getFileInfoFromUrl("https://www.123pan.com/s/ZYAZVv-TBYjd.html").then(file => console.log(file));
