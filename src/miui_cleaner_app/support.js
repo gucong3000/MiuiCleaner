@@ -75,9 +75,20 @@ function support () {
 		},
 		onPageFinished: () => {
 			progressbar.setVisibility(View.GONE);
-		},
-		onCloseWindow: () => {
-			console.log("onCloseWindow");
+			webView.evaluateJavascript(
+				`javascript:(${(() => {
+					const powerBy = document.querySelector(".power_by");
+					if (powerBy) {
+						powerBy.style.display = "none";
+					}
+				}).toString().trim()})()`,
+				new JavaAdapter(
+					android.webkit.ValueCallback,
+					{
+						onReceiveValue: () => {},
+					},
+				),
+			);
 		},
 	}));
 

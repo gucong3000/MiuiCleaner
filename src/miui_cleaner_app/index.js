@@ -16,9 +16,9 @@ require("core-js/modules/es.array.flat");
 const singleChoice = require("./singleChoice");
 
 const mainActions = [
+	require("./offAppAd"),
 	require("./sysAppRm"),
 	require("./downApp"),
-	require("./offAppAd"),
 	require("./appManager"),
 	require("./recycle"),
 	require("./support"),
@@ -77,12 +77,14 @@ function regBack () {
 		const thisPackageName = context.getPackageName();
 		console.log("DEBUG in", thisPackageName);
 		if (thisPackageName === "com.github.gucong3000.miui.cleaner") {
-			if (!engines.myEngine().source.toString().startsWith("/")) {
-				engines.execScriptFile(`/storage/emulated/0/脚本/${thisPackageName}/main.js`);
+			let entry = engines.myEngine().source.toString();
+			if (!entry.startsWith("/")) {
+				entry = `/storage/emulated/0/脚本/${thisPackageName}/${entry}`;
+				if (files.exists(entry)) {
+					engines.execScriptFile(entry);
+				}
 				return;
 			}
-		} else {
-			// app.launch("com.github.gucong3000.miui.cleaner");
 		}
 	}
 	mainMenu();
