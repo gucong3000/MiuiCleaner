@@ -340,11 +340,8 @@ class LogTransform extends Transform {
 			file = [file, line || "1", column || "0"].join(":");
 		}
 		prefix = prefix || "";
-		if (name) {
-			return `${prefix}${name} (${file})`;
-		} else {
-			return `${prefix}${file}`;
-		}
+		name = name ? ` (${name})` : "";
+		return prefix + file + name;
 	}
 
 	_transform (string, encoding, callback) {
@@ -379,27 +376,33 @@ class LogTransform extends Transform {
 				}),
 			).replaceAll(
 				// 替换类似JSON格式的报错
-				// { [JavaException: message ]
+				// { JavaException: message
 				//   fileName: 'file:///android_asset/modules/filename.js',
 				//   lineNumber: 8848 }`;
-				/\{\s+\[(.+)\]([\s\S]*?)\}/gm,
-				(s, message, jsonBody) => {
+				/([\d:.]+\/[A-Z]:\s+|^)\{\s+(\w+E(?:rror|xception):[\s\S\r\n]*?)((?:(\r?\n)\s+\w+:.*)+)\s+\}$/gm,
+				(s, level, message, jsonBody) => {
 					let errInfo;
 					try {
-					/* eslint no-new-func: "off" */
+						/* eslint no-new-func: "off" */
 						errInfo = json5.parse(`{${jsonBody}}`);
 					} catch (ex) {
 						// return s;
 					}
-					if (!errInfo || !errInfo.fileName || !/\b\w*E(rror|xception)/.test(message)) {
+					if (!errInfo || !errInfo.fileName) {
 						return s;
 					}
-					return `${message}\n${this.traceFormat({
-						prefix: "\tat ",
+					let stack = this.traceFormat({
 						file: errInfo.fileName,
 						line: +errInfo.lineNumber,
 						column: +errInfo.columnNumber,
-					})}`;
+					});
+					if (message.includes(stack)) {
+						stack = "";
+					} else {
+						stack = `\n\tat ${stack}`;
+					}
+
+					return `${level}${message.trim()}${stack}`;
 				},
 			);
 		}
