@@ -54,24 +54,13 @@ const appList = [
 		// url: "https://m.32r.com/app/7401.html",
 		url: "https://firepx.lanzoul.com/b00vf92jc#pwd=647w",
 	},
-	// {
-	// 	name: "软件包安装程序",
-	// 	summary: "Google版",
-	// 	packageName: "com.google.android.packageinstaller",
-	// 	icon: "https://file.1xiazai.net/d/file/android/20220728/202266164286724.png",
-	// 	url: {
-	// 		// 3.01 MB 版本号 未知 适用于安卓 13 SDK 33
-	// 		33: "https://www.123pan.com/s/OZe0Vv-iOKl3",
-	// 		// 3.14 MB 版本号 12-7567768 适用于安卓 12 SDK 31
-	// 		31: "https://www.123pan.com/s/OZe0Vv-LOKl3",
-	// 		// 3.13 MB 版本号 11-7532981 适用于安卓 11 SDK 30
-	// 		30: "https://www.123pan.com/s/OZe0Vv-zOKl3",
-	// 		// 1.83 MB 版本号 10-7029319 适用于安卓 10 SDK 29
-	// 		29: "https://www.123pan.com/s/OZe0Vv-tOKl3",
-	// 		// 8.55 MB 版本号 9-7126274 适用于安卓 9 SDK 28
-	// 		28: "https://www.123pan.com/s/OZe0Vv-qOKl3",
-	// 	}[device.sdkInt],
-	// },
+	{
+		name: "隐启设置",
+		summary: "MIUI软件包安装程序v3.8.0，不含“纯净模式”",
+		icon: "https://raw.fastgit.org/WangDaYeeeeee/GeometricWeather/master/app/src/main/res/drawable/ic_launcher.png",
+		packageName: "com.miui.gaojishezhi.plus",
+		url: "https://www.coolapk.com/apk/com.miui.gaojishezhi.plus",
+	},
 	{
 		name: "应用包管理组件",
 		summary: "MIUI软件包安装程序v3.8.0，不含“纯净模式”",

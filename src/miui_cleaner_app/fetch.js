@@ -170,9 +170,13 @@ function wrapResponse (res, options) {
 		getHeaders: () => {
 			if (!headers) {
 				headers = new Headers();
-				res.headers().forEach(entry => {
+				const _headers = res.headers();
+				_headers.forEach(entry => {
 					headers.append(entry.first, entry.second);
 				});
+				if (!headers.getSetCookie) {
+					headers.getSetCookie = () => Array.from(_headers.values("Set-Cookie"));
+				}
 			}
 			return headers;
 		},

@@ -84,6 +84,10 @@ class FileInfo {
 		return this.FileName;
 	}
 
+	set fileName (fileName) {
+		this.FileName = fileName;
+	}
+
 	get size () {
 		return this.Size;
 	}
@@ -135,10 +139,14 @@ async function getRealFile (fileInfo, redirect) {
 	);
 	await checkResponse(res);
 	res = await res.json();
-	fileInfo.location = decodeURI(atob(new URL(res.data.DownloadURL).searchParams.get("params")));
+	fileInfo.location = decodeURI(atob(new URL(res.data.DownloadURL).searchParams.get("params"))).replace(/([?&]filename=).*?(&|$)/, (s, prefix, suffix) => prefix + fileInfo.fileName + suffix);
 	// if (redirect) {
 	// 	//
 	// }
 	return fileInfo;
 }
 module.exports = parse;
+// getFileInfo("https://www.123pan.com/s/A6cA-C29Jh").then(f => {
+// 	f[0].fileName = "a.apk";
+// 	return f[0].getLocation(1);
+// }).then(console.log);

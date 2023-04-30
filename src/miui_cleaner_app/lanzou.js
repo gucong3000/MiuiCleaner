@@ -263,18 +263,16 @@ async function getRealFile (fileInfo, redirect) {
 			redirect: redirect ? "follow" : "manual",
 			// redirect: "error",
 			headers: {
-				"Accept": "text/html",
-				"Accept-Encoding": "gzip, deflate, br",
-				"Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
+				// "Accept-Encoding": "gzip, deflate, br",
+				"Accept-Language": "zh-CN",
 				// "Cache-Control": "no-cache",
 				// "Connection": "keep-alive",
 				// "Pragma": "no-cache",
-				"Upgrade-Insecure-Requests": 1,
-				"Cookie": "down_ip=1",
-				"User-Agent": userAgent,
-				"Referer": fileInfo.url,
-				"X-Forwarded-For": getRandomIP(),
-				"client-ip": getRandomIP(),
+				// "Cookie": "down_ip=1",
+				// "User-Agent": userAgent,
+				// "Referer": fileInfo.url,
+				// "X-Forwarded-For": getRandomIP(),
+				// "client-ip": getRandomIP(),
 			},
 			referrer: fileInfo.url,
 		});
@@ -286,9 +284,10 @@ async function getRealFile (fileInfo, redirect) {
 		}
 		let disposition = res.headers.get("content-disposition");
 		if (disposition) {
-			disposition = disposition && disposition.match(/(^|;)\s*filename\*?\s*=\s*(UTF-8(''|\/))?(.*?)(;|\s|$)/i);
-			disposition = disposition && decodeURI(disposition[4]);
-			fileInfo.fileName = disposition || fileInfo.fileName;
+			if (!fileInfo.fileName) {
+				disposition = disposition.match(/(^|;)\s*filename\*?\s*=\s*(UTF-8(''|\/))?(.*?)(;|\s|$)/i);
+				fileInfo.fileName = disposition && decodeURI(disposition[4]);
+			}
 			fileInfo.location = location || res.url;
 			const expires = res.headers.get("expires");
 			if (expires) {
@@ -308,6 +307,7 @@ async function getRealFile (fileInfo, redirect) {
 			}
 		}
 		if (fileInfo.location) {
+			fileInfo.location = fileInfo.location.replace(/([?&]filename=).*?(&|$)/, (s, prefix, suffix) => prefix + fileInfo.fileName + suffix); ;
 			realFileCache[fileInfo.id] = fileInfo;
 			return fileInfo;
 		} else {
@@ -366,8 +366,10 @@ async function parse (url, options) {
 }
 module.exports = parse;
 // (async () => {
-// 	let file = await parse("https://423down.lanzouv.com/tp/iKBGf0hcsq5e");
-// 	console.log(file.url);
-// 	file = await parse("https://423down.lanzouv.com/tp/iKBGf0hcsq5e");
-// 	console.log(file.url);
+// 	let file = await parse("https://423down.lanzouv.com/b0f1avpib");
+// 	file = file[0];
+// 	file.fileName = "优酷.apk";
+// 	console.log(file);
+// 	file = await file.getLocation();
+// 	console.log(file);
 // })();

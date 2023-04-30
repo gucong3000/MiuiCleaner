@@ -5,13 +5,11 @@ console.setGlobalLogConfig({
 	),
 });
 
-delete global.Promise;
 require("core-js/modules/web.url.js");
 require("core-js/modules/web.url-search-params");
-require("core-js/modules/es.promise");
-require("core-js/modules/es.promise.any");
-require("core-js/modules/es.promise.finally");
 require("core-js/modules/es.array.flat");
+require("core-js/modules/es.object.assign");
+require("./dateFormat");
 
 const singleChoice = require("./singleChoice");
 

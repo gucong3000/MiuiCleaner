@@ -35,11 +35,15 @@
 		"wrapper-webpack-plugin": "^2.2.2"
 	},
 	"dependencies": {
+		"any-date-parser": "^1.5.4",
 		"blob-polyfill": "^7.0.20220408",
 		"core-js": "^3.26.0",
 		"debounce": "^1.2.1",
 		"headers-polyfill": "^3.1.2",
+		"intl": "^1.2.5",
 		"json5": "^2.2.1",
-		"pretty-bytes": "^5.6.0"
+		"mime": "^3.0.0",
+		"pretty-bytes": "^5.6.0",
+		"set-cookie-parser": "^2.6.0"
 	}
 }
