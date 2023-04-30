@@ -218,6 +218,7 @@ class RemoteFile {
 				Accept: "*/*",
 			},
 			redirect,
+			method: "HEAD",
 		});
 		return file.location;
 	}
@@ -349,10 +350,11 @@ class Browser {
 			...options,
 			headers: {
 				...this.#headers,
-				Referer: this.location?.href,
-				Cookie: this.getCookie(url),
-				...options.headers,
+				"Referer": this.location?.href,
+				"Cookie": this.getCookie(url),
+				"X-Requested-With": /^\w+\/json\b/i.test(options.headers?.Accept) && "XMLHttpRequest",
 				...options.file?.headers,
+				...options.headers,
 			},
 			redirect: (typeof options.redirect === "string") ? options.redirect : (options.redirect ? "follow" : "manual"),
 		};
@@ -394,7 +396,7 @@ class Browser {
 				return this.parseJSON(await res.json(), res);
 			} if ((contentDisposition = headers.get("content-disposition")) || /^application\/\w+/i.test(contentType)) {
 				// 20X 下载
-				contentDisposition = contentDisposition && contentDisposition.match(/(^|;)\s*filename\*?\s*=\s*(UTF-8(''|\/))?(.*?)(;|\s|$)/i);
+				contentDisposition = contentDisposition && contentDisposition.match(/(^|;)\s*filename\*?\s*=\s*(UTF-\d+(''|\/))?(.*?)(;|\s|$)/i);
 				contentDisposition = contentDisposition && decodeURI(contentDisposition[4]);
 				fileInfo = {
 					fileName: contentDisposition,

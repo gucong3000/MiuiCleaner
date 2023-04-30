@@ -42,7 +42,7 @@ class RemoteFile extends Browser.RemoteFile {
 			{
 				headers: {
 					"Accept": "application/json",
-					"Content-Type": "application/json;charset=UTF-8",
+					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
 					FileID: file.id,

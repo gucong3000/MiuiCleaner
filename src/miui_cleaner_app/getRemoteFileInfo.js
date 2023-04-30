@@ -49,11 +49,11 @@ function parseGithubRelease (url, redirect) {
 			const versionName = release.tag_name.replace(/^v/, "");
 			return release.assets.map(
 				asset => new Asset({
+					id: asset.node_id,
 					fileName: asset.name,
-					type: asset.content_type,
 					size: asset.size,
 					lastModified: Date.parse(asset.updated_at),
-					id: asset.node_id,
+					type: asset.content_type,
 					url: asset.browser_download_url,
 					referer,
 					versionName,
