@@ -137,23 +137,67 @@ class RemoteFile {
 	}
 
 	set contentType (type) {
-		if (type && !/^application\/octet-stream$/i.test(type)) {
+		if (type && !/^application\/octet-stream$/i.test(type) && /\w+\/\w+/.test(type)) {
 			this.#contentType = type;
 		}
 	}
 
+	#url;
+	set url (url) {
+		if (url) {
+			this.#url = url;
+		}
+	}
+
+	get url () {
+		return this.#fixurl(this.#url);
+	}
+
+	#location;
+	set location (url) {
+		if (url) {
+			this.#location = url;
+		}
+	}
+
+	get location () {
+		return this.#fixurl(this.#location);
+	}
+
+	#fixurl (url) {
+		if (url) {
+			if (this.#fileName) {
+				url = url.replace(/([?&](?:fs|file)name=).*?(&|$)/i, (s, prefix, suffix) => prefix + this.#fileName + suffix);
+			}
+			return url;
+		}
+	}
+
+	// if (fileInfo.location && fileInfo.fileName) {
+	// 	fileInfo.location = fileInfo.location
+	// }
+
+	getUrl () {
+		return this.url;
+	}
+
 	async getLocation (redirect) {
-		return this.browser.fetch(this.url, {
+		let file = this;
+		if (file.location) {
+			return file.location;
+		}
+		file = this.browser.fetch(await this.getUrl(), {
 			file: this,
 			headers: {
 				Accept: "*/*",
 			},
 			redirect,
 		});
+		return file.location;
 	}
 
 	valueOf () {
-		const value = {
+		const data = {
 			// appName: this.appName,
 			// versionName: this.versionName,
 			// packageName: this.packageName,
@@ -167,14 +211,17 @@ class RemoteFile {
 			url: this.url,
 			location: this.location,
 			contentType: this.contentType,
-			browser: this.browser,
+			// browser: this.browser,
 			headers: this.headers,
 			// browser: this.browser,
 		};
 		Object.keys(this).forEach(key => {
-			value[key] = this[key];
+			const value = this[key];
+			if (value != null && !/^function|object$/.test(typeof value)) {
+				data[key] = value;
+			}
 		});
-		return value;
+		return data;
 	}
 
 	[util.inspect.custom || "inspect"] () {
@@ -219,19 +266,20 @@ class Browser {
 	}
 
 	static RemoteFile = RemoteFile;
-
+	RemoteFile = RemoteFile;
 	parseHTML = parerDefault;
 	parseJSON = parerDefault;
 	parseFile (fileInfo) {
-		if (fileInfo.location && fileInfo.fileName) {
-			fileInfo.location = fileInfo.location.replace(/([?&](?:fs|file)name=).*?(&|$)/i, (s, prefix, suffix) => prefix + fileInfo.fileName + suffix);
+		if (!fileInfo.referrer) {
+			fileInfo.referrer = this.#url;
 		}
 		if (!fileInfo.headers && fileInfo.url) {
 			const [
 				url,
 				options,
 			] = this.getFetchArgs(fileInfo.url, {
-				header: {
+				headers: {
+					Accept: "*/*",
 					referer: fileInfo.referrer,
 				},
 			});
@@ -239,10 +287,8 @@ class Browser {
 			fileInfo.headers = options.headers;
 		}
 		fileInfo.browser = this;
-		if (!fileInfo.referrer) {
-			fileInfo.referrer = this.url;
-		}
-		return new RemoteFile(fileInfo);
+
+		return new (this.RemoteFile)(fileInfo);
 	}
 
 	#url;
@@ -281,6 +327,7 @@ class Browser {
 				Referer: this.#url || "",
 				Cookie: this.getCookie(url),
 				...options.headers,
+				...options.file?.headers,
 			},
 			redirect: (typeof options.redirect === "string") ? options.redirect : (options.redirect ? "follow" : "manual"),
 		};
@@ -314,7 +361,7 @@ class Browser {
 				this.#url = url.href;
 				fileInfo = await this.parseHTML(await res.text(), res);
 				if (Array.isArray(fileInfo)) {
-					return fileInfo.map(this.parseFile, this);
+					return fileInfo.flat().map(this.parseFile, this);
 				} else {
 					return this.parseFile(fileInfo);
 				}

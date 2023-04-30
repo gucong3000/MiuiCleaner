@@ -1,152 +1,141 @@
-const jsonParse = require("json5/lib/parse");
-const fetch = global.fetch || require("./fetch");
+const Browser = require("./RemoteFile");
 const atob = global.atob || global.$base64.decode;
+const jsonParse = require("json5/lib/parse");
 
-let userAgent;
-try {
-	userAgent = android.webkit.WebSettings.getDefaultUserAgent(context);
-} catch (ex) {
-	userAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1";
-}
+class RemoteFile extends Browser.RemoteFile {
+	/* eslint accessor-pairs: off */
 
-async function getFileInfo (url) {
-	url = parseUrl(url);
-	const res = await fetch(
-		url.href,
-		{
-			headers: {
-				"Accept": "text/html",
-				"User-Agent": userAgent,
-			},
-		},
-	);
-	await checkResponse(res);
-	const html = await res.text();
-	let initialProps = html.match(/\b(window\.)?g_initialProps\s*=\s*(.*);/m);
-	initialProps = initialProps && jsonParse(initialProps[2]);
-	return parseFileInfo(initialProps.reslist.data.InfoList, url, initialProps);
-}
+	set FileId (value) {
+		this.id = value;
+	}
 
-async function parseFileInfo (fileInfo, url, initialProps) {
-	if (Array.isArray(fileInfo)) {
-		// 解析多个结果
-		fileInfo = await Promise.all(fileInfo.map(fileInfo => parseFileInfo(fileInfo, url, initialProps)));
-		fileInfo = fileInfo.flat();
-		if (fileInfo.length === 1) {
-			fileInfo = fileInfo[0];
+	set FileName (value) {
+		this.fileName = value;
+	}
+
+	set Size (value) {
+		this.size = value;
+	}
+
+	set UpdateAt (value) {
+		this.lastModified = value;
+	}
+
+	set DownloadUrl (value) {
+		this.url = value;
+	}
+
+	set ContentType (value) {
+		this.contentType = value;
+	}
+
+	async getUrl () {
+		const file = this;
+		if (file.url) {
+			return file.url;
 		}
-	} else if (fileInfo.Etag || fileInfo.S3KeyFlag) {
-		// 解析单个文件
-		fileInfo.publicPath = initialProps.publicPath;
-		fileInfo.shareKey = initialProps.res.data.ShareKey;
-		fileInfo = new FileInfo(fileInfo);
-	} else {
-		// 解析文件夹
-		let res = await fetch(
+		const url = await file.browser.fetch(
 			new URL(
-				`share/get?limit=999&next=1&orderBy=share_id&orderDirection=desc&shareKey=${initialProps.res.data.ShareKey}&ParentFileId=${fileInfo.FileId}&Page=1`,
-				initialProps.publicPath,
-			).href,
+				"share/download/info",
+				file.publicPath,
+			),
 			{
 				headers: {
 					"Accept": "application/json",
-					"User-Agent": userAgent,
+					"Content-Type": "application/json;charset=UTF-8",
 				},
-				referrerPolicy: "no-referrer",
+				body: JSON.stringify({
+					FileID: file.id,
+					Size: file.size,
+					S3keyFlag: file.S3KeyFlag,
+					ShareKey: file.ShareKey,
+					Etag: file.Etag,
+				}),
+				method: "POST",
 			},
 		);
-		await checkResponse(res);
-		res = await res.json();
-		fileInfo = await parseFileInfo(res.data.InfoList, url, initialProps);
-	}
-	return fileInfo;
-}
-
-async function checkResponse (res) {
-	if (!res.ok) {
-		throw new Error(`status: ${res.status}\nmessage: ${res.message || JSON.stringify(await res.text())}\n    at ${res.url}`);
+		// call setter defined in super
+		file.url = url;
+		return file.url;
 	}
 }
 
-function parseUrl (url) {
-	if (!url.href) {
-		url = new URL(url);
-	}
-	return url;
+async function parseHTML (html, res) {
+	let initialProps = html.match(/^\s*(window\.)?g_initialProps\s*=\s*(.*?)\s*;?\s*$/im);
+	initialProps = initialProps && jsonParse(initialProps[2].trim());
+	this.shareData = {
+		...initialProps.res.data,
+		publicPath: initialProps.publicPath,
+	};
+	return this.parseJSON(initialProps.reslist);
 }
 
-class FileInfo {
-	constructor (data) {
-		Object.assign(this, data);
-	}
+function parseFileData (fileList, browser) {
+	if (Array.isArray(fileList)) {
+		// 解析多个结果
+		fileList = Promise.all(
+			fileList.map(file => parseFileData(file, browser)),
+		);
+	} else {
+		const {
+			publicPath,
+			ShareKey,
+		} = browser.shareData;
 
-	get fileName () {
-		return this.FileName;
+		if (fileList.Etag || fileList.S3KeyFlag) {
+			// 解析单个文件
+			fileList.publicPath = publicPath;
+			fileList.ShareKey = ShareKey;
+		} else {
+			// 解析文件夹
+			fileList = browser.fetch(
+				new URL(
+					`share/get?limit=999&next=1&orderBy=share_id&orderDirection=desc&shareKey=${ShareKey}&ParentFileId=${fileList.FileId}&Page=1`,
+					publicPath,
+				),
+				{
+					headers: {
+						Accept: "application/json",
+					},
+				},
+			);
+		}
 	}
-
-	set fileName (fileName) {
-		this.FileName = fileName;
-	}
-
-	get size () {
-		return this.Size;
-	}
-
-	get lastModified () {
-		return Date.parse(this.UpdateAt);
-	}
-
-	get id () {
-		return this.FileId;
-	}
-
-	async getLocation (redirect) {
-		const data = await getRealFile(this, redirect);
-		Object.assign(this, data);
-		return this;
-	}
+	return fileList;
 }
 
-async function parse (url, options) {
-	const data = await getFileInfo(url, options || {});
-	if (Array.isArray(data)) {
-		return data.map(data => new FileInfo(data));
+function parseJSON (res) {
+	if (!res.code && res.data) {
+		if (res.data.InfoList) {
+			return parseFileData(res.data.InfoList, this);
+		} else if (res.data.DownloadURL) {
+			return decodeURI(
+				atob(
+					new URL(res.data.DownloadURL).searchParams.get("params"),
+				),
+			);
+		}
 	}
-	return new FileInfo(data);
+	throw new Error(res.message || res);
 }
 
-async function getRealFile (fileInfo, redirect) {
-	let res = await fetch(
-		new URL(
-			"share/download/info",
-			fileInfo.publicPath,
-		).href,
-		{
-			headers: {
-				"Accept": "application/json",
-				"Content-Type": "application/json;charset=UTF-8",
-				"User-Agent": userAgent,
-			},
-			body: JSON.stringify({
-				ShareKey: fileInfo.shareKey,
-				FileID: fileInfo.FileId,
-				S3keyFlag: fileInfo.S3KeyFlag,
-				Size: fileInfo.Size,
-				Etag: fileInfo.Etag,
-			}),
-			method: "POST",
-		},
+async function getFileInfo (url) {
+	const browser = new Browser(
+		parseHTML,
+		parseJSON,
 	);
-	await checkResponse(res);
-	res = await res.json();
-	fileInfo.location = decodeURI(atob(new URL(res.data.DownloadURL).searchParams.get("params"))).replace(/([?&]filename=).*?(&|$)/, (s, prefix, suffix) => prefix + fileInfo.fileName + suffix);
-	// if (redirect) {
-	// 	//
-	// }
-	return fileInfo;
+	browser.RemoteFile = RemoteFile;
+
+	try {
+		return browser.fetch(url);
+	} catch (ex) {
+		console.error(ex);
+	}
 }
-module.exports = parse;
-// getFileInfo("https://www.123pan.com/s/A6cA-C29Jh").then(f => {
-// 	f[0].fileName = "a.apk";
-// 	return f[0].getLocation(1);
+
+module.exports = getFileInfo;
+
+// getFileInfo("https://www.123pan.com/s/A6cA-C29Jh").then(async f => {
+// 	console.log(await f[0].getUrl());
+// 	console.log(f[0].url);
 // }).then(console.log);

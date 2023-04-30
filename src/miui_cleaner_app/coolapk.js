@@ -28,7 +28,7 @@ function parseHTML (html, res) {
 	return file;
 }
 
-async function getFileInfo (url) {
+function getFileInfo (url) {
 	return browser.fetch(url);
 }
 

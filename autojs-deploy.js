@@ -364,10 +364,11 @@ class LogTransform extends Transform {
 					pos,
 				}),
 			).replaceAll(
-				// 替换以下两种错误日志格式中的文件路径和行号(文件路径和行号不带括号，函数名如果存在、带括号)：
+				// 替换以下几种错误日志格式中的文件路径和行号(文件路径和行号不带括号，函数名如果存在、带括号)：
+				//     19:40:17.562/D: Unhandled rejection 	at /storage/emulated/0/脚本/com.github.gucong3000.miui.cleaner/main.js:15471 (_callee$)
 				//     at /some/path/to/file:69:54 (function_name)
 				//     at /some/path/to/file:69:54
-				/^(\s*at\s+)(.*?)((?:[:#]\d+)+)(?:\s+\((.*)\))?$/gm,
+				/^((?:[\d:.]+\/[A-Z]:\s+.*?)?\s*at\s+)(.*?)((?:[:#]\d+)+)(?:\s+\((.*)\))?$/gm,
 				(s, prefix, file, pos, name) => this.traceFormat({
 					prefix,
 					file,
