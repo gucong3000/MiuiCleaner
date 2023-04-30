@@ -28,7 +28,7 @@ const appList = [
 		summary: "MIUI音乐APP套壳的产品",
 		icon: "https://m.32r.com/logo/210807/202108070906595774.png",
 		packageName: "com.tencent.qqmusiclite",
-		url: "https://wwi.lanzout.com/b046evhng#pwd=eeee",
+		url: "https://wwi.lanzout.com/b046evhng?pwd=eeee",
 		// https://www.32r.com/app/106580.html
 	},
 	{
@@ -52,7 +52,7 @@ const appList = [
 		packageName: "com.iflytek.inputmethod",
 		// url: "https://app.meizu.com/apps/public/detail?package_name=com.iflytek.inputmethod",
 		// url: "https://m.32r.com/app/7401.html",
-		url: "https://firepx.lanzoul.com/b00vf92jc#pwd=647w",
+		url: "https://firepx.lanzoul.com/b00vf92jc?pwd=647w",
 	},
 	{
 		name: "隐启设置",

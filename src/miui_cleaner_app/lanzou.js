@@ -1,30 +1,10 @@
 const jsonParse = require("json5/lib/parse");
-const fetch = global.fetch || require("./fetch");
+const Browser = require("./RemoteFile");
 
-let userAgent;
-try {
-	userAgent = android.webkit.WebSettings.getDefaultUserAgent(context);
-} catch (ex) {
-	userAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1";
-}
-const storage = {};
-const realFileCache = {};
+// const storage = {};
+// const realFileCache = {};
 
-async function getFileInfoFromUrl (url, options) {
-	url = parseUrl(url);
-	const res = await fetch(
-		url.href,
-		{
-			headers: {
-				"Accept": "text/html",
-				"User-Agent": userAgent,
-				"X-Forwarded-For": getRandomIP(),
-				"client-ip": getRandomIP(),
-			},
-		},
-	);
-	await checkResponse(res);
-	const html = await res.text();
+async function parseHTML (html, res) {
 	let fileName = html.match(/\bclass="(md|appname)"[^<>]*>\s*(.+?)\s*<\/?\w+/);
 	fileName = fileName && fileName[2];
 	let size = html.match(/\b(id|class)="(submit|mtt)"[^<>]*>.*?\(\s*(\d+.*?)\s*\)\s*<\/?\w+/);
@@ -41,8 +21,10 @@ async function getFileInfoFromUrl (url, options) {
 		size,
 		lastModified,
 	};
+	const that = Object.fromEntries(
+		this.location.searchParams.entries(),
+	);
 
-	const that = Object.assign({}, options);
 	function getVal (code) {
 		if (code in that) {
 			return that[code];
@@ -59,7 +41,7 @@ async function getFileInfoFromUrl (url, options) {
 		const hostname = script.match(/(['"])(https?:\/\/(\w+\.)*lanzoug\w*(\.\w+)+\/file\/?)\1/i);
 		const pathname = script.match(/(['"])(\?\S{256,})\1/);
 		if (hostname && pathname) {
-			console.log("发现无密码的单文件：", url.href);
+			console.log("发现无密码的单文件：", res.url);
 			fileInfo.url = new URL(pathname[2], hostname[2]).href;
 			break;
 		}
@@ -99,16 +81,52 @@ async function getFileInfoFromUrl (url, options) {
 				}
 			}
 		});
+
 		if (ajaxConfig.url && ajaxConfig.data) {
-			// 有密码的单文件或者文件夹
-			return getFileInfoByAjax(url, fileInfo, ajaxConfig, options);
+			this.fileInfo = fileInfo;
+			return await this.fetch(
+				new URL(ajaxConfig.url, res.url),
+				{
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded",
+						"Accept": "application/json",
+						"referrer": res.url,
+					},
+					body: new URLSearchParams(ajaxConfig.data).toString(),
+					method: (ajaxConfig.type || "POST").toUpperCase(),
+				},
+			);
 		}
 	}
-	fileInfo.options = options;
-	return parseFileInfo(fileInfo, url);
+	return parseFileInfo(fileInfo, this.location);
 }
 
-function parseFileInfo (fileInfo, url) {
+function parseJSON (data) {
+	if (Array.isArray(data.text)) {
+		console.log("发现文件夹:", this.location.href);
+		data = data.text.map(file => parseFileInfo({
+			fileName: file.name_all,
+			size: file.size,
+			lastModified: file.time,
+			id: file.id,
+		}, this.location));
+		// storage[getIdByUrl(url)] = data.map(dada => dada.id);
+	} else if (data.url && data.inf && data.dom) {
+		console.log("发现需要密码的单文件:", this.location.href);
+		const fileInfo = this.fileInfo;
+		fileInfo.fileName = data.inf;
+		fileInfo.url = new URL(data.url, new URL("/file/", data.dom)).href;
+		fileInfo.options = this.options;
+		data = parseFileInfo(fileInfo, this.location);
+	} else {
+		// 除非网络异常，否则大概里是密码错了
+		throw new Error(data.inf || data);
+	}
+	// 有密码的单文件或者文件夹
+	return data;
+}
+
+function parseFileInfo (fileInfo, location) {
 	if (typeof fileInfo.size === "string") {
 		const size = fileInfo.size.match(/^([+-\d.]+)\s*(\w+)?$/);
 		const BIBYTE_UNITS = "BKMGTPEZY";
@@ -120,256 +138,29 @@ function parseFileInfo (fileInfo, url) {
 			fileInfo.size = Math.round(number * Math.pow(1024, exponent));
 		}
 	}
-	if (typeof fileInfo.lastModified === "string") {
-		let lastTime = fileInfo.lastModified.match(/^(\d+)\s*(.*)前$/);
-		if (lastTime) {
-			fileInfo.lastModified = Date.now() - (+lastTime[1] * 1000 * ({
-				天: 60 * 60 * 24,
-				小时: 60 * 60,
-				分钟: 60,
-				分: 60,
-				秒钟: 1,
-				秒: 1,
-			}[lastTime[2]]));
-		} else if ((lastTime = fileInfo.lastModified.match(/^(.*)天\s*((?:\d+:+)*\d+)/))) {
-			let time = lastTime[2].split(":");
-			time = Date.parse(new Date().toLocaleDateString() + ` ${time[0]}:${time[1]}:${time[2] || 0} GMT+0800`);
-			time -= ({
-				昨: 1,
-				前: 2,
-			}[lastTime[1]] || 0) * 60 * 60 * 24 * 1000;
-			fileInfo.lastModified = time;
-		} else {
-			fileInfo.lastModified = Date.parse(fileInfo.lastModified) || fileInfo.lastModified;
-		}
+	if (!fileInfo.id) {
+		fileInfo.id = location.pathname.replace(/^(\/+tp)*\/+/, "") + location.search;
 	}
-	if (fileInfo.id) {
-		fileInfo.referer = new URL("/tp/" + fileInfo.id, url.origin).href;
-	} else {
-		const id = getIdByUrl(url);
-		fileInfo.id = id;
-		fileInfo.referer = `${url.origin}/tp/${id}`;
-	}
-
-	if (fileInfo.url) {
-		fileInfo.expires = Date.now() + 1800000;
-	}
-	storage[fileInfo.id] = fileInfo;
+	fileInfo.referrer = new URL("/tp/" + fileInfo.id, location.origin).href;
+	// storage[fileInfo.id] = fileInfo;
 	return fileInfo;
 }
 
-function getIdByUrl (url) {
-	return url.pathname.replace(/^(\/+tp)*\/+/, "") + url.search;
-}
-
-async function getFileInfoByAjax (url, fileInfo, ajaxConfig, options) {
-	const res = await fetch(
-		new URL(ajaxConfig.url, url.origin).href,
-		{
-			headers: {
-				"Content-Type": "application/x-www-form-urlencoded",
-				"Accept": "application/json",
-				"x-requested-with": "XMLHttpRequest",
-				"User-Agent": userAgent,
-				"Referer": url.href,
-				"X-Forwarded-For": getRandomIP(),
-				"client-ip": getRandomIP(),
-			},
-			body: new URLSearchParams(ajaxConfig.data).toString(),
-			method: (ajaxConfig.type || "POST").toUpperCase(),
-		},
+function getFileInfo (url) {
+	const browser = new Browser(
+		parseHTML,
+		parseJSON,
 	);
-	await checkResponse(res);
-	let data = await res.json();
-	if (Array.isArray(data.text)) {
-		console.log("发现文件夹:", url.href);
-		data = data.text.map(file => parseFileInfo({
-			fileName: file.name_all,
-			size: file.size,
-			lastModified: file.time,
-			id: file.id,
-		}, url));
-		storage[getIdByUrl(url)] = data.map(dada => dada.id);
-	} else if (data.url && data.inf && data.dom) {
-		console.log("发现需要密码的单文件:", url.href);
-		fileInfo.fileName = data.inf;
-		fileInfo.url = new URL(data.url, new URL("/file/", data.dom)).href;
-		fileInfo.options = options;
-		data = parseFileInfo(fileInfo, url);
-	} else {
-		// 除非网络异常，否则大概里是密码错了
-		throw new Error(data.info || data);
-	}
-	return data;
+	// browser.RemoteFile = RemoteFile;
+	return browser.fetch(url);
 }
+module.exports = getFileInfo;
 
-// function reqFileInfoByWeb (url) {
-// 	const web = webView({
-// 		url: url.href,
-// 		userAgent: uaMobile,
-// 	});
-// 	return web.ready(
-// 		() => document.documentElement.innerHTML,
-// 	).then(html => getFileInfo(url, html, (ajaxInfo) => web.evaluate(
-// 		ajaxInfo => fetch(ajaxInfo.url, {
-// 			headers: {
-// 				"Accept": "application/json",
-// 				"Content-Type": "application/x-www-form-urlencoded",
-// 				"x-requested-with": "XMLHttpRequest",
-// 			},
-// 			body: new URLSearchParams(ajaxInfo.data).toString(),
-// 			method: ajaxInfo.type,
-// 		}).then(response => response.json()),
-// 		[ajaxInfo],
-// 	), "WebView: ")).finally(() => web.cancel);
-// };
-
-function getFileInfo (url, options) {
-	url = parseUrl(url);
-	const id = getIdByUrl(url);
-	const fileInfo = storage[id];
-	if (fileInfo) {
-		if (Array.isArray(fileInfo)) {
-			return getFileInfoFromUrl(url, options).catch(ex => {
-				return fileInfo.map(id => storage[id]);
-			});
-		} else {
-			if (!options.reqUrl || (fileInfo.url && fileInfo.expires > Date.now())) {
-				return Promise.resolve(fileInfo);
-			}
-			if (fileInfo.options) {
-				options = Object.assign(fileInfo.options, options);
-			}
-		}
-	}
-	return getFileInfoFromUrl(url, options);
-}
-
-async function getRealFile (fileInfo, redirect) {
-	const cache = realFileCache[fileInfo.id];
-	const now = Date.now();
-	if (cache) {
-		if (cache.expires && now >= cache.expires) {
-			// console.log("命中缓存，但已过期:", fileInfo);
-			delete realFileCache[fileInfo.id];
-		} else {
-			// console.log("命中缓存:", fileInfo);
-			return Promise.resolve(cache);
-		}
-	}
-	if (fileInfo.url && fileInfo.expires > now) {
-		const res = await fetch(fileInfo.url, {
-			method: "HEAD",
-			redirect: redirect ? "follow" : "manual",
-			// redirect: "error",
-			headers: {
-				// "Accept-Encoding": "gzip, deflate, br",
-				"Accept-Language": "zh-CN",
-				// "Cache-Control": "no-cache",
-				// "Connection": "keep-alive",
-				// "Pragma": "no-cache",
-				// "Cookie": "down_ip=1",
-				// "User-Agent": userAgent,
-				// "Referer": fileInfo.url,
-				// "X-Forwarded-For": getRandomIP(),
-				// "client-ip": getRandomIP(),
-			},
-			referrer: fileInfo.url,
-		});
-		const location = res.headers.get("location");
-		if (location) {
-			fileInfo.location = location;
-		} else {
-			await checkResponse(res);
-		}
-		let disposition = res.headers.get("content-disposition");
-		if (disposition) {
-			if (!fileInfo.fileName) {
-				disposition = disposition.match(/(^|;)\s*filename\*?\s*=\s*(UTF-8(''|\/))?(.*?)(;|\s|$)/i);
-				fileInfo.fileName = disposition && decodeURI(disposition[4]);
-			}
-			fileInfo.location = location || res.url;
-			const expires = res.headers.get("expires");
-			if (expires) {
-				fileInfo.expires = Date.parse(expires);
-			}
-			const type = res.headers.get("Content-Type");
-			if (type && !/^application\/octet-stream$/i.test(type)) {
-				fileInfo.type = type;
-			}
-			const size = +res.headers.get("content-length");
-			if (size) {
-				fileInfo.size = size;
-			}
-			const lastModified = res.headers.get("last-modified");
-			if (lastModified) {
-				fileInfo.lastModified = Date.parse(lastModified);
-			}
-		}
-		if (fileInfo.location) {
-			fileInfo.location = fileInfo.location.replace(/([?&]filename=).*?(&|$)/, (s, prefix, suffix) => prefix + fileInfo.fileName + suffix); ;
-			realFileCache[fileInfo.id] = fileInfo;
-			return fileInfo;
-		} else {
-			throw new Error("unknow error: \nat " + res.url);
-		}
-	}
-	if (fileInfo.referer) {
-		return getRealFile(await getFileInfo(fileInfo.referer, {
-			reqUrl: true,
-		}));
-	}
-}
-
-async function checkResponse (res) {
-	if (!res.ok) {
-		throw new Error(`status: ${res.status}\nmessage: ${res.message || JSON.stringify(await res.text())}\n    at ${res.url}`);
-	}
-}
-
-function parseUrl (url) {
-	if (!url.href) {
-		url = new URL(url);
-	}
-	return url;
-}
-
-function getRandomIP () {
-	let ip = [218, 66, 60, 202, 204, 59, 61, 222, 221, 62, 63, 64, 122, 211];
-	ip = [
-		ip[Math.floor(Math.random() * ip.length)],
-	];
-	for (let i = 0; i < 3; i++) {
-		ip.push(Math.floor(Math.random() * 256));
-	}
-	return ip.join(".");
-}
-
-class FileInfo {
-	constructor (data) {
-		Object.assign(this, data);
-	}
-
-	async getLocation (redirect) {
-		const data = await getRealFile(this, redirect);
-		Object.assign(this, data);
-		return this;
-	}
-}
-
-async function parse (url, options) {
-	const data = await getFileInfo(url, options || {});
-	if (Array.isArray(data)) {
-		return data.map(data => new FileInfo(data));
-	}
-	return new FileInfo(data);
-}
-module.exports = parse;
-// (async () => {
-// 	let file = await parse("https://423down.lanzouv.com/b0f1avpib");
-// 	file = file[0];
-// 	file.fileName = "优酷.apk";
-// 	console.log(file);
-// 	file = await file.getLocation();
-// 	console.log(file);
-// })();
+(async () => {
+	const file = await getFileInfo("https://zisu.lanzoum.com/tp/iI7LGwn5xjc");
+	// console.log(file);
+	// file.fileName = "优酷.apk";
+	// console.log(file);
+	await file.getLocation(true);
+	console.log(file);
+})();

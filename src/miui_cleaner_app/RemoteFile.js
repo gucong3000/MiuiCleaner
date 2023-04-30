@@ -109,10 +109,36 @@ class RemoteFile {
 	}
 
 	set lastModified (date) {
-		date = Date.parse(date);
-		if (!Number.isNaN(date)) {
-			this.#lastModified = date;
+		let time = Date.parse(date);
+		if (Number.isInteger(time)) {
+			date = time;
+		} else if (date && date.match) {
+			let lastTime = date.match(/^(\d+)\s*(.*)前$/);
+			if (lastTime) {
+				date = Date.now() - (+lastTime[1] * 1000 * ({
+					天: 60 * 60 * 24,
+					小时: 60 * 60,
+					分钟: 60,
+					分: 60,
+					秒钟: 1,
+					秒: 1,
+				}[lastTime[2]]));
+			} else if ((lastTime = date.match(/^(.*)天\s*((?:\d+:+)*\d+)/))) {
+				time = lastTime[2].split(":");
+				time = Date.parse(new Date().toLocaleDateString() + ` ${time[0]}:${time[1]}:${time[2] || 0} GMT+0800`);
+				time -= ({
+					昨: 1,
+					前: 2,
+				}[lastTime[1]] || 0) * 60 * 60 * 24 * 1000;
+				date = time;
+			} else {
+				return;
+			}
+			if (!Number.isInteger(date)) {
+				return;
+			}
 		}
+		this.#lastModified = date;
 	}
 
 	#expires;
@@ -122,7 +148,7 @@ class RemoteFile {
 
 	set expires (date) {
 		date = Date.parse(date);
-		if (!Number.isNaN(date)) {
+		if (Number.isInteger(date)) {
 			this.#expires = date;
 		}
 	}
@@ -183,10 +209,10 @@ class RemoteFile {
 
 	async getLocation (redirect) {
 		let file = this;
-		if (file.location) {
+		if (file.location && !redirect) {
 			return file.location;
 		}
-		file = this.browser.fetch(await this.getUrl(), {
+		file = await this.browser.fetch(await this.getUrl(), {
 			file: this,
 			headers: {
 				Accept: "*/*",
@@ -271,7 +297,7 @@ class Browser {
 	parseJSON = parerDefault;
 	parseFile (fileInfo) {
 		if (!fileInfo.referrer) {
-			fileInfo.referrer = this.#url;
+			fileInfo.referrer = this.location.href;
 		}
 		if (!fileInfo.headers && fileInfo.url) {
 			const [
@@ -280,18 +306,16 @@ class Browser {
 			] = this.getFetchArgs(fileInfo.url, {
 				headers: {
 					Accept: "*/*",
-					referer: fileInfo.referrer,
+					Referer: fileInfo.referrer,
 				},
 			});
 			fileInfo.url = url.href;
 			fileInfo.headers = options.headers;
 		}
 		fileInfo.browser = this;
-
 		return new (this.RemoteFile)(fileInfo);
 	}
 
-	#url;
 	#headers;
 	#cookie;
 
@@ -318,13 +342,14 @@ class Browser {
 	getFetchArgs (url, options = {}) {
 		url = new URL(
 			url.href || url,
-			this.#url,
+			this.location,
 		);
+
 		options = {
 			...options,
 			headers: {
 				...this.#headers,
-				Referer: this.#url || "",
+				Referer: this.location?.href,
 				Cookie: this.getCookie(url),
 				...options.headers,
 				...options.file?.headers,
@@ -358,14 +383,14 @@ class Browser {
 
 		if (res.ok) {
 			if (/^text\/html\b/i.test(contentType)) {
-				this.#url = url.href;
+				this.location = url;
 				fileInfo = await this.parseHTML(await res.text(), res);
 				if (Array.isArray(fileInfo)) {
 					return fileInfo.flat().map(this.parseFile, this);
 				} else {
 					return this.parseFile(fileInfo);
 				}
-			} else if (/^application\/json\b/i.test(contentType)) {
+			} else if (/^\w+\/json\b/i.test(contentType)) {
 				return this.parseJSON(await res.json(), res);
 			} if ((contentDisposition = headers.get("content-disposition")) || /^application\/\w+/i.test(contentType)) {
 				// 20X 下载

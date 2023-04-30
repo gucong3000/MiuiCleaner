@@ -119,18 +119,13 @@ function parseJSON (res) {
 	throw new Error(res.message || res);
 }
 
-async function getFileInfo (url) {
+function getFileInfo (url) {
 	const browser = new Browser(
 		parseHTML,
 		parseJSON,
 	);
 	browser.RemoteFile = RemoteFile;
-
-	try {
-		return browser.fetch(url);
-	} catch (ex) {
-		console.error(ex);
-	}
+	return browser.fetch(url);
 }
 
 module.exports = getFileInfo;
