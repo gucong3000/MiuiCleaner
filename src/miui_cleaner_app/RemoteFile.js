@@ -1,6 +1,7 @@
 const fetch = global.fetch || require("./fetch");
 const util = global.util || require("util");
 const setCookie = require("set-cookie-parser");
+const jsonParse = require("json5/lib/parse");
 const Headers = global.Headers || require("headers-polyfill").Headers;
 
 if (!Headers.prototype.getSetCookie) {
@@ -223,6 +224,49 @@ class RemoteFile {
 		return file.location;
 	}
 
+	#versionName;
+
+	set versionName (versionName) {
+		if (versionName) {
+			this.#versionName = versionName;
+		}
+	}
+
+	get versionName () {
+		if (this.#versionName) {
+			return this.#versionName;
+		}
+		const fileName = this.fileName;
+		if (fileName) {
+			const versionName = fileName.match(/\d+(\.+\d+)+/);
+			if (versionName) {
+				return versionName[0];
+			}
+		}
+	}
+
+	#versionCode;
+
+	set versionCode (versionCode) {
+		if (Number.isInteger(versionCode)) {
+			this.#versionCode = versionCode;
+		}
+	}
+
+	get versionCode () {
+		if (Number.isInteger(this.#versionCode)) {
+			return this.#versionCode;
+		}
+
+		const fileName = this.fileName;
+		if (fileName) {
+			const versionCode = fileName.match(/\(\s*(\d+)\s*\)/);
+			if (versionCode) {
+				return +versionCode[1];
+			}
+		}
+	}
+
 	valueOf () {
 		const data = {
 			// appName: this.appName,
@@ -231,6 +275,7 @@ class RemoteFile {
 			id: this.id,
 			fileName: this.fileName,
 			size: this.size,
+			contentLength: this.contentLength,
 			lastModified: this.lastModified && new Date(this.lastModified),
 			expires: this.expires && new Date(this.expires),
 			// cookie: this.cookie,
@@ -239,6 +284,7 @@ class RemoteFile {
 			location: this.location,
 			contentType: this.contentType,
 			// browser: this.browser,
+			versionName: this.versionName,
 			headers: this.headers,
 			// browser: this.browser,
 		};
@@ -283,7 +329,9 @@ class Browser {
 			"X-Real-IP": ip,
 		};
 		this.#cookie = new Map();
-		this.parseHTML = parseHTML;
+		if (parseHTML) {
+			this.parseHTML = parseHTML;
+		}
 		if (parseFile) {
 			this.parseFile = parseFile;
 		}
@@ -294,7 +342,24 @@ class Browser {
 
 	static RemoteFile = RemoteFile;
 	RemoteFile = RemoteFile;
-	parseHTML = parerDefault;
+	parseHTML (html) {
+		let url;
+		const meta = html.match(/<meta\s+http-equiv="refresh"\s+content="\d+;url=(.*?)"/i);
+		if (meta) {
+			url = meta[1];
+		} else {
+			const js = html.match(/\b(?:\w+\.)*location(?:\.href)?\s*=\s*(("|').*?\2)/);
+			if (js) {
+				url = jsonParse(js[1]);
+			} else {
+				return;
+			}
+		}
+		return {
+			url: decodeURI(url),
+		};
+	}
+
 	parseJSON = parerDefault;
 	parseFile (fileInfo) {
 		if (!fileInfo.referrer) {
@@ -352,7 +417,7 @@ class Browser {
 				...this.#headers,
 				"Referer": this.location?.href,
 				"Cookie": this.getCookie(url),
-				"X-Requested-With": /^\w+\/json\b/i.test(options.headers?.Accept) && "XMLHttpRequest",
+				"X-Requested-With": /^\w+\/json\b/i.test(options.headers?.Accept) ? "XMLHttpRequest" : null,
 				...options.file?.headers,
 				...options.headers,
 			},
@@ -426,3 +491,9 @@ class Browser {
 }
 
 module.exports = Browser;
+// (async () => {
+// 	const file = await new Browser().fetch("https://www.kookong.com/kk_apk.html");
+// 	console.log(file);
+// 	await file.getLocation();
+// 	console.log(file);
+// })();

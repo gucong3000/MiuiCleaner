@@ -257,6 +257,8 @@ MIUI广告清理工具
 	> MIUI软件包安装程序v3.8.0，不含“纯净模式”
 - [QQ音乐简洁版](https://www.coolapk.com/apk/com.tencent.qqmusiclite)
 	> MIUI 音乐APP套壳的产品
+- [酷控](https://www.kookong.com/kk_apk.html)
+	> 万能遥控APP套壳的产品
 - [几何天气](https://github.com/WangDaYeeeeee/GeometricWeather/releases/latest)
 	> 干净、小巧、漂亮、功能多
 - [Holi 天气](https://www.coolapk.com/apk/com.joe.holi)

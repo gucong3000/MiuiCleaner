@@ -156,11 +156,11 @@ function getFileInfo (url) {
 }
 module.exports = getFileInfo;
 
-(async () => {
-	const file = await getFileInfo("https://zisu.lanzoum.com/tp/iI7LGwn5xjc");
-	// console.log(file);
-	// file.fileName = "优酷.apk";
-	// console.log(file);
-	await file.getLocation(true);
-	console.log(file);
-})();
+// (async () => {
+// 	const file = await getFileInfo("https://zisu.lanzoum.com/tp/iI7LGwn5xjc");
+// 	// console.log(file);
+// 	// file.fileName = "优酷.apk";
+// 	// console.log(file);
+// 	await file.getLocation(true);
+// 	console.log(file);
+// })();

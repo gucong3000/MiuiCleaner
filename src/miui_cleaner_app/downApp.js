@@ -91,6 +91,13 @@ const appList = [
 		// https://www.32r.com/app/106580.html
 	},
 	{
+		name: "酷控",
+		summary: "万能遥控APP套壳的产品",
+		icon: "http://pp.myapp.com/ma_icon/0/icon_11816604_1680864203/256",
+		packageName: "com.kookong.app",
+		url: "https://www.kookong.com/kk_apk.html",
+	},
+	{
 		name: "几何天气",
 		summary: "干净、小巧、漂亮、功能多",
 		icon: "https://raw.fastgit.org/WangDaYeeeeee/GeometricWeather/master/app/src/main/res/drawable/ic_launcher.png",
