@@ -24,16 +24,16 @@ const appList = [
 		},
 	},
 	{
-		name: "QQ音乐简洁版",
-		summary: "MIUI音乐APP套壳的产品",
-		icon: "https://m.32r.com/logo/210807/202108070906595774.png",
-		packageName: "com.tencent.qqmusiclite",
-		url: "https://wwi.lanzout.com/b046evhng?pwd=eeee",
+		name: "微软桌面",
+		summary: "替代MIUI的桌面、天气、便笺、搜索、负一屏",
+		icon: "http://image.coolapk.com/apk_logo/2018/0301/0_1519874977_7219@256x256.png.t.png",
+		packageName: "com.microsoft.launcher",
+		url: "https://app.mi.com/details?id=com.microsoft.launcher",
 		// https://www.32r.com/app/106580.html
 	},
 	{
 		name: "Edge",
-		summary: "浏览器，微软出品，带广告屏蔽功能",
+		summary: "浏览器，微软出品，带网站广告屏蔽功能",
 		icon: "https://edgefrecdn.azureedge.net/welcome/static/favicon.png",
 		packageName: "com.microsoft.emmx",
 		url: "https://app.mi.com/details?id=com.microsoft.emmx",
@@ -81,6 +81,14 @@ const appList = [
 				return file;
 			});
 		},
+	},
+	{
+		name: "QQ音乐简洁版",
+		summary: "MIUI音乐APP套壳的产品",
+		icon: "https://m.32r.com/logo/210807/202108070906595774.png",
+		packageName: "com.tencent.qqmusiclite",
+		url: "https://wwi.lanzout.com/b046evhng?pwd=eeee",
+		// https://www.32r.com/app/106580.html
 	},
 	{
 		name: "几何天气",

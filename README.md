@@ -154,8 +154,11 @@ MIUI广告清理工具
 	- 桌面搜索框（Google）
 - 过时的 APP
 	- 悬浮球
-	- 小米闻声
 	- 智慧生活
+	- 小米云盘
+- 无障碍辅助
+	- 小米闻声
+	- TalkBack
 - 影音类 APP
 	- 音乐
 	- Mi Video
@@ -222,6 +225,16 @@ MIUI广告清理工具
 	- 小爱视觉（扫一扫）
 	- 小爱翻译
 	- 小爱通话（AI虚拟助手）
+- 文字转语音(TTS)引擎
+	- 小米
+	- Google
+	- Svox
+	- 科大讯飞
+	- 度秘
+- MIUI 翻译服务
+	- 小米云
+	- 金山
+	- 有道
 </details>
 
 ### 去广告版APP
@@ -232,6 +245,8 @@ MIUI广告清理工具
 
 - [李跳跳](https://www.123pan.com/s/A6cA-edAJh)
 	> 广告自动跳过工具
+- [微软桌面](https://app.mi.com/details?id=com.microsoft.launcher)
+	> 替代MIUI的桌面、天气、便笺、搜索、负一屏
 - [Edge](https://www.coolapk.com/apk/com.microsoft.emmx)
 	> 广告可关，可与Windows的Edge互动，有网页广告屏蔽功能
 - [小米浏览器](https://com-globalbrowser.cn.aptoide.com/app)

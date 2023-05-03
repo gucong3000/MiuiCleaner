@@ -16,8 +16,11 @@ module.exports = {
 	"com.baidu.searchbox": "桌面搜索框（百度）",
 	// 过时的 APP
 	"com.miui.touchassistant": "悬浮球/Quickball",
-	"com.miui.accessibility": "听障辅助工具",
 	"com.miui.hybrid.accessory": "古早版智能家居",
+	"com.android.midrive": "古早版小米云盘",
+	// 无障碍辅助
+	"com.miui.accessibility": "小米闻声/听障辅助工具/语音转文字",
+	"com.google.android.marvin.talkback": "TalkBack/视障辅助工具/文字转语音",
 	// 影音类 APP
 	"com.miui.player": "QQ音乐简洁版，应替换成ES文件浏览器",
 	"com.miui.videoplayer": "Mi Video，应替换成ES文件浏览器",
@@ -50,7 +53,7 @@ module.exports = {
 	"com.android.wallpaperbackup": "壁纸备份",
 	"com.android.wallpapercropper": "壁纸编辑器",
 	"com.miui.fm": "收音机/蜻蜓FM",
-	"cn.wps.moffice_eng.xiaomi.lite": "WPS Office Lite，应替换成ES文件浏览器",
+	"cn.wps.moffice_eng.xiaomi.lite": "WPS Office Lite",
 	"com.dragon.read": "阅读/番茄免费小说",
 	"com.duokan.reader": "阅读/多看阅读器",
 	"com.mi.health": "小米健康/小米运动健康",
@@ -84,9 +87,19 @@ module.exports = {
 	"com.xiaomi.scanner": "小爱视觉/扫一扫",
 	"com.xiaomi.aiasst.vision": "小爱翻译",
 	"com.xiaomi.aiasst.service": "小爱通话（AI虚拟助手）",
+	// TTS引擎
+	// https://blog.csdn.net/yingchengyou/article/details/79591954
+	"com.xiaomi.mibrain.speech": "小米TTS",
+	"com.svox.pico": "Svox TTS",
+	"com.svox.classic": "Svox TTS",
+	"com.google.android.tts": "Google TTS",
+	"com.iflytek.speechcloud": "科大讯飞TTS",
+	"com.iflytek.speechsuite": "科大讯飞TTS",
+	"com.iflytek.tts": "科大讯飞TTS",
+	"com.baidu.duersdk.opensdk": "度秘TTS",
 	// 翻译
 	"com.miui.translationservice": "MIUI翻译服务",
-	"com.miui.translation.kingsoft": "MIUI翻译-金山",
 	"com.miui.translation.xmcloud": "MIUI翻译-小米云",
+	"com.miui.translation.kingsoft": "MIUI翻译-金山",
 	"com.miui.translation.youdao": "MIUI翻译-有道",
 };

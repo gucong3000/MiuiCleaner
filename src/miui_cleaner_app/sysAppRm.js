@@ -45,7 +45,7 @@ function clickButton (button, text) {
 // 	console.log(`发现${installerAppName}(${installerPackageName})，版本号${packageInfo.getVersionName()}，已释放版本号为v380的降级安装包到路径：${copyPath}`);
 // }
 
-const whitelist = /^com\.(miui\.(voiceassist|personalassistant)|android\.(quicksearchbox|chrome))$/;
+const whitelist = /^com\.(miui\.voiceassist|(google\.)?android\..*)$/;
 function getAppList () {
 	const appList = sysAppList.filter(item => {
 		if (!getApplicationInfo(item)) {
