@@ -213,8 +213,8 @@ class RemoteFile {
 		if (file.location && !redirect) {
 			return file.location;
 		}
-		file = await this.browser.fetch(await this.getUrl(), {
-			file: this,
+		file = await file.browser.fetch(await file.getUrl(), {
+			file,
 			headers: {
 				Accept: "*/*",
 			},
@@ -263,13 +263,18 @@ class RemoteFile {
 		if (Number.isInteger(this.#versionCode)) {
 			return this.#versionCode;
 		}
-
-		const fileName = this.fileName;
-		if (fileName) {
-			const versionCode = fileName.match(/\(\s*(\d+)\s*\)/);
-			if (versionCode) {
-				return +versionCode[1];
-			}
+		let versionCode;
+		if (
+			[
+				this.fileName,
+				this.path,
+			].filter(Boolean).some(path => {
+				versionCode = path.match(/\(\s*(\d+)\s*\)/);
+				versionCode = versionCode && versionCode[1];
+				return versionCode;
+			})
+		) {
+			return +versionCode;
 		}
 	}
 
@@ -332,7 +337,6 @@ class Browser {
 	constructor (parseHTML, parseJSON, parseFile) {
 		const ip = getRandomIP();
 		this.#headers = {
-			"Accept": "text/html",
 			"Accept-Language": "zh-CN",
 			"User-Agent": userAgent,
 			"X-Forwarded-For": ip,
@@ -374,7 +378,7 @@ class Browser {
 	parseJSON = parerDefault;
 	parseFile (fileInfo) {
 		if (!fileInfo.referrer) {
-			fileInfo.referrer = this.location.href;
+			fileInfo.referrer = this.location?.href;
 		}
 		if (!fileInfo.headers && fileInfo.url) {
 			const [
@@ -422,13 +426,16 @@ class Browser {
 			this.location,
 		);
 
+		const mayApi = /\bapi\b/.test(url);
+
 		options = {
 			...options,
 			headers: {
 				...this.#headers,
-				"Referer": this.location?.href,
+				"Accept": mayApi ? "application/json" : "text/html",
+				"Referer": this.location?.href || null,
 				"Cookie": this.getCookie(url),
-				"X-Requested-With": /^\w+\/json\b/i.test(options.headers?.Accept) ? "XMLHttpRequest" : null,
+				"X-Requested-With": (mayApi || /^\w+\/json\b/i.test(options.headers?.Accept)) ? "XMLHttpRequest" : null,
 				...options.file?.headers,
 				...options.headers,
 			},
@@ -445,29 +452,30 @@ class Browser {
 			url,
 			options,
 		] = this.getFetchArgs(url, options);
-
+		if (options?.signal?.aborted) {
+			return;
+		}
 		const res = await fetch(
 			url.href,
 			options,
-		);
+		).catch(ex => {
+			ex.message = [
+				url.href,
+				ex.message,
+			].filter(Boolean).join("\n");
+			throw ex;
+		});
 
 		res.headers.getSetCookie().forEach(this.setCookie, this);
 
 		const headers = res.headers;
 		const contentType = headers.get("content-type");
-		let contentDisposition;
 		let location;
 		let fileInfo;
 
 		if (res.ok) {
-			if (/^text\/html\b/i.test(contentType)) {
-				this.location = url;
-				fileInfo = await this.parseHTML(await res.text(), res);
-				const parseFile = fileInfo => Array.isArray(fileInfo) ? fileInfo.map(parseFile) : this.parseFile(fileInfo);
-				return parseFile(fileInfo);
-			} else if (/^\w+\/json\b/i.test(contentType)) {
-				return this.parseJSON(await res.json(), res);
-			} if ((contentDisposition = headers.get("content-disposition")) || /^application\/\w+/i.test(contentType)) {
+			let contentDisposition = headers.get("content-disposition");
+			if (contentDisposition || /^HEAD$/i.test(options.method)) {
 				// 20X 下载
 				contentDisposition = contentDisposition && contentDisposition.match(/(^|;)\s*filename\*?\s*=\s*(UTF-\d+(''|\/))?(.*?)(;|\s|$)/i);
 				contentDisposition = contentDisposition && decodeURI(contentDisposition[4]);
@@ -476,10 +484,17 @@ class Browser {
 					expires: headers.get("expires"),
 					lastModified: headers.get("last-modified"),
 					contentLength: +headers.get("content-length"),
-					contentType,
+					contentType: contentType.replace(/\s*;.*$/, ""),
 					location: res.url,
 					headers: options.headers,
 				};
+			} else if (/^text\/html\b/i.test(contentType)) {
+				this.location = url;
+				fileInfo = await this.parseHTML(await res.text(), res);
+				const parseFile = fileInfo => Array.isArray(fileInfo) ? fileInfo.map(parseFile) : this.parseFile(fileInfo);
+				return parseFile(fileInfo);
+			} else if (/^\w+\/json\b/i.test(contentType)) {
+				return this.parseJSON(await res.json(), res);
 			}
 		} else if ((location = headers.get("location"))) {
 			// 30X 跳转
@@ -491,10 +506,11 @@ class Browser {
 			throw new Error(`status: ${res.status}\nmessage: ${res.message || JSON.stringify(await res.text())}\n    at ${res.url}`);
 		}
 		if (options.file) {
-			return Object.assign(options.file, fileInfo);
+			fileInfo = Object.assign(options.file, fileInfo);
 		} else {
-			return this.parseFile(fileInfo);
+			fileInfo = this.parseFile(fileInfo);
 		}
+		return fileInfo;
 	}
 }
 

@@ -78,6 +78,7 @@ function getFastUrl (remote) {
 		[
 			"github.com",
 			"download.fastgit.org",
+			"hub.gitmirror.com/https://github.com",
 			"gh.api.99988866.xyz/https://github.com",
 		].map(
 			host => `https://${host}/gucong3000/MiuiCleaner/releases/download/v${remote.versionName}/MiuiCleaner.apk`,
@@ -104,7 +105,7 @@ function getFastUrl (remote) {
 request([
 	"https://cdn.jsdelivr.net/gh/gucong3000/MiuiCleaner/src/miui_cleaner_app/project.json",
 	"https://raw.fastgit.org/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
-	// "http://raw.staticdn.net/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
+	"http://raw.gitmirror.com/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
 	"https://raw.githubusercontent.com/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
 ]).then(res => res.ok && res.json()).then(remote => {
 	if (!remote) {
