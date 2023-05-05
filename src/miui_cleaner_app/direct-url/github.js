@@ -27,7 +27,6 @@ function parseHTML () {
 
 function parseJSON (data, res) {
 	if (data.assets) {
-		const referer = data.html_url;
 		const versionName = data.tag_name.replace(/^v_*/, "");
 		return data.assets.map(
 			asset => new RemoteFile({
@@ -37,7 +36,7 @@ function parseJSON (data, res) {
 				lastModified: Date.parse(asset.updated_at),
 				contentType: asset.content_type,
 				url: asset.browser_download_url,
-				referer,
+				referrer: data.html_url,
 				versionName,
 				browser: this,
 				release: data,

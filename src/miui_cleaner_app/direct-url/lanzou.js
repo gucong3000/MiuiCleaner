@@ -131,17 +131,6 @@ function parseJSON (data, res) {
 }
 
 function parseFileInfo (fileInfo, location) {
-	if (typeof fileInfo.size === "string") {
-		const size = fileInfo.size.match(/^([+-\d.]+)\s*(\w+)?$/);
-		const BIBYTE_UNITS = "BKMGTPEZY";
-		const number = Number.parseFloat(size[1]);
-		const exponent = BIBYTE_UNITS.indexOf(size[2][0].toUpperCase());
-		if (Number.isNaN(number) || exponent < 0) {
-			delete fileInfo.size;
-		} else {
-			fileInfo.size = Math.round(number * Math.pow(1024, exponent));
-		}
-	}
 	if (!fileInfo.id) {
 		fileInfo.id = location.pathname.replace(/^(\/+tp)*\/+/, "") + location.search;
 	}

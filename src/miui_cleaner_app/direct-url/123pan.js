@@ -3,32 +3,6 @@ const atob = global.atob || global.$base64.decode;
 const jsonParse = require("json5/lib/parse");
 
 class RemoteFile extends Browser.RemoteFile {
-	/* eslint accessor-pairs: off */
-
-	set FileId (value) {
-		this.id = value;
-	}
-
-	set FileName (value) {
-		this.fileName = value;
-	}
-
-	set Size (value) {
-		this.size = value;
-	}
-
-	set UpdateAt (value) {
-		this.lastModified = value;
-	}
-
-	set DownloadUrl (value) {
-		this.url = value;
-	}
-
-	set ContentType (value) {
-		this.contentType = value;
-	}
-
 	get path () {
 		let file = this;
 		const path = [];
@@ -62,7 +36,7 @@ class RemoteFile extends Browser.RemoteFile {
 					Size: file.size,
 					S3keyFlag: file.S3KeyFlag,
 					ShareKey: file.browser.shareData.ShareKey,
-					Etag: file.Etag,
+					Etag: file.etag,
 				}),
 				method: "POST",
 			},
@@ -107,7 +81,18 @@ async function parseFileList (fileList) {
 	fileList = await Promise.all(
 		fileList.map(file => {
 			if (file.Etag || file.S3KeyFlag) {
-				return file;
+				return {
+					id: file.FileId,
+					fileName: file.FileName,
+					size: file.Size,
+					lastModified: file.UpdateAt,
+					url: file.DownloadUrl,
+					contentType: file.ContentType,
+					etag: file.Etag,
+					S3KeyFlag: file.S3KeyFlag,
+					ParentFileId: file.ParentFileId,
+					// ...file,
+				};
 			} else {
 				this.dirCache[file.FileId] = file;
 				return this.parseDir(file);
@@ -176,6 +161,6 @@ module.exports = getFileInfo;
 // getFileInfo("https://www.123pan.com/s/s1luVv-LbkXv").then(async f => {
 // 	console.log(await f[0].getUrl());
 // 	console.log(await f[0]);
-// 	// console.log(f);
+// 	console.log(f);
 // 	return f;
 // });

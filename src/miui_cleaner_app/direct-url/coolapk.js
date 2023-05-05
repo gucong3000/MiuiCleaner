@@ -19,7 +19,7 @@ function parseHTML (html, res) {
 		fileName: `${appName}_v${versionName}.apk`,
 		size: search(/\bclass="apk_topba_message"[^<>]*>[\s\r\n]*(.+?)\s\//),
 		lastModified: search(/更新时间[:：]\s*(.*?)(<|$)/m),
-		referrer: res.url || `https://www.coolapk.com/apk/${packageName}`,
+		referrer: res.url,
 		url,
 		appName,
 		versionName,

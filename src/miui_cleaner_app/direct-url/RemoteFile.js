@@ -394,7 +394,10 @@ class Browser {
 			fileInfo.headers = options.headers;
 		}
 		fileInfo.browser = this;
-		return new (this.RemoteFile)(fileInfo);
+		if (!(fileInfo instanceof RemoteFile)) {
+			fileInfo = new (this.RemoteFile)(fileInfo);
+		}
+		return fileInfo;
 	}
 
 	#headers;
@@ -491,8 +494,10 @@ class Browser {
 			} else if (/^text\/html\b/i.test(contentType)) {
 				this.location = url;
 				fileInfo = await this.parseHTML(await res.text(), res);
-				const parseFile = fileInfo => Array.isArray(fileInfo) ? fileInfo.map(parseFile) : this.parseFile(fileInfo);
-				return parseFile(fileInfo);
+				if (!options.file || Array.isArray(fileInfo)) {
+					const parseFile = fileInfo => Array.isArray(fileInfo) ? fileInfo.map(parseFile) : this.parseFile(fileInfo);
+					return parseFile(fileInfo);
+				}
 			} else if (/^\w+\/json\b/i.test(contentType)) {
 				return this.parseJSON(await res.json(), res);
 			}
@@ -507,10 +512,8 @@ class Browser {
 		}
 		if (options.file) {
 			fileInfo = Object.assign(options.file, fileInfo);
-		} else {
-			fileInfo = this.parseFile(fileInfo);
 		}
-		return fileInfo;
+		return this.parseFile(fileInfo);
 	}
 }
 
