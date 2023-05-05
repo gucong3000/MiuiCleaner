@@ -101,7 +101,7 @@ async function parseHTML (html, res) {
 	return parseFileInfo(fileInfo, this.location);
 }
 
-function parseJSON (data) {
+function parseJSON (data, res) {
 	if (Array.isArray(data.text)) {
 		console.log("发现文件夹:", this.location.href);
 		data = data.text.map(file => parseFileInfo({
@@ -119,8 +119,12 @@ function parseJSON (data) {
 		fileInfo.options = this.options;
 		data = parseFileInfo(fileInfo, this.location);
 	} else {
-		// 除非网络异常，否则大概里是密码错了
-		throw new Error(data.inf || data);
+		// 除非网络异常，否则大概里是密码错了，或文件夹为空
+		throw new Error([
+			data.info,
+			res.url,
+			JSON.stringify(data, 0, "\t"),
+		].filter(Boolean).join("\n"));
 	}
 	// 有密码的单文件或者文件夹
 	return data;
@@ -157,7 +161,18 @@ function getFileInfo (url) {
 module.exports = getFileInfo;
 
 // (async () => {
+// 	console.time("net");
 // 	const file = await getFileInfo("https://zisu.lanzoum.com/tp/iI7LGwn5xjc");
+// 	// console.log(file);
+// 	// file.fileName = "优酷.apk";
+// 	// console.log(file);
+// 	await file.getLocation(true);
+// 	console.timeEnd("net");
+// 	console.log(file);
+// })();
+
+// (async () => {
+// 	const file = await getFileInfo("https://gucong.lanzoub.com/b03q6dgoj?pwd=diiw");
 // 	// console.log(file);
 // 	// file.fileName = "优酷.apk";
 // 	// console.log(file);

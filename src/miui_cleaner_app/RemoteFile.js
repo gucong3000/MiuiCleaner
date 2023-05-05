@@ -236,12 +236,18 @@ class RemoteFile {
 		if (this.#versionName) {
 			return this.#versionName;
 		}
-		const fileName = this.fileName;
-		if (fileName) {
-			const versionName = fileName.match(/\d+(\.+\d+)+/);
-			if (versionName) {
-				return versionName[0];
-			}
+		let versionName;
+		if (
+			[
+				this.fileName,
+				this.path,
+			].filter(Boolean).some(path => {
+				versionName = path.match(/\d+(\.+\d+)+/);
+				versionName = versionName && versionName[0];
+				return versionName;
+			})
+		) {
+			return versionName;
 		}
 	}
 
@@ -268,30 +274,35 @@ class RemoteFile {
 	}
 
 	valueOf () {
-		const data = {
-			// appName: this.appName,
-			// versionName: this.versionName,
-			// packageName: this.packageName,
-			id: this.id,
-			fileName: this.fileName,
-			size: this.size,
-			contentLength: this.contentLength,
-			lastModified: this.lastModified && new Date(this.lastModified),
-			expires: this.expires && new Date(this.expires),
-			// cookie: this.cookie,
-			referrer: this.referrer,
-			url: this.url,
-			location: this.location,
-			contentType: this.contentType,
-			// browser: this.browser,
-			versionName: this.versionName,
-			headers: this.headers,
-			// browser: this.browser,
-		};
-		Object.keys(this).forEach(key => {
+		const data = {};
+		[
+			"id",
+			"fileName",
+			"path",
+			"size",
+			"referrer",
+			"url",
+			"location",
+			"contentType",
+			"appName",
+			"packageName",
+			"versionName",
+			"versionCode",
+			// "browser",
+			// "headers",
+			// "browser",
+		].concat(Object.keys(this)).forEach(key => {
 			const value = this[key];
 			if (value != null && !/^function|object$/.test(typeof value)) {
 				data[key] = value;
+			}
+		});
+		[
+			"lastModified",
+			"expires",
+		].forEach(time => {
+			if (this[time]) {
+				data[time] = new Date(this[time]);
 			}
 		});
 		return data;
@@ -452,11 +463,8 @@ class Browser {
 			if (/^text\/html\b/i.test(contentType)) {
 				this.location = url;
 				fileInfo = await this.parseHTML(await res.text(), res);
-				if (Array.isArray(fileInfo)) {
-					return fileInfo.flat().map(this.parseFile, this);
-				} else {
-					return this.parseFile(fileInfo);
-				}
+				const parseFile = fileInfo => Array.isArray(fileInfo) ? fileInfo.map(parseFile) : this.parseFile(fileInfo);
+				return parseFile(fileInfo);
 			} else if (/^\w+\/json\b/i.test(contentType)) {
 				return this.parseJSON(await res.json(), res);
 			} if ((contentDisposition = headers.get("content-disposition")) || /^application\/\w+/i.test(contentType)) {
@@ -493,7 +501,7 @@ class Browser {
 module.exports = Browser;
 // (async () => {
 // 	const file = await new Browser().fetch("https://www.kookong.com/kk_apk.html");
-// 	console.log(file);
+// console.log(file);
 // 	await file.getLocation();
 // 	console.log(file);
 // })();
