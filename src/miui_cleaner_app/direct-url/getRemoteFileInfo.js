@@ -1,4 +1,4 @@
-const fetch = require("./fetch");
+const fetch = require("../fetch");
 const lanzou = require("./lanzou");
 const coolapk = require("./coolapk");
 const _123pan = require("./123pan");
@@ -199,5 +199,5 @@ function getRemoteFileInfo (url) {
 module.exports = getRemoteFileInfo;
 
 if (DEBUG) {
-	require("./test/getRemoteFileInfo")(module.exports);
+	require("../test/getRemoteFileInfo")(module.exports);
 }

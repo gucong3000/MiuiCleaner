@@ -1,4 +1,4 @@
-const fetch = global.fetch || require("./fetch");
+const fetch = global.fetch || require("../fetch");
 const util = global.util || require("util");
 const setCookie = require("set-cookie-parser");
 const jsonParse = require("json5/lib/parse");

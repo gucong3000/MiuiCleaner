@@ -1,5 +1,5 @@
 const getApplicationInfo = require("./getApplicationInfo");
-const getRemoteFileInfo = require("./getRemoteFileInfo");
+const getRemoteFileInfo = require("./direct-url/getRemoteFileInfo");
 const singleChoice = require("./singleChoice");
 const prettyBytes = require("pretty-bytes");
 const downFile = require("./downFile");
