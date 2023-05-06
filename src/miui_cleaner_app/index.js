@@ -4,11 +4,22 @@ console.setGlobalLogConfig({
 		"log.txt",
 	),
 });
-
+if (DEBUG) {
+	delete global.Promise;
+	require("core-js/modules/es.promise");
+	require("core-js/modules/es.promise.any");
+	require("core-js/modules/es.promise.finally");
+}
 require("core-js/modules/web.url.js");
 require("core-js/modules/web.url-search-params");
 require("core-js/modules/es.array.flat");
 require("core-js/modules/es.object.assign");
+
+global.atob || (global.atob = global.$base64.decode);
+if (!global.fetch) {
+	global.fetch = require("./fetch-polyfill");
+	require("abortcontroller-polyfill/dist/polyfill-patch-fetch");
+}
 require("./dateFormat");
 
 const singleChoice = require("./singleChoice");

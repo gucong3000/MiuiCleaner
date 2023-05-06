@@ -1,5 +1,5 @@
 const getApplicationInfo = require("./getApplicationInfo");
-const getRemoteFileInfo = require("./direct-url/getRemoteFileInfo");
+const directUrl = require("./direct-url/index");
 const singleChoice = require("./singleChoice");
 const prettyBytes = require("pretty-bytes");
 const downFile = require("./downFile");
@@ -364,7 +364,7 @@ function fileCompare (b, a) {
 }
 
 function getRemoteFiles (appInfo) {
-	return getRemoteFileInfo(appInfo.url).then(fileList => {
+	return directUrl(appInfo.url).then(fileList => {
 		if (!fileList) {
 			return;
 		}

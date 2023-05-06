@@ -41,7 +41,7 @@ async function parseHTML (html, res) {
 		const hostname = script.match(/(['"])(https?:\/\/(\w+\.)*lanzoug\w*(\.\w+)+\/file\/?)\1/i);
 		const pathname = script.match(/(['"])(\?\S{256,})\1/);
 		if (hostname && pathname) {
-			console.log("发现无密码的单文件：", res.url);
+			// console.log("发现无密码的单文件：", res.url);
 			fileInfo.url = new URL(pathname[2], hostname[2]).href;
 			break;
 		}
@@ -103,7 +103,7 @@ async function parseHTML (html, res) {
 
 function parseJSON (data, res) {
 	if (Array.isArray(data.text)) {
-		console.log("发现文件夹:", this.location.href);
+		// console.log("发现文件夹:", this.location.href);
 		data = data.text.map(file => parseFileInfo({
 			fileName: file.name_all,
 			size: file.size,
@@ -112,7 +112,7 @@ function parseJSON (data, res) {
 		}, this.location));
 		// storage[getIdByUrl(url)] = data.map(dada => dada.id);
 	} else if (data.url && data.inf && data.dom) {
-		console.log("发现需要密码的单文件:", this.location.href);
+		// console.log("发现需要密码的单文件:", this.location.href);
 		const fileInfo = this.fileInfo;
 		fileInfo.fileName = data.inf;
 		fileInfo.url = new URL(data.url, new URL("/file/", data.dom)).href;
@@ -148,23 +148,4 @@ function getFileInfo (url) {
 	return browser.fetch(url);
 }
 module.exports = getFileInfo;
-
-// (async () => {
-// 	console.time("net");
-// 	const file = await getFileInfo("https://zisu.lanzoum.com/tp/iI7LGwn5xjc");
-// 	// console.log(file);
-// 	// file.fileName = "优酷.apk";
-// 	// console.log(file);
-// 	await file.getLocation(true);
-// 	console.timeEnd("net");
-// 	console.log(file);
-// })();
-
-// (async () => {
-// 	const file = await getFileInfo("https://gucong.lanzoub.com/b03q6dgoj?pwd=diiw");
-// 	// console.log(file);
-// 	// file.fileName = "优酷.apk";
-// 	// console.log(file);
-// 	await file.getLocation(true);
-// 	console.log(file);
-// })();
+module.exports.test = hostname => /^(\w+\.)*lanzou\w*(\.\w+)+$/.test(hostname);

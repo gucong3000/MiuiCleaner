@@ -1,4 +1,3 @@
-const fetch = global.fetch || require("../fetch");
 const util = global.util || require("util");
 const setCookie = require("set-cookie-parser");
 const jsonParse = require("json5/lib/parse");
@@ -27,7 +26,7 @@ try {
 	mime.getExtensionFromMimeType = mime.getExtension;
 	mime.getMimeTypeFromExtension = mime.getType;
 	mime.getFileExtensionFromUrl = (url) => {
-		return new URL(url).pathname.match(/(\.\w+)?$/, "$1")[0].slice(1);
+		return new URL(url).pathname.match(/(\.\w+)?$/)[0].slice(1);
 	};
 }
 
@@ -110,6 +109,9 @@ class RemoteFile {
 	}
 
 	set lastModified (date) {
+		if (!date) {
+			return;
+		}
 		let time = Date.parse(date);
 		if (Number.isInteger(time)) {
 			date = time;
@@ -126,12 +128,11 @@ class RemoteFile {
 				}[lastTime[2]]));
 			} else if ((lastTime = date.match(/^(.*)天\s*((?:\d+:+)*\d+)/))) {
 				time = lastTime[2].split(":");
-				time = Date.parse(new Date().toLocaleDateString() + ` ${time[0]}:${time[1]}:${time[2] || 0} GMT+0800`);
-				time -= ({
-					昨: 1,
-					前: 2,
-				}[lastTime[1]] || 0) * 60 * 60 * 24 * 1000;
-				date = time;
+				date = new Date();
+				date.setHours(+time[0] || 0);
+				date.setMinutes(+time[1] || 0);
+				date.setSeconds(+time[2] || 0);
+				date = date.getTime() - ("今昨前".indexOf(lastTime[1]) * 60 * 60 * 24 * 1000);
 			} else {
 				return;
 			}
@@ -148,9 +149,11 @@ class RemoteFile {
 	}
 
 	set expires (date) {
-		date = Date.parse(date);
-		if (Number.isInteger(date)) {
-			this.#expires = date;
+		if (date) {
+			date = Date.parse(date);
+			if (Number.isInteger(date)) {
+				this.#expires = date;
+			}
 		}
 	}
 
@@ -204,8 +207,15 @@ class RemoteFile {
 	// 	fileInfo.location = fileInfo.location
 	// }
 
-	getUrl () {
-		return this.url;
+	async getUrl () {
+		const file = this;
+		if (file.url) {
+			return file.url;
+		}
+		await file.browser.fetch(file.referrer, {
+			file,
+		});
+		return file.url;
 	}
 
 	async getLocation (redirect) {
@@ -436,9 +446,9 @@ class Browser {
 			headers: {
 				...this.#headers,
 				"Accept": mayApi ? "application/json" : "text/html",
-				"Referer": this.location?.href || null,
+				"Referer": this.location?.href || "",
 				"Cookie": this.getCookie(url),
-				"X-Requested-With": (mayApi || /^\w+\/json\b/i.test(options.headers?.Accept)) ? "XMLHttpRequest" : null,
+				"X-Requested-With": (mayApi || /^\w+\/json\b/i.test(options.headers?.Accept)) ? "XMLHttpRequest" : "",
 				...options.file?.headers,
 				...options.headers,
 			},
@@ -508,7 +518,7 @@ class Browser {
 				headers: options.headers,
 			};
 		} else {
-			throw new Error(`status: ${res.status}\nmessage: ${res.message || JSON.stringify(await res.text())}\n    at ${res.url}`);
+			throw new Error(`status: ${res.status}\nmessage: ${res.message || JSON.stringify(await res.text())}\n\tat ${res.url}`);
 		}
 		if (options.file) {
 			fileInfo = Object.assign(options.file, fileInfo);
@@ -518,9 +528,3 @@ class Browser {
 }
 
 module.exports = Browser;
-// (async () => {
-// 	const file = await new Browser().fetch("https://www.kookong.com/kk_apk.html");
-// console.log(file);
-// 	await file.getLocation();
-// 	console.log(file);
-// })();

@@ -54,7 +54,4 @@ async function getFileInfo (url) {
 }
 
 module.exports = getFileInfo;
-
-// getFileInfo(new URL("https://m.32r.com/app/109976.html")).then(async (file) => {
-// 	console.log(file);
-// });
+module.exports.test = hostname => /^(\w+\.)*32r(\.\w+)+$/.test(hostname);

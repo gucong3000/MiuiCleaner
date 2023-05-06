@@ -36,7 +36,6 @@ function fetch (url, options = {}) {
 			...options,
 		};
 		options.method = options.method.toUpperCase();
-		// console.time(url);
 		const client = http.client().newBuilder()
 			.followRedirects(/^follow$/i.test(options.redirect))
 			.build();
@@ -53,7 +52,6 @@ function fetch (url, options = {}) {
 					return;
 				}
 				work.emit("response", res);
-				// console.timeEnd(url);
 			},
 			onFailure: function (call, err) {
 				work.emit("error", err);

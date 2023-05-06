@@ -33,12 +33,4 @@ function getFileInfo (url) {
 }
 
 module.exports = getFileInfo;
-// getFileInfo("https://www.coolapk.com/apk/com.miui.gaojishezhi.plus").then((fileList) => {
-// 	console.log(fileList);
-// 	// return fileList.getLocation(true);
-// }).then(file => {
-// 	// console.log(file);
-// });
-// getFileInfo("https://www.coolapk.com/apk/com.miui.gaojishezhi.plus").then(f => f.getLocation(1)).then(console.log);
-// getFileInfo("https://www.coolapk.com/apk/com.joe.holi").then(f => f.getLocation(1)).then(console.log);
-// location: 'http://113.249.230.43:49155/imtt.dd.qq.com/16891/apk/8421C517FFBF256E016AB262AEA08549.apk?mkey=644b7712df5d26827382e0fc2be6df84&arrive_key=1286322330023&fsname=com.joe.holi_4.4.5_172.apk&csr=db5e&cip=171.213.47.106&proto=http',
+module.exports.test = hostname => /^(\w+\.)*coolapk(\.\w+)+$/.test(hostname);

@@ -1,5 +1,4 @@
 const Browser = require("./RemoteFile");
-const atob = global.atob || global.$base64.decode;
 const jsonParse = require("json5/lib/parse");
 
 class RemoteFile extends Browser.RemoteFile {
@@ -139,28 +138,8 @@ function getFileInfo (url) {
 	browser.parseFileList = parseFileList;
 	browser.parseDir = parseDir;
 	browser.dirCache = {};
-	// console.time("net");
 	return browser.fetch(url);
-	// console.timeEnd("net");
-	// console.log(Object.keys(browser.dirCache).length);
-	// return file;
 }
 
 module.exports = getFileInfo;
-
-// getFileInfo("https://www.123pan.com/s/A6cA-C29Jh").then(async f => {
-// 	console.log(f.flat(99).map(f => f.path));
-// 	return f[0];
-// }).then(console.log);
-
-// getFileInfo("https://www.123pan.com/s/OZe0Vv-5oul3#SharePwd=K4fl").then(async f => {
-// console.log(await f[0].getUrl());
-// 	console.log(f.flat(99).map(f => f.path));
-// }).then(console.log);
-
-// getFileInfo("https://www.123pan.com/s/s1luVv-LbkXv").then(async f => {
-// 	console.log(await f[0].getUrl());
-// 	console.log(await f[0]);
-// 	console.log(f);
-// 	return f;
-// });
+module.exports.test = hostname => /^(\w+\.)*123pan(\.\w+)+$/.test(hostname);

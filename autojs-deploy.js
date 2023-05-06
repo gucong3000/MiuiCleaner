@@ -380,7 +380,7 @@ class LogTransform extends Transform {
 				// { JavaException: message
 				//   fileName: 'file:///android_asset/modules/filename.js',
 				//   lineNumber: 8848 }`;
-				/([\d:.]+\/[A-Z]:\s+|^)\{\s+(\w+E(?:rror|xception):[\s\S\r\n]*?)((?:(\r?\n)\s+\w+:.*)+)\s+\}$/gm,
+				/([\d:.]+\/[A-Z]:\s+.*?|^)\{\s+(\w+E(?:rror|xception):[\s\S\r\n]*?)((?:(\r?\n)\s+\w+:.*)+)\s+\}$/gm,
 				(s, level, message, jsonBody) => {
 					let errInfo;
 					try {

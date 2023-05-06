@@ -124,7 +124,7 @@ function getFileInfo (url, options) {
 		? url
 		: new URL(url);
 
-	if (!/^raw\./i.test(url.hostname)) {
+	if (!/^raw\./i.test(url.hostname) || /\bgithubusercontent\b/.test(url.hostname)) {
 		const [
 			,
 			repo,
@@ -150,22 +150,4 @@ function getFileInfo (url, options) {
 }
 
 module.exports = getFileInfo;
-
-// getFileInfo("https://github.com/gucong3000/MiuiCleaner/raw/main/src/miui_cleaner_app/project.json").then(async assets => {
-// 	console.log(assets);
-// });
-
-// getFileInfo("https://github.com/gucong3000/MiuiCleaner/releases/latest").then(async assets => {
-// 	await Promise.all(
-// 		assets.map(asset => asset.getLocation(true)),
-// 	);
-// 	console.log(assets);
-// });
-// getFileInfo("https://github.com/gucong3000/MiuiCleaner/raw/v2023.4.23.8/README.md").then(async assets => {
-// 	await assets[0].getLocation(true);
-// 	console.log(assets[0]);
-// });
-// getFileInfo("https://github.com/gucong3000/MiuiCleaner/blob/v2023.4.23.8/README.md").then(async assets => {
-// 	await assets[0].getLocation(true);
-// 	console.log(assets[0]);
-// });
+module.exports.test = hostname => /^(\w+\.)*github(usercontent)?(\.\w+)+$/.test(hostname);

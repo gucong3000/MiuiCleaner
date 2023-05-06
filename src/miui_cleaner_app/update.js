@@ -2,7 +2,6 @@ const prettyBytes = require("pretty-bytes");
 const project = require("./project.json");
 const downFile = require("./downFile");
 const dialogs = require("./dialogs");
-const request = require("./fetch");
 
 function iec (number, options) {
 	return prettyBytes(number, {
@@ -74,7 +73,7 @@ function download (remote, options) {
 }
 
 function getFastUrl (remote) {
-	return request(
+	return fetch(
 		[
 			"github.com",
 			"download.fastgit.org",
@@ -102,7 +101,7 @@ function getFastUrl (remote) {
 
 // https://gh.api.99988866.xyz
 // https://g.ioiox.com
-request([
+fetch([
 	"https://cdn.jsdelivr.net/gh/gucong3000/MiuiCleaner/src/miui_cleaner_app/project.json",
 	"https://raw.fastgit.org/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
 	"http://raw.gitmirror.com/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",

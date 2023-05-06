@@ -21,6 +21,7 @@ jobs:
     - name: Build
       run: |
         npm install
+        npm test
         npm run build
 
     - name: Create Release
