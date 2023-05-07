@@ -1,4 +1,4 @@
-const Browser = require("./RemoteFile");
+const Browser = require("./browser");
 
 class RemoteFile extends Browser.RemoteFile {
 	async getLocation (redirect) {

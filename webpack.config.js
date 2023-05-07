@@ -23,6 +23,13 @@ const config = {
 			configFile: path.resolve(__dirname, "src/miui_cleaner_app/project.json"),
 		}),
 	],
+	resolve: {
+		alias: {
+			"mime": require.resolve("./src/npm-alias/mime.js"),
+			"user-agents": require.resolve("./src/npm-alias/user-agents.js"),
+		},
+	},
+	externals: /^__.+__$/i,
 	module: {
 		rules: [
 			{

@@ -1,4 +1,4 @@
-const Browser = require("./RemoteFile");
+const Browser = require("./browser");
 const parsers = [
 	require("./123pan"),
 	require("./lanzou"),

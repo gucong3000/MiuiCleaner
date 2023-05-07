@@ -7,14 +7,6 @@ const appList = [
 		url: "https://www.123pan.com/s/ZYAZVv-TBYjd",
 	},
 	{
-		name: "微软桌面",
-		url: "https://app.mi.com/details?id=com.microsoft.launcher",
-	},
-	{
-		name: "Edge",
-		url: "https://app.mi.com/details?id=com.microsoft.emmx",
-	},
-	{
 		name: "小米浏览器",
 		url: "https://wwm.lanzoul.com/tp/idzsf0bh062h",
 	},

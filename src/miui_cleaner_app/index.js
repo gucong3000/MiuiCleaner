@@ -18,7 +18,7 @@ require("core-js/modules/es.object.assign");
 global.atob || (global.atob = global.$base64.decode);
 if (!global.fetch) {
 	global.fetch = require("./fetch-polyfill");
-	require("abortcontroller-polyfill/dist/polyfill-patch-fetch");
+	// require("abortcontroller-polyfill/dist/polyfill-patch-fetch");
 }
 require("./dateFormat");
 

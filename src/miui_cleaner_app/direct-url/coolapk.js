@@ -1,5 +1,5 @@
 
-const Browser = require("./RemoteFile");
+const Browser = require("./browser");
 
 const browser = new Browser(
 	parseHTML,

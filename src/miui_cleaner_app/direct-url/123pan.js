@@ -1,4 +1,4 @@
-const Browser = require("./RemoteFile");
+const Browser = require("./browser");
 const jsonParse = require("json5/lib/parse");
 
 class RemoteFile extends Browser.RemoteFile {

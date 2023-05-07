@@ -1,5 +1,5 @@
 const jsonParse = require("json5/lib/parse");
-const Browser = require("./RemoteFile");
+const Browser = require("./browser");
 
 // const storage = {};
 // const realFileCache = {};
