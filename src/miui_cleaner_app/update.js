@@ -3,6 +3,30 @@ const project = require("./project.json");
 const downFile = require("./downFile");
 const dialogs = require("./dialogs");
 
+function fetchAny (url, options = {}) {
+	if (Array.isArray(url)) {
+		let controller;
+		if (!options.signal) {
+			if (global.AbortController) {
+				controller = new AbortController();
+				options.signal = controller.signal;
+			} else {
+				options.signal = events.emitter(threads.currentThread());
+			}
+		}
+		return Promise.any(url.map(url => fetch(url, options))).then(res => {
+			if (controller) {
+				controller.abort();
+			} else if (options.signal?.emit) {
+				options.signal.emit("abort");
+			}
+			return res;
+		});
+	} else {
+		return fetch(url, options);
+	}
+}
+
 function iec (number, options) {
 	return prettyBytes(number, {
 		binary: true,
@@ -73,7 +97,7 @@ function download (remote, options) {
 }
 
 function getFastUrl (remote) {
-	return fetch(
+	return fetchAny(
 		[
 			"github.com",
 			"download.fastgit.org",
@@ -101,7 +125,7 @@ function getFastUrl (remote) {
 
 // https://gh.api.99988866.xyz
 // https://g.ioiox.com
-fetch([
+fetchAny([
 	"https://cdn.jsdelivr.net/gh/gucong3000/MiuiCleaner/src/miui_cleaner_app/project.json",
 	"https://raw.fastgit.org/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
 	"http://raw.gitmirror.com/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",

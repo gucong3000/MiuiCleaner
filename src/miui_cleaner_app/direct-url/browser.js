@@ -1,9 +1,9 @@
 const setCookie = require("set-cookie-parser");
 const jsonParse = require("json5/lib/parse");
-const Headers = global.Headers || require("headers-polyfill").Headers;
+// const Headers = global.Headers || require("headers-polyfill").Headers;
 const RemoteFile = require("./remotefile");
 const UserAgent = require("user-agents");
-if (!Headers.prototype.getSetCookie) {
+if (global.Headers && !Headers.prototype.getSetCookie) {
 	// https://developer.mozilla.org/en-US/docs/Web/API/Headers/getSetCookie
 	Headers.prototype.getSetCookie = function getSetCookie () {
 		const cookie = this.get("Set-Cookie");

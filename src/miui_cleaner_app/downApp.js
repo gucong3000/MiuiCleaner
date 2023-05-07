@@ -1,5 +1,5 @@
 const getApplicationInfo = require("./getApplicationInfo");
-const directUrl = require("./direct-url/index");
+const directUrl = require("./direct-url");
 const singleChoice = require("./singleChoice");
 const prettyBytes = require("pretty-bytes");
 const downFile = require("./downFile");
