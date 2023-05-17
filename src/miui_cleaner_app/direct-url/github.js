@@ -21,12 +21,8 @@ class RemoteFile extends Browser.RemoteFile {
 	}
 }
 
-function parseHTML () {
-
-}
-
 function parseJSON (data, res) {
-	if (data.assets) {
+	if (data.assets && /^https?:\/\/api\./i.test(res.url)) {
 		const versionName = data.tag_name.replace(/^v_*/, "");
 		return data.assets.map(
 			asset => new RemoteFile({
@@ -43,16 +39,17 @@ function parseJSON (data, res) {
 			}),
 		);
 	}
+	return data;
 }
 
 const browser = new Browser(
-	parseHTML,
+	null,
 	parseJSON,
 );
 
 browser.RemoteFile = RemoteFile;
 
-async function getFastUrl (browser, urlList, options = {}) {
+async function getFastUrl (urlList, options = {}) {
 	const controller = new AbortController();
 	options = {
 		signal: controller.signal,
@@ -68,26 +65,29 @@ async function getFastUrl (browser, urlList, options = {}) {
 	return file;
 }
 
-async function getFastAsset (browser, url, options) {
+async function getFastAsset (url, options) {
 	const urlList = [
 		"github.com",
 		// https://doc.fastgit.org/zh-cn/guide.html#release-和源码存档的下载
 		"download.fastgit.org",
-		// https://github.com/fhefh2015/Fast-GitHub/issues/44
-		"gh.api.99988866.xyz",
-		"gh.con.sh",
-		"gh.ddlc.top",
-		"gh2.yanqishui.work",
-		"ghproxy.com",
-		"ghps.cc",
-		"git.xfj0.cn",
-		"github.91chi.fun",
-		"proxy.zyun.vip",
 	].map(
 		host => `${url.protocol}//${host}${url.pathname}`,
+	).concat(
+		[
+			// https://github.com/fhefh2015/Fast-GitHub/issues/44
+			"ghproxy.com",
+			"hub.gitmirror.com",
+			"gh.api.99988866.xyz",
+			// "gh.con.sh",
+			// "gh.ddlc.top",
+			// "gh2.yanqishui.work",
+			// "ghps.cc",
+			// "git.xfj0.cn",
+			// "github.91chi.fun",
+			// "proxy.zyun.vip",
+		].map(host => `${url.protocol}//${host}/${url.href}`),
 	);
 	const file = await getFastUrl(
-		browser,
 		urlList,
 		options,
 	);
@@ -97,23 +97,25 @@ async function getFastAsset (browser, url, options) {
 	return file;
 }
 
-async function getFastRaw (browser, url, options) {
+async function getFastRaw (url, options) {
 	const urlList = [
-		"githubusercontent.com",
-		// https://doc.fastgit.org/zh-cn/guide.html#对于-raw-的代理
-		"fastgit.org",
-		// https://gitmirror.com/raw.html
-		"gitmirror.com",
-	].map(host => `${url.protocol}//raw.${host}${url.pathname}`);
-	urlList.unshift(
-		url.protocol + "//cdn.jsdelivr.net/gh" + url.pathname.replace(/^(\/.*?\/.*?)\//, "$1@"),
+		`${url.protocol}//fastly.jsdelivr.net/gh${url.pathname.replace(/^(\/.*?\/.*?)\//, "$1@")}`,
+		`${url.protocol}//ghproxy.com/${url.href}`,
+	].concat(
+		[
+			"githubusercontent.com",
+			// https://gitmirror.com/raw.html
+			"gitmirror.com",
+			// https://doc.fastgit.org/zh-cn/guide.html#对于-raw-的代理
+			"fastgit.org",
+		].map(host => `${url.protocol}//raw.${host}${url.pathname}`),
 	);
+
 	const file = await getFastUrl(
-		browser,
 		urlList,
 		options,
 	);
-	if (!file.url) {
+	if ((file instanceof RemoteFile) && !file.url) {
 		file.url = urlList[1];
 	}
 	return file;
@@ -124,7 +126,7 @@ function getFileInfo (url, options) {
 		? url
 		: new URL(url);
 
-	if (!/^raw\./i.test(url.hostname) || /\bgithubusercontent\b/.test(url.hostname)) {
+	if (!/^raw\./i.test(url.hostname)) {
 		const [
 			,
 			repo,
@@ -133,20 +135,20 @@ function getFileInfo (url, options) {
 		] = url.pathname.match(/^(?:\/repos)?(\/.*?\/.*?)\/(.*?)(\/.*|$)/i);
 
 		if (action === "releases") {
-			if (/^\/.+?\/.+/.test(path)) {
+			if (/\/download\//i.test(path)) {
 				// release 中的文件下载
-				return getFastAsset(browser, url, options);
+				return getFastAsset(url, options);
 			} else {
 				// 查询 assets
 				url.hostname = "api." + url.hostname;
 				url.pathname = "/repos" + url.pathname;
-				return browser.fetch(url);
+				return browser.fetch(url, options);
 			}
 		} else {
 			url.pathname = repo + path;
 		}
 	}
-	return getFastRaw(browser, url, options);
+	return getFastRaw(url, options);
 }
 
 module.exports = getFileInfo;

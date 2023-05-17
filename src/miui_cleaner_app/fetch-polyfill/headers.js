@@ -43,9 +43,6 @@ class Headers extends (global.Headers || null) {
 					this.append(name, value);
 				}
 			}
-			if (init.getSetCookie) {
-				init.getSetCookie().forEach(this.append, this);
-			}
 		}
 	}
 
@@ -74,16 +71,17 @@ class Headers extends (global.Headers || null) {
 	}
 
 	get (name) {
-		const values = this.#value.get(normalizeHeaderName(name));
-		if (!values.length) {
-			return null;
+		name = normalizeHeaderName(name);
+		let values = this.#value.get(name);
+		if (values && values.length) {
+			values = values.join(", ");
+			if (/^content-encoding$/i.test(name)) {
+				values = values.toLowerCase();
+			}
+		} else {
+			values = null;
 		}
-
-		let value = values.join(", ");
-		if (/^content-encoding$/i.test(name)) {
-			value = value.toLowerCase();
-		}
-		return value;
+		return values;
 	}
 
 	getSetCookie () {
@@ -91,11 +89,11 @@ class Headers extends (global.Headers || null) {
 	}
 
 	has (name) {
-		return this.#value.has(normalizeHeaderName(name));
+		return this.get(name) != null;
 	}
 
 	keys () {
-		return this.#value.keys();
+		return this.#value.keys().filter(name => this.has(name));
 	}
 
 	set (name, value) {
@@ -114,15 +112,11 @@ class Headers extends (global.Headers || null) {
 }
 
 function wrap (okhttpHeaders) {
-	try {
-		const headers = new Headers();
-		okhttpHeaders.forEach(entry => {
-			headers.append(entry.first, entry.second);
-		});
-		return headers;
-	} catch (ex) {
-		console.error(ex);
-	}
+	const headers = new Headers();
+	okhttpHeaders.forEach(entry => {
+		headers.append(entry.first, entry.second);
+	});
+	return headers;
 }
 
 module.exports = {

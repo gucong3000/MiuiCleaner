@@ -4,7 +4,7 @@ MIUI广告清理工具
 
 ## 使用方法
 
-- [点击下载最新版本MiuiCleaner](https://github.com/gucong3000/MiuiCleaner/releases/latest)，将`MiuiCleaner.apk`安装到手机即可
+- [点击下载最新版本MiuiCleaner](https://github.com/gucong3000/MiuiCleaner/releases/latest/download/MiuiCleaner.apk)，将`MiuiCleaner.apk`安装到手机即可
 - 使用“预装应用卸载”功能能时，需要root权限或者ADB权限（亦即“开发者选项”中“USB 调试”），未root用户在使用该功能时请在电脑上按以下步骤操作：
 	- 在电脑上安装以下工具中任何一种，并确保其可以正常连接手机。
 		- [小米手机助手](http://zhushou.xiaomi.com/)

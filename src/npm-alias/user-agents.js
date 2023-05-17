@@ -1,7 +1,10 @@
 let userAgent;
 
 function init () {
-	userAgent = userAgent || android.webkit.WebSettings.getDefaultUserAgent(context);
+	if (!userAgent) {
+		userAgent = android.webkit.WebSettings.getDefaultUserAgent(context);
+	}
+	return userAgent;
 }
 class UserAgent {
 	[Symbol.toPrimitive] = init;

@@ -16,13 +16,15 @@ require("core-js/modules/es.array.flat");
 require("core-js/modules/es.object.assign");
 
 global.atob || (global.atob = global.$base64.decode);
+
 if (!global.fetch) {
-	global.fetch = require("./fetch-polyfill");
-	// require("abortcontroller-polyfill/dist/polyfill-patch-fetch");
+	require("./fetch-polyfill");
 }
+
 require("./dateFormat");
 
 const singleChoice = require("./singleChoice");
+const update = require("./update");
 
 const mainActions = [
 	require("./offAppAd"),
@@ -97,7 +99,7 @@ function regBack () {
 		}
 	}
 	mainMenu();
-	require("./update");
+	update.checkUpdate();
 })();
 module.exports = regBack;
 module.exports.mainMenu = mainMenu;

@@ -1,31 +1,8 @@
 const prettyBytes = require("pretty-bytes");
 const project = require("./project.json");
-const downFile = require("./downFile");
+const github = require("./direct-url/github");
 const dialogs = require("./dialogs");
-
-function fetchAny (url, options = {}) {
-	if (Array.isArray(url)) {
-		let controller;
-		if (!options.signal) {
-			if (global.AbortController) {
-				controller = new AbortController();
-				options.signal = controller.signal;
-			} else {
-				options.signal = events.emitter(threads.currentThread());
-			}
-		}
-		return Promise.any(url.map(url => fetch(url, options))).then(res => {
-			if (controller) {
-				controller.abort();
-			} else if (options.signal?.emit) {
-				options.signal.emit("abort");
-			}
-			return res;
-		});
-	} else {
-		return fetch(url, options);
-	}
-}
+const downFile = require("./downFile");
 
 function iec (number, options) {
 	return prettyBytes(number, {
@@ -34,8 +11,45 @@ function iec (number, options) {
 	});
 }
 
-function download (remote, options) {
-	const downTask = downFile(options);
+function loadRemote () {
+	return github("https://raw.githubusercontent.com/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json", {
+		method: "get",
+		redirect: "follow",
+	}).catch(ex => {
+		console.error(ex);
+	});
+}
+
+async function userConfirm (remote) {
+	const confirm = await dialogs.confirm(
+		`发现新版本：${remote.versionName}，是否升级？`,
+		{
+			title: "版本更新",
+			neutral: true,
+		},
+	);
+	if (confirm === null) {
+		app.openUrl("https://github.com/gucong3000/MiuiCleaner/releases/latest");
+	}
+	return confirm;
+}
+
+async function loadFileInfo (remote) {
+	let assets;
+	try {
+		assets = await github("https://github.com/gucong3000/MiuiCleaner/releases/latest");
+	} catch (ex) {
+		// 若API请求大袋
+		const fileInfo = github("https://github.com/gucong3000/MiuiCleaner/releases/latest/download/MiuiCleaner.apk");
+		fileInfo.versionName = remote.versionName;
+		return fileInfo;
+	}
+	return assets.find(file => file.fileName === "MiuiCleaner.apk" && file.versionName === remote.versionName);
+}
+
+async function downloadFile (fileInfo, remote) {
+	await fileInfo.getLocation();
+	const downTask = downFile(fileInfo);
 
 	let progressDialog;
 	let view;
@@ -55,7 +69,7 @@ function download (remote, options) {
 			</vertical>
 		`);
 		progressDialog = dialogs(
-			`正在下载新版本：${remote.versionName}`,
+			`正在下载新版本：${fileInfo.versionName || remote.versionName}`,
 			{
 				title: "版本更新",
 				positive: "后台下载",
@@ -96,60 +110,18 @@ function download (remote, options) {
 	});
 }
 
-function getFastUrl (remote) {
-	return fetchAny(
-		[
-			"github.com",
-			"download.fastgit.org",
-			"hub.gitmirror.com/https://github.com",
-			"gh.api.99988866.xyz/https://github.com",
-		].map(
-			host => `https://${host}/gucong3000/MiuiCleaner/releases/download/v${remote.versionName}/MiuiCleaner.apk`,
-		),
-		{
-			method: "HEAD",
-		},
-	);
+async function checkUpdate () {
+	const remote = await loadRemote();
+	if (remote && (project.versionCode <= remote.versionCode)) {
+		const fileInfo = await loadFileInfo(remote);
+		return downloadFile(fileInfo, remote);
+	}
 }
 
-// https://zhuanlan.zhihu.com/p/314071453
-// http://raw.githubusercontent.com 替换为 http://raw.staticdn.net 即可加速。
-
-// GitHub + Jsdelivr
-// https://github.com.cnpmjs.org
-// https://hub.fastgit.org
-// 也就是说上面的镜像就是一个克隆版的 GitHub，你可以访问上面的镜像网站，网站的内容跟 GitHub 是完整同步的镜像，然后在这个网站里面进行下载克隆等操作。
-
-// GitHub 文件加速
-// 利用 Cloudflare Workers 对 github release 、archive 以及项目文件进行加速，部署无需服务器且自带CDN.
-
-// https://gh.api.99988866.xyz
-// https://g.ioiox.com
-fetchAny([
-	"https://cdn.jsdelivr.net/gh/gucong3000/MiuiCleaner/src/miui_cleaner_app/project.json",
-	"https://raw.fastgit.org/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
-	"http://raw.gitmirror.com/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
-	"https://raw.githubusercontent.com/gucong3000/MiuiCleaner/main/src/miui_cleaner_app/project.json",
-]).then(res => res.ok && res.json()).then(remote => {
-	if (!remote) {
-		return;
-	}
-	if (project.versionCode >= parseInt(remote.versionCode)) {
-		return;
-	}
-	return dialogs.confirm(
-		`发现新版本：${remote.versionName}，是否升级？`,
-		{
-			title: "版本更新",
-			neutral: true,
-		},
-	).then(confirm => {
-		if (!confirm) {
-			if (confirm === null) {
-				app.openUrl("https://github.com/gucong3000/MiuiCleaner/releases/latest");
-			}
-			return;
-		}
-		return getFastUrl(remote).then(options => download(remote, options));
-	});
-}).catch(console.error);
+module.exports = {
+	loadRemote,
+	loadFileInfo,
+	userConfirm,
+	downloadFile,
+	checkUpdate,
+};

@@ -74,6 +74,18 @@ const appList = [
 		name: "App分享",
 		url: "https://www.123pan.com/s/s1luVv-LbkXv",
 	},
+	{
+		name: "MiuiCleaner Asset",
+		url: "https://github.com/gucong3000/MiuiCleaner/releases/latest/download/MiuiCleaner.apk",
+	},
+	{
+		name: "MiuiCleaner API",
+		url: "https://github.com/gucong3000/MiuiCleaner/releases/latest",
+	},
+	{
+		name: "MiuiCleaner raw",
+		url: "https://raw.githubusercontent.com/JohyC/Hosts/main/MicrosoftHosts.txt",
+	},
 ];
 function sleep (delay) {
 	return new Promise((resolve, reject) => {

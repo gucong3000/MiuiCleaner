@@ -41,7 +41,7 @@
 		"wrapper-webpack-plugin": "^2.2.2"
 	},
 	"dependencies": {
-		"abortcontroller-polyfill": "^1.7.5",
+		"abort-controller": "^3.0.0",
 		"any-date-parser": "^1.5.4",
 		"blob-polyfill": "^7.0.20220408",
 		"core-js": "^3.26.0",

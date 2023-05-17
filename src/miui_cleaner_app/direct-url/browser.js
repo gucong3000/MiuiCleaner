@@ -193,6 +193,14 @@ class Browser {
 				}
 			} else if (/^\w+\/json\b/i.test(contentType)) {
 				return this.parseJSON(await res.json(), res);
+			} else if (/^text\/plain\b/i.test(contentType)) {
+				fileInfo = await res.text();
+				try {
+					fileInfo = jsonParse(fileInfo);
+				} catch (ex) {
+					return fileInfo;
+				}
+				return this.parseJSON(fileInfo, res);
 			}
 		} else if ((location = headers.get("location"))) {
 			// 30X 跳转
