@@ -6,19 +6,20 @@ console.setGlobalLogConfig({
 });
 if (DEBUG) {
 	delete global.Promise;
-	require("core-js/modules/es.promise");
-	require("core-js/modules/es.promise.any");
-	require("core-js/modules/es.promise.finally");
+	require("core-js/es/promise/");
+	require("core-js/es/promise/any");
+	require("core-js/es/promise/finally");
 }
-require("core-js/modules/web.url.js");
-require("core-js/modules/web.url-search-params");
-require("core-js/modules/es.array.flat");
-require("core-js/modules/es.object.assign");
+require("core-js/web/url");
+require("core-js/web/url-search-params");
+require("core-js/es/array/flat");
+require("core-js/es/object/assign");
+require("core-js/es/reflect");
 
 global.atob || (global.atob = global.$base64.decode);
 
 if (!global.fetch) {
-	require("./fetch-polyfill");
+	Object.assign(global, require("./fetch-polyfill"));
 }
 
 require("./dateFormat");

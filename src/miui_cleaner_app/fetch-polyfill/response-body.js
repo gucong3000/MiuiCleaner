@@ -5,16 +5,6 @@
 const INTERNALS = Symbol("Body internals");
 
 class Body extends (global.Body || null) {
-	#bodyUsed = false;
-	async #getOkhttpBody () {
-		if (this.#bodyUsed) {
-			throw new TypeError(`Failed to execute function on '${this.constructor.name}': body stream already read`);
-		} else {
-			this.#bodyUsed = true;
-			return this[INTERNALS];
-		}
-	}
-
 	#body;
 	get body () {
 		if (!this.#body) {
@@ -31,8 +21,18 @@ class Body extends (global.Body || null) {
 		return this.#body;
 	}
 
+	#bodyUsed = false;
 	get bodyUsed () {
 		return this.#bodyUsed;
+	}
+
+	async #getOkhttpBody () {
+		if (this.#bodyUsed) {
+			throw new TypeError(`Failed to execute function on '${this.constructor.name}': body stream already read`);
+		} else {
+			this.#bodyUsed = true;
+			return this[INTERNALS];
+		}
 	}
 
 	/**
