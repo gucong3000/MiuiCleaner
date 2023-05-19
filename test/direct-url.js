@@ -1,5 +1,5 @@
 /* eslint-disable mocha/no-setup-in-describe */
-const assert = require("assert");
+const { assert } = require("chai");
 const director = require("../src/miui_cleaner_app/direct-url");
 const appList = [
 	{
@@ -75,16 +75,20 @@ const appList = [
 		url: "https://www.123pan.com/s/s1luVv-LbkXv",
 	},
 	{
-		name: "MiuiCleaner Asset",
+		name: "MiuiCleaner asset",
 		url: "https://github.com/gucong3000/MiuiCleaner/releases/latest/download/MiuiCleaner.apk",
 	},
 	{
-		name: "MiuiCleaner API",
+		name: "MiuiCleaner releases",
 		url: "https://github.com/gucong3000/MiuiCleaner/releases/latest",
 	},
 	{
 		name: "MiuiCleaner raw",
 		url: "https://raw.githubusercontent.com/JohyC/Hosts/main/MicrosoftHosts.txt",
+	},
+	{
+		name: "MiuiCleaner archive",
+		url: "https://github.com/ineo6/hosts/archive/refs/heads/master.zip",
 	},
 ];
 function sleep (delay) {
@@ -101,7 +105,9 @@ describe("direct-url", function () {
 			assert.ifError(cache[file.id], "文件 id 应该具有唯一性");
 			cache[file.id] = file;
 		}
-		// "fileName",
+		assert.match("fabar", /^foo/, "regexp matches");
+
+		console.log(/.+\.apk$/.test(file.fileName), "文件名需为 *.apk");
 		assert.match(file.fileName, /.+\.apk$/, "文件名需为 *.apk");
 		file.path && assert.match(file.path, /^.+(\/.+?)*$/, "文件 path 格式");
 		assert.ok(file.size && Number.isInteger(file.size), "文件 size 需为整数");

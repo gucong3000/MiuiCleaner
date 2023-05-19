@@ -51,10 +51,10 @@ class Response extends body.Body {
 	}
 }
 
-function wrap (okhttpResponse, response) {
+function wrap (okhttpResponse, okhttpBody, response) {
 	response = response || new Response();
+	body.wrap(okhttpBody, response);
 	response[INTERNALS] = okhttpResponse;
-	body.wrap(okhttpResponse.body(), response);
 	return response;
 }
 

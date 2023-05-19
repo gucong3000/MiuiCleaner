@@ -30,6 +30,7 @@
 		"@devicefarmer/adbkit": "^3.2.3",
 		"ansi-styles": "^5.2.0",
 		"babel-loader": "^8.2.5",
+		"chai": "^4.3.7",
 		"eslint": "^8.24.0",
 		"eslint-config-standard": "^17.0.0",
 		"eslint-plugin-mocha": "^10.1.0",

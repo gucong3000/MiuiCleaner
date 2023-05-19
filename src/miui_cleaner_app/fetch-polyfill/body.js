@@ -5,36 +5,31 @@
 const Blob = global.Blob || require("blob-polyfill").Blob;
 const INTERNALS = Symbol("Body internals");
 
-function hexToArrayUint8Array (input) {
-	const view = new Uint8Array(input.length / 2);
-	for (let i = 0; i < input.length; i += 2) {
-		view[i / 2] = parseInt(input.substring(i, i + 2), 16);
-	}
-	return view;
-}
-
 class Body extends (global.Body || null) {
 	#bodyUsed = false;
-	get #byteString () {
+	async #getOkhttpBody () {
 		if (this.#bodyUsed) {
 			throw new TypeError(`Failed to execute function on '${this.constructor.name}': body stream already read`);
 		} else {
 			this.#bodyUsed = true;
-			return this[INTERNALS].byteString();
+			return this[INTERNALS];
 		}
 	}
 
-	get #blob () {
-		const contentType = this[INTERNALS].contentType();
-		return new Blob([
-			hexToArrayUint8Array(this.#byteString.hex()),
-		], {
-			type: `${contentType.type()}/${contentType.subtype()}`,
-		});
-	}
-
+	#body;
 	get body () {
-		this.#blob.stream();
+		if (!this.#body) {
+			this.#body = new ReadableStream({
+				async start (controller) {
+					const {
+						bytes,
+					} = await this.#getOkhttpBody();
+					controller.enqueue(new Uint8Array(Array.from(bytes)));
+					controller.close();
+				},
+			});
+		}
+		return this.#body;
 	}
 
 	get bodyUsed () {
@@ -61,7 +56,18 @@ class Body extends (global.Body || null) {
 	 * @return Promise
 	 */
 	async blob () {
-		return this.#blob;
+		const {
+			bytes,
+			contentType,
+		} = await this.#getOkhttpBody();
+		return new Blob(
+			[
+				new Uint8Array(Array.from(bytes)),
+			],
+			{
+				type: `${contentType.type()}/${contentType.subtype()}`,
+			},
+		);
 	}
 
 	/**
@@ -74,16 +80,19 @@ class Body extends (global.Body || null) {
 		return JSON.parse(text);
 	}
 
-	#text;
 	/**
 	 * Decode response as text
 	 *
 	 * @return  Promise
 	 */
 	async text () {
+		const {
+			bytes,
+			contentType,
+		} = await this.#getOkhttpBody();
 		return new java.lang.String(
-			this.#byteString.toByteArray(),
-			this[INTERNALS].contentType().charset() || "UTF-8",
+			bytes,
+			contentType.charset() || "UTF-8",
 		);
 	}
 }
@@ -91,7 +100,7 @@ class Body extends (global.Body || null) {
 function wrap (okhttpBody, body) {
 	body = body || new Body();
 	body[INTERNALS] = okhttpBody;
-	return okhttpBody;
+	return body;
 }
 
 module.exports = {

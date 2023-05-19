@@ -56,69 +56,63 @@ async function getFastUrl (urlList, options = {}) {
 		method: "HEAD",
 		...options,
 	};
-	const file = await Promise.any(
-		urlList.map(
-			url => browser.fetch(url, options),
-		),
-	);
+	const file = await Promise.any(urlList.map(async url => {
+		const file = await browser.fetch(url, options);
+		if ((file instanceof RemoteFile) && !file.url) {
+			file.url = url;
+		}
+		return file;
+	}));
 	controller.abort();
 	return file;
 }
 
-async function getFastAsset (url, options) {
-	const urlList = [
-		"github.com",
-		// https://doc.fastgit.org/zh-cn/guide.html#release-和源码存档的下载
-		"download.fastgit.org",
-	].map(
-		host => `${url.protocol}//${host}${url.pathname}`,
-	).concat(
+async function getFastDownUrl (url, options) {
+	return getFastUrl(
 		[
-			// https://github.com/fhefh2015/Fast-GitHub/issues/44
-			"ghproxy.com",
-			"hub.gitmirror.com",
-			"gh.api.99988866.xyz",
-			// "gh.con.sh",
-			// "gh.ddlc.top",
-			// "gh2.yanqishui.work",
-			// "ghps.cc",
-			// "git.xfj0.cn",
-			// "github.91chi.fun",
-			// "proxy.zyun.vip",
-		].map(host => `${url.protocol}//${host}/${url.href}`),
-	);
-	const file = await getFastUrl(
-		urlList,
+			"github.com",
+			// https://doc.fastgit.org/zh-cn/guide.html#release-和源码存档的下载
+			"download.fastgit.org",
+		].map(
+			host => `${url.protocol}//${host}${url.pathname}`,
+		).concat(
+			[
+				// https://github.com/fhefh2015/Fast-GitHub/issues/44
+				"ghproxy.com",
+				"hub.gitmirror.com",
+				"gh.api.99988866.xyz",
+				// "gh.con.sh",
+				// "gh.ddlc.top",
+				// "gh2.yanqishui.work",
+				// "ghps.cc",
+				// "git.xfj0.cn",
+				// "github.91chi.fun",
+				// "proxy.zyun.vip",
+			].map(host => `${url.protocol}//${host}/${url.href}`),
+		),
 		options,
 	);
-	if (!file.url) {
-		file.url = urlList[0];
-	}
-	return file;
 }
 
-async function getFastRaw (url, options) {
-	const urlList = [
-		`${url.protocol}//fastly.jsdelivr.net/gh${url.pathname.replace(/^(\/.*?\/.*?)\//, "$1@")}`,
-		`${url.protocol}//ghproxy.com/${url.href}`,
-	].concat(
+async function getFastSourceUrl (url, options) {
+	return getFastUrl(
 		[
-			"githubusercontent.com",
-			// https://gitmirror.com/raw.html
-			"gitmirror.com",
-			// https://doc.fastgit.org/zh-cn/guide.html#对于-raw-的代理
-			"fastgit.org",
-		].map(host => `${url.protocol}//raw.${host}${url.pathname}`),
-	);
-
-	const file = await getFastUrl(
-		urlList,
+			// https://www.jsdelivr.com/?docs=gh
+			`${url.protocol}//fastly.jsdelivr.net/gh${url.pathname.replace(/^(\/.*?\/.*?)\//, "$1@")}`,
+			// https://gitmirror.com/cdn.html
+			`${url.protocol}//cdn.gitmirror.com/gh${url.pathname}`,
+			`${url.protocol}//ghproxy.com/${url.href}`,
+		].concat(
+			[
+				"githubusercontent.com",
+				// https://gitmirror.com/raw.html
+				"gitmirror.com",
+				// https://doc.fastgit.org/zh-cn/guide.html#对于-raw-的代理
+				"fastgit.org",
+			].map(host => `${url.protocol}//raw.${host}${url.pathname}`),
+		),
 		options,
 	);
-	if ((file instanceof RemoteFile) && !file.url) {
-		file.url = urlList[1];
-	}
-	return file;
 }
 
 function getFileInfo (url, options) {
@@ -134,21 +128,31 @@ function getFileInfo (url, options) {
 			path,
 		] = url.pathname.match(/^(?:\/repos)?(\/.*?\/.*?)\/(.*?)(\/.*|$)/i);
 
-		if (action === "releases") {
-			if (/\/download\//i.test(path)) {
-				// release 中的文件下载
-				return getFastAsset(url, options);
-			} else {
-				// 查询 assets
-				url.hostname = "api." + url.hostname;
-				url.pathname = "/repos" + url.pathname;
-				return browser.fetch(url, options);
+		switch (action) {
+			case "releases": {
+				if (/\/download\//i.test(path)) {
+					// release 中的文件下载
+					return getFastDownUrl(url, options);
+				} else {
+					// 查询 assets
+					url.hostname = "api." + url.hostname;
+					url.pathname = "/repos" + url.pathname;
+					return browser.fetch(url, options);
+				}
 			}
-		} else {
-			url.pathname = repo + path;
+			case "archive": {
+				return getFastDownUrl(url, options);
+			}
+			// https://github.com/ineo6/hosts/master/template.md
+			// https://github.com/ineo6/hosts/master/template.md
+			// case "blob":
+			// case "raw":
+			default: {
+				url.pathname = repo + path;
+			}
 		}
 	}
-	return getFastRaw(url, options);
+	return getFastSourceUrl(url, options);
 }
 
 module.exports = getFileInfo;

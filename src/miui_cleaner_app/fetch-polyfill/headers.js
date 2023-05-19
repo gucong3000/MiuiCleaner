@@ -59,8 +59,11 @@ class Headers extends (global.Headers || null) {
 	}
 
 	* entries () {
-		for (const name of this.keys()) {
-			yield [name, this.get(name)];
+		for (const name of this.#value.keys()) {
+			const value = this.get(name);
+			if (value != null) {
+				yield [name, value];
+			}
 		}
 	}
 
@@ -92,8 +95,10 @@ class Headers extends (global.Headers || null) {
 		return this.get(name) != null;
 	}
 
-	keys () {
-		return this.#value.keys().filter(name => this.has(name));
+	* keys () {
+		for (const [key] of this.entries()) {
+			yield key;
+		}
 	}
 
 	set (name, value) {
