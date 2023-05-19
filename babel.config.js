@@ -1,5 +1,5 @@
 module.exports = {
-	sourceType: "script",
+	sourceType: "unambiguous",
 	targets: {
 		rhino: "1.7.13",
 	},

@@ -2,7 +2,6 @@
 // https://square.github.io/okhttp/4.x/okhttp/okhttp3/-response-body/
 // https://developer.mozilla.org/zh-CN/docs/Web/API/Body
 
-const Blob = global.Blob || require("blob-polyfill").Blob;
 const INTERNALS = Symbol("Body internals");
 
 class Body extends (global.Body || null) {
@@ -47,7 +46,7 @@ class Body extends (global.Body || null) {
 	}
 
 	async formData () {
-		// TODO
+		throw new TypeError(`${this.constructor.name}.formData: Could not parse content as FormData`);
 	}
 
 	/**

@@ -27,6 +27,7 @@ const config = {
 		alias: {
 			"mime": require.resolve("./src/npm-alias/mime.js"),
 			"user-agents": require.resolve("./src/npm-alias/user-agents.js"),
+			// "fetch-blob": require.resolve("blob-polyfill"),
 		},
 	},
 	externals: /^__.+__$/i,

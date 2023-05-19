@@ -2,14 +2,16 @@
 // https://developer.mozilla.org/zh-CN/docs/Web/API/Response
 
 const INTERNALS = Symbol("Response internals");
-const body = require("./body");
-const headers = require("./headers");
+const body = require("./response-body");
 
 class Response extends body.Body {
 	#headers;
 	get headers () {
 		if (!this.#headers) {
-			this.#headers = headers.wrap(this[INTERNALS].headers());
+			this.#headers = new Headers();
+			this[INTERNALS].headers().forEach(entry => {
+				this.#headers.append(entry.first, entry.second);
+			});
 		}
 		return this.#headers;
 	}

@@ -80,15 +80,4 @@ function fetch (url, options = {}) {
 	});
 }
 
-// fetch("http://163.com").then(async res => {
-// 	console.log(res);
-// 	console.log(res.url);
-// 	console.log(Object.fromEntries(res.headers));
-// 	const blob = await res.blob();
-// 	console.log(blob);
-
-// 	console.log(await blob.text());
-// 	console.log(await res.text());
-// });
-
 module.exports = fetch;
