@@ -5,7 +5,24 @@ const INTERNALS = Symbol("Response internals");
 const body = require("./body");
 
 class Response extends body.Body {
+	constructor (bodyInit, options) {
+		super();
+		if (!(this instanceof Response)) {
+			throw new TypeError("Please use the \"new\" operator, this DOM object constructor cannot be called as a function.");
+		}
+		this.#status = options.status == null ? 200 : options.status;
+		this.#statusText = options.statusText == null ? "" : String(options.statusText);
+		this.#headers = new Headers(options.headers);
+		this.#url = options.url || "";
+		body.initBody(this, bodyInit);
+	}
+
+	#type = "default";
 	#headers;
+	#statusText = "";
+	#status = 200;
+	#url = "";
+
 	get headers () {
 		if (!this.#headers) {
 			this.#headers = new Headers();
@@ -21,27 +38,29 @@ class Response extends body.Body {
 	}
 
 	get redirected () {
-		return this[INTERNALS].isRedirect();
+		return this[INTERNALS] ? this[INTERNALS].isRedirect() : (this.status >= 300 && this.status < 400);
 	}
 
 	get status () {
-		return this[INTERNALS].code();
+		return this[INTERNALS] ? this[INTERNALS].code() : this.#status;
 	}
 
 	get statusText () {
-		return this[INTERNALS].message();
+		return this[INTERNALS] ? this[INTERNALS].message() : this.#statusText;
 	}
 
 	get type () {
 		// TODO
+		return this.#type;
 	}
 
 	get url () {
-		return this[INTERNALS].request().url().toString();
+		return this[INTERNALS] ? this[INTERNALS].request().url().toString() : this.#url;
 	}
 
 	clone () {
-		return wrap(this[INTERNALS]);
+		// TODO
+		// return wrap(this[INTERNALS]);
 	}
 
 	static error (...args) {

@@ -1,5 +1,5 @@
 export class FetchBaseError extends Error {
-	constructor(message, type) {
+	constructor (message, type) {
 		super(message);
 		// Hide custom error implementation details from end-users
 		Error.captureStackTrace(this, this.constructor);
@@ -7,11 +7,11 @@ export class FetchBaseError extends Error {
 		this.type = type;
 	}
 
-	get name() {
+	get name () {
 		return this.constructor.name;
 	}
 
-	get [Symbol.toStringTag]() {
+	get [Symbol.toStringTag] () {
 		return this.constructor.name;
 	}
 }
