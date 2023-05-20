@@ -20,13 +20,14 @@ async function fetch (url, options) {
 		options = new request.Request(url, options);
 		let body = null;
 		if (!["GET", "HEAD"].includes(options.method)) {
-			const view = new Uint8Array(await options.arrayBuffer());
-			if (view.length) {
-				const buff = java.lang.reflect.Array.newInstance(java.lang.Byte, view.length);
-				for (let i = 0; i < view.length; i++) {
-					buff[i] = view[i];
-				}
-				body = okhttp3.RequestBody.create(okhttp3.MediaType.parse(options.contentType || ""), buff);
+			const arrayBuffer = await options.arrayBuffer();
+			if (arrayBuffer.byteLength) {
+				body = okhttp3.RequestBody.Companion.create(
+					okhttp3.MediaType.Companion.parse(
+						options.headers.get("Content-Type") || "",
+					),
+					Array.from(new Uint8Array(arrayBuffer)),
+				);
 			}
 		}
 
