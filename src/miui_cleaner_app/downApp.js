@@ -56,7 +56,7 @@ const appList = [
 	},
 	{
 		name: "隐启设置",
-		summary: "MIUI软件包安装程序v3.8.0，不含“纯净模式”",
+		summary: "各类被 MIUI 隐藏的安卓原生系统选项",
 		icon: "https://raw.fastgit.org/WangDaYeeeeee/GeometricWeather/master/app/src/main/res/drawable/ic_launcher.png",
 		packageName: "com.miui.gaojishezhi.plus",
 		url: "https://www.coolapk.com/apk/com.miui.gaojishezhi.plus",

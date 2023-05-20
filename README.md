@@ -253,6 +253,8 @@ MIUI广告清理工具
 	> 国际版，广告可关，有网页广告屏蔽功能
 - [讯飞输入法](https://423down.lanzouv.com/b0f24av5i)
 	> Google Play版，无广告
+- [隐启设置](https://www.coolapk.com/apk/com.miui.gaojishezhi.plus)
+	> 各类被 MIUI 隐藏的安卓原生系统选项
 - [应用包管理组件](https://zisu.lanzoum.com/iI7LGwn5xjc)
 	> MIUI软件包安装程序v3.8.0，不含“纯净模式”
 - [QQ音乐简洁版](https://www.coolapk.com/apk/com.tencent.qqmusiclite)
