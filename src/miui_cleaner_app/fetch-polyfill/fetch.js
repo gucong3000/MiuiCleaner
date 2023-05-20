@@ -1,6 +1,7 @@
 const okhttp3 = global.Packages?.okhttp3;
 const response = require("./response");
 const request = require("./request");
+const AbortError = request("./errors/abort-error");
 
 function newCall (req, body) {
 	const client = new okhttp3.OkHttpClient.Builder()
@@ -36,7 +37,7 @@ async function fetch (url, options) {
 				if (call) {
 					call.isCanceled() || call.cancel();
 				}
-				const ex = new Error(options.signal?.reason || "The user aborted a request.");
+				const ex = new AbortError(options.signal?.reason || "The user aborted a request.");
 				if (work) {
 					work.emit("error", ex);
 				} else {
@@ -80,6 +81,9 @@ async function fetch (url, options) {
 						const charset = contentType.charset();
 						const bytes = charset ? null : okhttpBody.bytes();
 						const text = charset ? okhttpBody.string() : null;
+						if (isAborted()) {
+							return;
+						}
 						work.emit("body", {
 							text,
 							bytes,

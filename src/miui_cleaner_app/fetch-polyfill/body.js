@@ -197,33 +197,52 @@ class Body extends (global.Body || null) {
 }
 
 function initBody (body, init) {
+	function isInstanceOf (stringTag) {
+		if (init[Symbol.toStringTag] === stringTag) {
+			return true;
+		}
+		const constructor = global[stringTag];
+		return constructor && init instanceof constructor;
+	}
+
 	const raw = body[INTERNALS] = {};
+	let type;
 	if (!init) {
 		raw.text = "";
 	} else if (typeof init === "string") {
 		raw.text = init;
-	} else if (init instanceof Blob) {
+	} else if (isInstanceOf("Blob") || isInstanceOf("File")) {
 		raw.blob = init;
-	} else if (init instanceof FormData) {
+		type = init.type;
+	} else if (isInstanceOf("FormData")) {
 		raw.formData = init;
-	} else if (init instanceof URLSearchParams) {
+		type = "multipart/form-data";
+	} else if (isInstanceOf("URLSearchParams")) {
 		raw.search = init;
-	} else if (init instanceof DataView) {
+		type = "application/x-www-form-urlencoded";
+	} else if (isInstanceOf("DataView")) {
 		raw.arrayBuffer = init.buffer;
-	} else if (ArrayBuffer.isView(init)) {
+	} else if (global.ArrayBuffer?.isView(init)) {
 		raw.arrayBuffer = init;
 	} else {
 		raw.text = init = Object.prototype.toString.call(init);
 	}
 
-	if (!body.headers.get("content-type")) {
-		if (typeof init === "string") {
-			body.headers.set("content-type", "text/plain;charset=UTF-8");
-		} else if (raw.blob && raw.blob.type) {
-			body.headers.set("content-type", raw.blob.type);
-		} else if (init instanceof URLSearchParams) {
-			body.headers.set("content-type", "application/x-www-form-urlencoded;charset=UTF-8");
+	if (body.headers && !body.headers.has("Content-Type")) {
+		if (raw.text != null) {
+			if (raw.text) {
+				try {
+					JSON.parse(raw.text);
+					type = "application/json";
+				} catch (ex) {
+					//
+				}
+			}
+			type = type || "text/plain";
+		} else if (!type) {
+			return;
 		}
+		body.headers.set("Content-Type", type + ";charset=UTF-8");
 	}
 };
 

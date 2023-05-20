@@ -146,6 +146,7 @@ function getFileInfo (url, options) {
 			// https://github.com/ineo6/hosts/master/template.md
 			// https://github.com/ineo6/hosts/master/template.md
 			// case "blob":
+			// case "tree":
 			// case "raw":
 			default: {
 				url.pathname = repo + path;

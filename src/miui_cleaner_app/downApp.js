@@ -57,7 +57,7 @@ const appList = [
 	{
 		name: "隐启设置",
 		summary: "各类被 MIUI 隐藏的安卓原生系统选项",
-		icon: "https://raw.fastgit.org/WangDaYeeeeee/GeometricWeather/master/app/src/main/res/drawable/ic_launcher.png",
+		icon: "http://image.coolapk.com/apk_logo/2022/0911/16/-2-28229-278849-o_1gclpalus1glo1a7e1e8ppjfnpg18-uid-2372266@256x256.png",
 		packageName: "com.miui.gaojishezhi.plus",
 		url: "https://www.coolapk.com/apk/com.miui.gaojishezhi.plus",
 	},
@@ -100,7 +100,7 @@ const appList = [
 	{
 		name: "几何天气",
 		summary: "干净、小巧、漂亮、功能多",
-		icon: "https://raw.fastgit.org/WangDaYeeeeee/GeometricWeather/master/app/src/main/res/drawable/ic_launcher.png",
+		icon: "https://cdn.gitmirror.com/gh/WangDaYeeeeee/GeometricWeather/master/app/src/main/res/drawable/ic_launcher.png",
 		packageName: "wangdaye.com.geometricweather",
 		url: "https://github.com/WangDaYeeeeee/GeometricWeather/releases/latest",
 		filter: function (files) {
