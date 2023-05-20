@@ -2,7 +2,7 @@
 // https://developer.mozilla.org/zh-CN/docs/Web/API/Response
 
 const INTERNALS = Symbol("Response internals");
-const body = require("./response-body");
+const body = require("./body");
 
 class Response extends body.Body {
 	#headers;
@@ -55,8 +55,8 @@ class Response extends body.Body {
 
 function wrap (okhttpResponse, okhttpBody, response) {
 	response = response || new Response();
-	body.wrap(okhttpBody, response);
 	response[INTERNALS] = okhttpResponse;
+	body.wrap(okhttpBody, response);
 	return response;
 }
 

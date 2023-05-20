@@ -1,46 +1,28 @@
+// https://square.github.io/okhttp/4.x/okhttp/okhttp3/-request-body/
+// https://square.github.io/okhttp/4.x/okhttp/okhttp3/-response-body/
+// https://developer.mozilla.org/zh-CN/docs/Web/API/Body
+
 const INTERNALS = Symbol("Body internals");
-function readArrayBufferAsText (buf) {
-	const view = new Uint8Array(buf);
-	const chars = new Array(view.length);
 
-	for (let i = 0; i < view.length; i++) {
-		chars[i] = String.fromCharCode(view[i]);
-	}
-	return chars.join("");
+function formDataToBlob (formData) {
+	const formDataToBlob = require("./utils/formdata-to-blob");
+	return formDataToBlob(formData);
 }
-
-function bufferClone (buf) {
-	if (buf.slice) {
-		return buf.slice(0);
-	} else {
-		const view = new Uint8Array(buf.byteLength);
-		view.set(new Uint8Array(buf));
-		return view.buffer;
-	}
-}
-
-class Body {
+class Body extends (global.Body || null) {
 	[INTERNALS] = {};
-	#bodyUsed = false;
-	get bodyUsed () {
-		return this.#bodyUsed;
-	}
-
-	async #raw () {
-		if (this.#bodyUsed) {
-			throw new TypeError(`Failed to execute function on '${this.constructor.name}': body stream already read`);
-		} else {
-			this.#bodyUsed = true;
-			return this[INTERNALS];
-		}
-	}
 
 	#body;
 	get body () {
 		if (!this.#body) {
+			const getDataView = this.#getDataView.bind(this);
 			this.#body = new ReadableStream({
 				async start (controller) {
-					controller.enqueue(await this.arrayBuffer());
+					const arrayBuffer = await this.#findArrayBuffer("arrayBuffer");
+					controller.enqueue(
+						arrayBuffer
+							? new Uint8Array(arrayBuffer)
+							: await getDataView(),
+					);
 					controller.close();
 				},
 			});
@@ -48,78 +30,170 @@ class Body {
 		return this.#body;
 	}
 
-	async blob () {
-		const raw = await this.#raw();
-		if (raw.blob) {
-			return raw.blob;
-		} else if (raw.arrayBuffer) {
-			return new Blob([raw.arrayBuffer]);
-		} else if (raw.formData) {
-			throw new TypeError(`${this.constructor.name}.blob: could not read FormData body as blob`);
-		} else {
-			return new Blob([
-				new Uint8Array(Array.from(raw.text).map(char => char.charCodeAt(0))),
-			]);
-		}
-	};
+	#bodyUsed = false;
+	get bodyUsed () {
+		return this.#bodyUsed;
+	}
 
-	async arrayBuffer () {
-		if (this[INTERNALS].arrayBuffer) {
-			const raw = await this.#raw();
-			if (ArrayBuffer.isView(raw.arrayBuffer)) {
-				return raw.arrayBuffer.buffer.slice(
-					raw.arrayBuffer.byteOffset,
-					raw.arrayBuffer.byteOffset + raw.arrayBuffer.byteLength,
-				);
-			} else {
-				return raw.arrayBuffer;
+	#getRawBody (functionName) {
+		if (functionName && this.#bodyUsed) {
+			throw new TypeError(`Failed to execute '${functionName}' on '${this.constructor.name}': body stream already read`);
+		} else {
+			this.#bodyUsed = true;
+			return this[INTERNALS];
+		}
+	}
+
+	async #getDataView (functionName) {
+		const raw = await this.#getRawBody(functionName);
+		let bytes;
+		let text;
+
+		if (raw.text != null) {
+			text = raw.text;
+		} else if (raw.bytes) {
+			bytes = raw.bytes;
+		} else if (raw.search) {
+			text = raw.search.toString();
+		}
+
+		if (text) {
+			if (!text.getBytes) {
+				text = new java.lang.String(text);
 			}
-		} else {
-			const blob = await this.blob();
-			return blob.arrayBuffer();
+			bytes = text.getBytes();
 		}
-	};
+		if (bytes) {
+			const view = new Uint8Array(bytes.length);
+			for (let index = 0; index < bytes.length; index++) {
+				view[index] = bytes[index];
+			}
+			return view;
+		}
+	}
 
-	async text () {
-		const raw = await this.#raw();
-		if (raw.blob) {
-			return raw.blob.text();
-		} else if (raw.arrayBuffer) {
-			return readArrayBufferAsText(raw.arrayBuffer);
+	async #findArrayBuffer (functionName) {
+		const raw = await this.#getRawBody(functionName);
+		let arrayBuffer;
+		if (raw.arrayBuffer) {
+			arrayBuffer = raw.arrayBuffer;
+		} else if (raw.blob) {
+			arrayBuffer = raw.blob.arrayBuffer();
 		} else if (raw.formData) {
-			throw new TypeError(`${this.constructor.name}.blob: could not read FormData body as text`);
-		} else {
-			return raw.text;
+			arrayBuffer = formDataToBlob(raw.formData).arrayBuffer();
 		}
-	};
+		return await arrayBuffer;
+	}
 
-	async formData () {
-		return decode(
-			await this.text(),
-		);
-	};
+	/**
+	 * Decode response as ArrayBuffer
+	 *
+	 * @return  Promise
+	 */
+	async arrayBuffer () {
+		return (await this.#findArrayBuffer("arrayBuffer")) || (await this.#getDataView(null)).buffer;
+	}
 
+	/**
+	 * Return raw response as Blob
+	 *
+	 * @return Promise
+	 */
+	async blob () {
+		const raw = await this.#getRawBody("blob");
+		let blob;
+		if (raw.blob) {
+			blob = raw.blob;
+		} else if (raw.formData) {
+			blob = formDataToBlob(raw.formData);
+		} else {
+			if (raw.arrayBuffer) {
+				blob = raw.arrayBuffer;
+			} else {
+				blob = await this.#getDataView(null);
+			}
+			blob = new Blob(
+				[
+					blob,
+				],
+				{
+					type: raw.type,
+				},
+			);
+		}
+		return await blob;
+	}
+
+	/**
+	 * Decode response as text
+	 *
+	 * @return  Promise
+	 */
+	async #getText (functionName) {
+		const raw = await this.#getRawBody(functionName);
+		let text;
+		if (raw.text != null) {
+			text = raw.text;
+		} else if (raw.bytes) {
+			text = new java.lang.String(raw.bytes);
+		} else if (raw.blob) {
+			text = raw.blob.text();
+		} else if (raw.search) {
+			text = raw.search.toString();
+		} else if (raw.arrayBuffer) {
+			const view = new Uint8Array(raw.arrayBuffer);
+			const chars = new Array(view.length);
+			for (let i = 0; i < view.length; i++) {
+				chars[i] = String.fromCharCode(view[i]);
+			}
+			return chars.join("");
+		} else if (raw.formData) {
+			text = formDataToBlob(raw.formData).text();
+		}
+
+		return await text;
+	}
+
+	/**
+	 * Decode response as text
+	 *
+	 * @return  Promise
+	 */
+	text () {
+		return this.#getText("text");
+	}
+
+	/**
+	 * Decode response as json
+	 *
+	 * @return  Promise
+	 */
 	async json () {
 		return JSON.parse(
-			await this.text(),
+			await this.#getText("json"),
 		);
-	};
-}
+	}
 
-function decode (body) {
-	const form = new FormData();
-	body
-		.trim()
-		.split("&")
-		.forEach(function (bytes) {
-			if (bytes) {
-				const split = bytes.split("=");
-				const name = split.shift().replace(/\+/g, " ");
-				const value = split.join("=").replace(/\+/g, " ");
-				form.append(decodeURIComponent(name), decodeURIComponent(value));
-			}
-		});
-	return form;
+	async formData () {
+		const raw = await this.#getRawBody("formData");
+		let formData;
+		if (raw.formData) {
+			formData = raw.formData;
+		} else {
+			const body = await this.#getText(null);
+			formData = new FormData();
+			body.trim().split("&").forEach(function (bytes) {
+				if (bytes) {
+					const split = bytes.split("=");
+					const name = split.shift().replace(/\+/g, " ");
+					const value = split.join("=").replace(/\+/g, " ");
+					formData.append(decodeURIComponent(name), decodeURIComponent(value));
+				}
+			});
+		}
+
+		return await formData;
+	}
 }
 
 function initBody (body, init) {
@@ -133,11 +207,11 @@ function initBody (body, init) {
 	} else if (init instanceof FormData) {
 		raw.formData = init;
 	} else if (init instanceof URLSearchParams) {
-		raw.text = init.toString();
+		raw.search = init;
 	} else if (init instanceof DataView) {
-		raw.arrayBuffer = bufferClone(init.buffer);
+		raw.arrayBuffer = init.buffer;
 	} else if (ArrayBuffer.isView(init)) {
-		raw.arrayBuffer = bufferClone(init);
+		raw.arrayBuffer = init;
 	} else {
 		raw.text = init = Object.prototype.toString.call(init);
 	}
@@ -153,7 +227,15 @@ function initBody (body, init) {
 	}
 };
 
+function wrap (okhttpBody, body) {
+	body = body || new Body();
+	body[INTERNALS] = okhttpBody;
+	return body;
+}
+
 module.exports = {
+	INTERNALS,
 	initBody,
 	Body,
+	wrap,
 };

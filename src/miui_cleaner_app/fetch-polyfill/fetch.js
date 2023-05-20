@@ -76,9 +76,14 @@ async function fetch (url, options) {
 							return;
 						}
 						const okhttpBody = okHttpRes.body();
+						const contentType = okhttpBody.contentType();
+						const charset = contentType.charset();
+						const bytes = charset ? null : okhttpBody.bytes();
+						const text = charset ? okhttpBody.string() : null;
 						work.emit("body", {
-							bytes: okhttpBody.bytes(),
-							contentType: okhttpBody.contentType(),
+							text,
+							bytes,
+							type: `${contentType.type()}/${contentType.subtype()}`,
 						});
 					} catch (ex) {
 						work.emit("error", ex);
