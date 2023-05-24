@@ -10,11 +10,15 @@ class Response extends body.Body {
 		if (!(this instanceof Response)) {
 			throw new TypeError("Please use the \"new\" operator, this DOM object constructor cannot be called as a function.");
 		}
-		this.#status = options.status == null ? 200 : options.status;
-		this.#statusText = options.statusText == null ? "" : String(options.statusText);
-		this.#headers = new Headers(options.headers);
-		this.#url = options.url || "";
-		body.initBody(this, bodyInit);
+		if (options) {
+			this.#status = options.status == null ? 200 : options.status;
+			this.#statusText = options.statusText == null ? "" : String(options.statusText);
+			this.#headers = new Headers(options.headers);
+			this.#url = options.url || "";
+		}
+		if (bodyInit) {
+			body.initBody(this, bodyInit);
+		}
 	}
 
 	#type = "default";

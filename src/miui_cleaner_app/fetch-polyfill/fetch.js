@@ -1,7 +1,7 @@
 const okhttp3 = global.Packages?.okhttp3;
 const response = require("./response");
 const request = require("./request");
-const AbortError = request("./errors/abort-error");
+const AbortError = require("./errors/abort-error");
 
 function newCall (req, body) {
 	const client = new okhttp3.OkHttpClient.Builder()

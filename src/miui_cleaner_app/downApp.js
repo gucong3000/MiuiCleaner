@@ -57,7 +57,7 @@ const appList = [
 	{
 		name: "隐启设置",
 		summary: "各类被 MIUI 隐藏的安卓原生系统选项",
-		icon: "http://image.coolapk.com/apk_logo/2022/0911/16/-2-28229-278849-o_1gclpalus1glo1a7e1e8ppjfnpg18-uid-2372266@256x256.png",
+		icon: "http://image.coolapk.com/apk_logo/2022/0911/16/-2-28229-278849-o_1gclpalus1glo1a7e1e8ppjfnpg18-uid-2372266@552x552.png",
 		packageName: "com.miui.gaojishezhi.plus",
 		url: "https://www.coolapk.com/apk/com.miui.gaojishezhi.plus",
 	},
