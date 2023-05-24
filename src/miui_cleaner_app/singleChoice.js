@@ -40,12 +40,12 @@ function singleChoice (
 
 	emitItemShowEvent(ui.itemList, icon);
 
-	ui.itemList.on("item_click", function (item, i, itemView, listView) {
+	ui.itemList.on("item_click", (item, i, itemView, listView) => {
 		console.log(`已点击：${item.displayName || item.appName || item.name}`);
 		item.fn ? item.fn(item, itemView) : fn(item, itemView);
 	});
 
-	ui.itemList.on("item_long_click", function (event, item, i, itemView, listView) {
+	ui.itemList.on("item_long_click", (event, item, i, itemView, listView) => {
 		if (item.url) {
 			app.openUrl(item.url);
 		}
@@ -66,7 +66,7 @@ function singleChoice (
 	global.activity.setSupportActionBar(ui.toolbar);
 	if (itemList.then) {
 		ui.progress.setVisibility(View.VISIBLE);
-		threads.start(function () {
+		threads.start(() => {
 			itemList.then(itemList => {
 				ui.post(() => {
 					setDataSource(itemList);

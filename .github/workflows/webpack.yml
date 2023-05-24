@@ -22,45 +22,24 @@ jobs:
       run: |
         npm install
         npm test
+        npm run report-coverage
         npm run build
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: production artifacts
+      uses: actions/upload-artifact@v3
       with:
-        tag_name: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        draft: true
-        prerelease: true
+        name: MiuiCleaner
+        retention-days: 7
+        path: |
+          dist/miui_cleaner_cmd/MiuiCleaner.cmd
+          dist/miui_cleaner_app/services.js
+          dist/miui_cleaner_app/main.js
 
-    - name: Upload Batch
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-        asset_path: ./dist/miui_cleaner_cmd/MiuiCleaner.cmd
-        asset_name: MiuiCleaner.cmd
-        asset_content_type: text/plain
-
-    - name: Upload JavaScript Main
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-        asset_path: ./dist/miui_cleaner_app/main.js
-        asset_name: main.js
-        asset_content_type: text/javascript
-
-    - name: Upload JavaScript Service
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-        asset_path: ./dist/miui_cleaner_app/services.js
-        asset_name: services.js
-        asset_content_type: text/javascript
+        files: |
+          dist/miui_cleaner_cmd/MiuiCleaner.cmd
+          dist/miui_cleaner_app/services.js
+          dist/miui_cleaner_app/main.js

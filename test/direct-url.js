@@ -1,4 +1,3 @@
-/* eslint-disable mocha/no-setup-in-describe */
 const { assert } = require("chai");
 const director = require("../src/miui_cleaner_app/direct-url");
 const appList = [
@@ -98,16 +97,13 @@ function sleep (delay) {
 		}, delay);
 	});
 }
-describe("direct-url", function () {
+describe("direct-url", () => {
 	let cache = {};
 	async function testFile (file) {
 		if (file.id) {
 			assert.ifError(cache[file.id], "文件 id 应该具有唯一性");
 			cache[file.id] = file;
 		}
-		assert.match("fabar", /^foo/, "regexp matches");
-
-		console.log(/.+\.apk$/.test(file.fileName), "文件名需为 *.apk");
 		assert.match(file.fileName, /.+\.apk$/, "文件名需为 *.apk");
 		file.path && assert.match(file.path, /^.+(\/.+?)*$/, "文件 path 格式");
 		assert.ok(file.size && Number.isInteger(file.size), "文件 size 需为整数");
@@ -153,7 +149,7 @@ describe("direct-url", function () {
 		});
 	});
 
-	after(function () {
+	after(() => {
 		cache = {};
 	});
 });

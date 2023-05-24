@@ -8,7 +8,20 @@ module.exports = {
 	extends: [
 		"standard",
 	],
+	overrides: [
+		{
+			files: [
+				"**/test/**/*",
+			],
+			env: {
+				mocha: true,
+			},
+			rules: {
+			},
+		},
+	],
 	parserOptions: {
+		ecmaVersion: "latest",
 		ecmaFeatures: {
 			jsx: true,
 		},
@@ -72,13 +85,35 @@ module.exports = {
 		DEBUG: true,
 	},
 	rules: {
-		"indent": ["error", "tab", { SwitchCase: 1 }],
-		"quotes": ["error", "double"],
-		"semi": ["error", "always"],
-		"block-spacing": ["error", "always"],
-		"array-bracket-spacing": ["error", "never"],
-		"quote-props": ["error", "consistent-as-needed"],
-		"comma-dangle": ["error", "always-multiline"],
-		"no-tabs": ["off"],
+		"prefer-arrow-callback": [
+			"error",
+		],
+		"indent": [
+			"error", "tab", { SwitchCase: 1 }],
+		"quotes": [
+			"error", "double",
+		],
+		"semi": [
+			"error",
+			"always",
+		],
+		"block-spacing": [
+			"error",
+			"always",
+		],
+		"array-bracket-spacing": [
+			"error", "never",
+		],
+		"quote-props": [
+			"error",
+			"consistent-as-needed",
+		],
+		"comma-dangle": [
+			"error",
+			"always-multiline",
+		],
+		"no-tabs": [
+			"off",
+		],
 	},
 };

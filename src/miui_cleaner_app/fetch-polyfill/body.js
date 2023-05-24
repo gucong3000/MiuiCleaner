@@ -182,7 +182,7 @@ class Body extends (global.Body || null) {
 		} else {
 			const body = await this.#getText(null);
 			formData = new FormData();
-			body.trim().split("&").forEach(function (bytes) {
+			body.trim().split("&").forEach((bytes) => {
 				if (bytes) {
 					const split = bytes.split("=");
 					const name = split.shift().replace(/\+/g, " ");
@@ -195,6 +195,15 @@ class Body extends (global.Body || null) {
 		return await formData;
 	}
 }
+// In browsers, all properties are enumerable.
+Object.defineProperties(Body.prototype, {
+	body: { enumerable: true },
+	bodyUsed: { enumerable: true },
+	arrayBuffer: { enumerable: true },
+	blob: { enumerable: true },
+	json: { enumerable: true },
+	text: { enumerable: true },
+});
 
 function initBody (body, init) {
 	function isInstanceOf (stringTag) {

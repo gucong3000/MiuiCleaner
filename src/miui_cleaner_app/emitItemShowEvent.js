@@ -3,7 +3,7 @@ const Rect = android.graphics.Rect;
 const inNightMode = Boolean(activity.getApplicationContext().getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_YES);
 function emitItemShowEvent (listView, defaultIcon) {
 	const itemList = new Map();
-	listView.on("item_bind", function (itemView, itemHolder) {
+	listView.on("item_bind", (itemView, itemHolder) => {
 		itemList.set(itemView, itemHolder);
 		setTimeout(() => {
 			listView.emit("item_show", itemHolder.item, itemView, listView);
@@ -26,7 +26,7 @@ function emitItemShowEvent (listView, defaultIcon) {
 			}
 		});
 	}, 80));
-	listView.on("item_show", function (item, itemView, listView) {
+	listView.on("item_show", (item, itemView, listView) => {
 		const imageView = itemView.icon;
 		if (item.loadIcon) {
 			imageView.setImageDrawable(item.loadIcon());

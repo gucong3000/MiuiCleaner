@@ -72,6 +72,17 @@ class Response extends body.Body {
 	}
 }
 
+Object.defineProperties(Response.prototype, {
+	type: { enumerable: true },
+	url: { enumerable: true },
+	status: { enumerable: true },
+	ok: { enumerable: true },
+	redirected: { enumerable: true },
+	statusText: { enumerable: true },
+	headers: { enumerable: true },
+	clone: { enumerable: true },
+});
+
 function wrap (okhttpResponse, okhttpBody, response) {
 	response = response || new Response();
 	response[INTERNALS] = okhttpResponse;

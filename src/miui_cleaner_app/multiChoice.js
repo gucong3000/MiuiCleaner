@@ -36,15 +36,15 @@ function multiChoice (
 
 	emitItemShowEvent(ui.itemList, icon);
 
-	ui.itemList.on("item_bind", function (itemView, itemHolder) {
-		itemView.checkbox.on("check", function (checked) {
+	ui.itemList.on("item_bind", (itemView, itemHolder) => {
+		itemView.checkbox.on("check", (checked) => {
 			const item = itemHolder.item;
 			item.checked = checked;
 			bindDoneBtnVisibility(checked);
 		});
 	});
 
-	ui.itemList.on("item_click", function (item, i, itemView, listView) {
+	ui.itemList.on("item_click", (item, i, itemView, listView) => {
 		itemView.checkbox.checked = !itemView.checkbox.checked;
 	});
 

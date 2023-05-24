@@ -126,6 +126,17 @@ class Request extends Body {
 	};
 }
 
+Object.defineProperties(Request.prototype, {
+	method: { enumerable: true },
+	url: { enumerable: true },
+	headers: { enumerable: true },
+	redirect: { enumerable: true },
+	clone: { enumerable: true },
+	signal: { enumerable: true },
+	referrer: { enumerable: true },
+	referrerPolicy: { enumerable: true },
+});
+
 module.exports = {
 	Request,
 };
