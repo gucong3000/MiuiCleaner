@@ -63,7 +63,7 @@ async function fetch (url, options) {
 			work.once("error", reject);
 
 			call.enqueue(new okhttp3.Callback({
-				onResponse: function (call, okHttpRes) {
+				onResponse (call, okHttpRes) {
 					try {
 						if (isAborted()) {
 							return;
@@ -93,7 +93,7 @@ async function fetch (url, options) {
 						work.emit("error", ex);
 					}
 				},
-				onFailure: function (call, err) {
+				onFailure (call, err) {
 					work.emit("error", err);
 				},
 			}));

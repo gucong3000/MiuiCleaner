@@ -17,7 +17,7 @@ const appList = [
 		icon: "https://litiaotiao.cn/apple-touch-icon.png",
 		packageName: "hello.litiaotiao.app",
 		url: "https://www.123pan.com/s/ZYAZVv-TBYjd",
-		filter: function (files) {
+		filter (files) {
 			return files.filter(file => {
 				return /李跳跳|MissLee/.test(file.fileName) && !file.fileName.includes("真实好友");
 			});
@@ -67,7 +67,7 @@ const appList = [
 		icon: "http://pic.danji100.com/upload/2022-4/20224261118377118.png",
 		packageName: "com.miui.packageinstaller",
 		url: "https://zisu.lanzoum.com/tp/iI7LGwn5xjc",
-		filter: function (files) {
+		filter (files) {
 			files = files.map(file => {
 				const miuiInst = file.fileName.match(/(应用包管理组件).*?([\d.]+)-(\d+).*?(\.\w+)$/);
 				if (miuiInst) {
@@ -103,7 +103,7 @@ const appList = [
 		icon: "https://cdn.gitmirror.com/gh/WangDaYeeeeee/GeometricWeather/master/app/src/main/res/drawable/ic_launcher.png",
 		packageName: "wangdaye.com.geometricweather",
 		url: "https://github.com/WangDaYeeeeee/GeometricWeather/releases/latest",
-		filter: function (files) {
+		filter (files) {
 			const appInfo = this;
 			files = files.filter(file => {
 				const verInfo = file.url.match(/\/(.+?)\/.*?\.\1_(\w+)\.\w+$/);
@@ -158,7 +158,7 @@ const appList = [
 		// url: "https://423down.lanzouo.com/b0f2lkafe",
 		// url: "https://m.32r.com/app/80966.html",
 		// https://www.423down.com/11775.html
-		filter: function (files) {
+		filter (files) {
 			return files.filter(file => {
 				return /知乎.*知了/.test(file.fileName);
 			});
@@ -172,7 +172,7 @@ const appList = [
 		// url: "https://www.123pan.com/s/A6cA-gT9Jh",
 		url: "https://423down.lanzouv.com/b0f1gksne",
 		// https://www.423down.com/12235.html
-		filter: function (files) {
+		filter (files) {
 			return files.filter(file => {
 				return /哔哩哔哩.*漫游/.test(file.fileName);
 			});
@@ -185,7 +185,7 @@ const appList = [
 		packageName: "com.youku.phone",
 		url: "https://423down.lanzouv.com/b0f1avpib",
 		// https://www.423down.com/8526.html
-		filter: function (files) {
+		filter (files) {
 			return files.filter(file => {
 				file.fileName = file.fileName.replace(/忧(?=酷)/g, "优");
 				return file.fileName.includes("优酷视频");

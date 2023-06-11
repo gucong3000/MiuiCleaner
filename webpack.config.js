@@ -16,6 +16,25 @@ const config = {
 		clean: true,
 	},
 	target: "node",
+	optimization: {
+		runtimeChunk: "single",
+		splitChunks: {
+			chunks: "all",
+			maxInitialRequests: Infinity,
+			minSize: 0,
+			cacheGroups: {
+				node_modules: {
+					test: /[\\/]node_modules[\\/]/,
+					name (module) {
+						// console.log(module);
+						// 取得名称。例如 /node_modules/packageName/not/this/part.js
+						// 或 /node_modules/packageName
+						return module.context.replace(/\\/g, "/").replace(/^.*?(\/node_modules\/)/, "$1");
+					},
+				},
+			},
+		},
+	},
 	plugins: [
 		new AutojsDeployPlugin({
 			// {boolean|String|boolean[]|String[]} 添加`"ui";`前缀的chunk（output）名单，true代表project.json中定义的main，字符串代表文件名
@@ -50,12 +69,12 @@ const config = {
 			},
 		],
 	},
+	mode: "development",
 };
 
 module.exports = (env, args) => {
 	const isProduction = args.mode ? args.mode === "production" : env.WEBPACK_BUILD;
 	if (isProduction) {
-		config.mode = "production";
 		config.devtool = false;
 		config.plugins.push(
 			new webpack.DefinePlugin({
@@ -63,7 +82,6 @@ module.exports = (env, args) => {
 			}),
 		);
 	} else {
-		config.mode = "development";
 		config.devtool = "source-map";
 		config.plugins.push(
 			new webpack.DefinePlugin({

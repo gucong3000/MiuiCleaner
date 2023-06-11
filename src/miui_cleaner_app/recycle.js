@@ -26,7 +26,7 @@ function launchMarket () {
 
 function getInstalledPackages () {
 	const pm = context.getPackageManager();
-	return Array.from(
+	const list = Array.from(
 		pm.getInstalledApplications(android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES),
 	).map(appInfo => {
 		if (app.getAppName(appInfo.packageName)) {
@@ -47,12 +47,16 @@ function getInstalledPackages () {
 		};
 	}).filter(Boolean).sort((app1, app2) => (
 		app1.packageName.localeCompare(app2.packageName)
-	)).concat({
-		name: "其他",
-		loadIcon: () => pm.getApplicationInfo(marketPackageName, 0).loadIcon(pm),
-		fn: launchMarket,
-		summary: "去应用商店下载其他小米官方应用",
-	});
+	));
+	if (app.getAppName(marketPackageName)) {
+		list.push({
+			name: "其他",
+			loadIcon: () => pm.getApplicationInfo(marketPackageName, 0).loadIcon(pm),
+			fn: launchMarket,
+			summary: "去应用商店下载其他小米官方应用",
+		});
+	}
+	return list;
 }
 let requestInstallPackages;
 function recycle () {
@@ -61,7 +65,7 @@ function recycle () {
 		itemList: {
 			then: (...args) => Promise.resolve(getInstalledPackages()).then(...args),
 		},
-		fn: function (appInfo) {
+		fn (appInfo) {
 			if (!requestInstallPackages) {
 				requestInstallPackages = settings.set("requestInstallPackages", true, "打开应用安装权限");
 			}

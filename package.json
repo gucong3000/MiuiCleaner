@@ -4,10 +4,9 @@
 	"private": true,
 	"description": "MIUI广告清理工具",
 	"scripts": {
-		"test:fix": "npm run test:lint -- --fix",
-		"test:unit": "nyc mocha",
-		"test:lint": "npx eslint *.js {src,test}/**/*.js",
-		"test": "npm run test:lint && npm run test:unit",
+		"lint:fix": "npm run pretest -- --fix",
+		"pretest": "eslint *.js {src,test}/**/*.js",
+		"test": "nyc mocha",
 		"report-coverage": "codecov",
 		"start": "npx webpack --config webpack.config.js --watch --mode=development",
 		"build:pack": "npx webpack --config webpack.config.js --mode=production",

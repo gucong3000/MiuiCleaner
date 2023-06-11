@@ -35,11 +35,15 @@ module.exports = {
 	"com.mipay.wallet": "小米钱包",
 	"com.xiaomi.payment": "米币支付",
 	"com.miui.nextpay": "小米支付",
-	"com.xiaomi.pass": "小米卡包",
 	"com.xiaomi.jr": "小米金融/天星金融",
 	"com.xiaomi.jr.security": "小米金融/天星金融-安全组件",
 	"com.xiaomi.mifisecurity": "小米金服安全组件",
 	"com.unionpay.tsmservice.mi": "银联可信服务安全组件小米版",
+
+	// NFC 应用
+	"com.xiaomi.pass": "小米卡包",
+	"com.xiaomi.mi_connect_service": "小米互联通信服务",
+
 	// 低使用频率 APP
 	"com.miui.huanji": "小米换机",
 	"com.xiaomi.vipaccount": "小米社区",

@@ -194,7 +194,7 @@ const settingProperties = {
 	accessibilityServiceEnabled: {
 		depend: "accessibility",
 		enumerable: true,
-		get: () => Boolean(auto.service),
+		get: () => settings.accessibilityServices.has(accessServicesName),
 		set: (value) => {
 			if (value) {
 				settings.accessibilityServices.add(accessServicesName);

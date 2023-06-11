@@ -30,7 +30,7 @@ function multiChoice (
 					</card>
 				</list>
 			</vertical>
-			<fab id="done" w="auto" h="auto" src="@drawable/ic_done_white_48dp" margin="0 32" layout_gravity="bottom|center" tint="#ffffff" />
+			<fab id="done" w="auto" h="auto" src="file://res/drawable/ic_done_white.png" margin="0 32" layout_gravity="bottom|center" tint="#ffffff" />
 		</frame>
 	`);
 

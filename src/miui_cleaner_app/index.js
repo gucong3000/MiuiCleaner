@@ -85,20 +85,20 @@ function regBack () {
 }
 
 (() => {
-	if (DEBUG) {
-		const thisPackageName = context.getPackageName();
-		console.log("DEBUG in", thisPackageName);
-		if (thisPackageName === "com.github.gucong3000.miui.cleaner") {
-			let entry = engines.myEngine().source.toString();
-			if (!entry.startsWith("/")) {
-				entry = `/storage/emulated/0/脚本/${thisPackageName}/${entry}`;
-				if (files.exists(entry)) {
-					engines.execScriptFile(entry);
-				}
-				return;
-			}
-		}
-	}
+	// if (DEBUG) {
+	// 	const thisPackageName = context.getPackageName();
+	// 	console.log("DEBUG in", thisPackageName);
+	// 	if (thisPackageName === "com.github.gucong3000.miui.cleaner") {
+	// 		let entry = engines.myEngine().source.toString();
+	// 		if (!entry.startsWith("/")) {
+	// 			entry = `/storage/emulated/0/脚本/${thisPackageName}/${entry}`;
+	// 			if (files.exists(entry)) {
+	// 				engines.execScriptFile(entry);
+	// 				return;
+	// 			}
+	// 		}
+	// 	}
+	// }
 	mainMenu();
 	update.checkUpdate();
 })();

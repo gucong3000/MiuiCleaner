@@ -657,7 +657,7 @@ const cleanerList = [
 	{
 		// 应用包管理组件
 		packageName: "com.miui.packageinstaller",
-		fn: function (options) {
+		fn (options) {
 			const googlePkgName = "com.google.android.packageinstaller";
 			let googleAppName = app.getAppName(googlePkgName);
 			const miuiPkgName = "com.miui.packageinstaller";

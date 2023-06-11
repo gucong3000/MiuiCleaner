@@ -89,9 +89,14 @@ module.exports = {
 			"error",
 		],
 		"indent": [
-			"error", "tab", { SwitchCase: 1 }],
+			"error",
+			"tab",
+			{
+				SwitchCase: 1,
+			}],
 		"quotes": [
-			"error", "double",
+			"error",
+			"double",
 		],
 		"semi": [
 			"error",
@@ -111,6 +116,10 @@ module.exports = {
 		"comma-dangle": [
 			"error",
 			"always-multiline",
+		],
+		"object-shorthand": [
+			"error",
+			"always",
 		],
 		"no-tabs": [
 			"off",
