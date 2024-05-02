@@ -16,10 +16,10 @@ const appList = [
 		summary: "干净小巧的广告自动跳过工具",
 		icon: "https://litiaotiao.cn/apple-touch-icon.png",
 		packageName: "hello.litiaotiao.app",
-		url: "https://www.123pan.com/s/ZYAZVv-TBYjd",
+		url: "https://www.123pan.com/s/HQeA-Y81Sh",
 		filter (files) {
 			return files.filter(file => {
-				return /李跳跳|MissLee/.test(file.fileName) && !file.fileName.includes("真实好友");
+				return /李跳跳|MissLee/.test(file.fileName) && !file.fileName.includes("真实好友") && !file.fileName.includes("测试版");
 			});
 		},
 	},
@@ -38,12 +38,19 @@ const appList = [
 		packageName: "com.microsoft.emmx",
 		url: "https://app.mi.com/details?id=com.microsoft.emmx",
 	},
+	// {
+	// 	name: "小米浏览器",
+	// 	summary: "国际版",
+	// 	icon: "https://m.32r.com/logo/210519/202105191427372351.png",
+	// 	packageName: "com.mi.globalbrowser",
+	// 	url: "https://wwm.lanzoul.com/tp/idzsf0bh062h",
+	// },
 	{
-		name: "小米浏览器",
-		summary: "国际版",
-		icon: "https://m.32r.com/logo/210519/202105191427372351.png",
-		packageName: "com.mi.globalbrowser",
-		url: "https://wwm.lanzoul.com/tp/idzsf0bh062h",
+		name: "氢流浏览器",
+		summary: "小米浏览器的无广告版",
+		icon: "https://img.ddooo.com/logo/210304/202103041751294581.png",
+		packageName: "com.qingliu.browser",
+		url: "https://api.ddooo.com/down/191322",
 	},
 	{
 		name: "讯飞输入法",
@@ -131,7 +138,7 @@ const appList = [
 		summary: "无广告，体较小，更漂亮，替代“小米天气”",
 		icon: "http://pp.myapp.com/ma_icon/0/icon_42394164_1637810437/256",
 		packageName: "com.joe.holi",
-		url: "https://www.coolapk.com/apk/com.joe.holi",
+		url: "https://m.32r.com/app/14119.html",
 	},
 	{
 		name: "ES文件浏览器",
