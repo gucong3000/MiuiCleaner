@@ -19,9 +19,9 @@ if %errorlevel%==1 (
 	pause>nul 2>nul
 	goto:start
 ) else if %errorlevel% geq 1 (
-	echo 错误：请将本程序移动到小米手机助手安装目录内再运行，按任意键前往小米手机助手官网
+	echo 错误：请将本程序移动到“adb.exe”所在目录内再运行，按任意键下载 Android SDK Platform-Tools
 	pause>nul 2>nul
-	start http://zhushou.xiaomi.com/
+	start https://googledownloads.cn/android/repository/platform-tools-latest-windows.zip
 	goto:eof
 )
 
