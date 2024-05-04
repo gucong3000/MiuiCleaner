@@ -6,14 +6,22 @@ const downloadManager = context.getSystemService(context.DOWNLOAD_SERVICE);
 const mimeTypeMap = android.webkit.MimeTypeMap.getSingleton();
 const emitter = events.emitter();
 
+function getColumnName (columnName) {
+	return columnName in DownloadManager && DownloadManager[columnName];
+}
+
 function getValOfCursor (cursor, columnName, columnType) {
 	let columnIndex = cursor.getColumnIndex(columnName);
 	if (columnIndex < 0) {
-		columnName = DownloadManager["COLUMN_" + columnName] || DownloadManager[columnName];
-		columnIndex = cursor.getColumnIndex(columnName);
-	}
-	if (columnIndex < 0) {
-		return;
+		columnName = getColumnName("COLUMN_" + columnName) || getColumnName(columnName);
+		if (columnName) {
+			columnIndex = cursor.getColumnIndex(columnName);
+			if (columnIndex < 0) {
+				return;
+			}
+		} else {
+			return;
+		}
 	}
 	if (!columnType) {
 		switch (cursor.getType(columnIndex)) {
